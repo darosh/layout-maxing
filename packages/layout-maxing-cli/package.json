@@ -1,0 +1,49 @@
+{
+  "name": "layout-maxing-cli",
+  "version": "0.0.0",
+  "description": "A starter for creating a TypeScript package.",
+  "homepage": "https://github.com/author/library#readme",
+  "bugs": {
+    "url": "https://github.com/author/library/issues"
+  },
+  "license": "MIT",
+  "author": "Author Name <author.name@mail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/author/library.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build:node": "vp pack",
+    "build:npm": "deno run -A ./scripts/build-npm.ts",
+    "dev": "vp pack --watch",
+    "test:node": "vp test",
+    "test:cli": "deno run -A ./src/index.ts",
+    "test:cli:fitness": "deno run -A ./src/index.ts fitness ./tests/fixtures/test.maxpat",
+    "test:cli:layout": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat",
+    "test:cli:layout:short": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat --population 10",
+    "check": "vp check",
+    "prepublishOnly": "vp run build"
+  },
+  "dependencies": {
+    "layout-maxing": "0.0.0"
+  },
+  "devDependencies": {
+    "@types/deno": "^2.5.0",
+    "@types/node": "^25.5.0",
+    "@typescript/native-preview": "7.0.0-dev.20260328.1",
+    "bumpp": "^11.0.1",
+    "typescript": "^6.0.2",
+    "vite-plus": "^0.1.14"
+  }
+}

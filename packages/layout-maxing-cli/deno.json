@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.42.3",
+    "layout-maxing": "../layout-maxing/src/index.ts"
+  }
+}
