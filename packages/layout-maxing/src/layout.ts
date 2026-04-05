@@ -21,8 +21,8 @@ export type BoxLayout = {
   numInlets: number
   numOutlets: number
   depth?: number
-  children?: BoxLayout[]
-  parents?: BoxLayout[]
+  children?: number[]
+  parents?: number[]
 }
 
 interface Box {
@@ -79,8 +79,8 @@ export function fillDepths(layouts: BoxLayout[], lines: Line[]): void {
     const parentIds = incoming.get(box.id) || []
     const childIds = outgoing.get(box.id) || []
 
-    box.parents = parentIds.map((id) => boxMap.get(id)!).filter(Boolean)
-    box.children = childIds.map((id) => boxMap.get(id)!).filter(Boolean)
+    box.parents = parentIds.map((id) => boxMap.get(id)!.index)
+    box.children = childIds.map((id) => boxMap.get(id)!.index)
   }
 
   // Memoization for depth calculation (longest path from root)

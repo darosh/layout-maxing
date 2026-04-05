@@ -5,37 +5,36 @@ export function cloneLayouts(layouts: BoxLayout[]): BoxLayout[] {
   return layouts.map((l) => ({ ...l }))
 }
 
-export function hasSiblings(box: BoxLayout): boolean {
+export function hasSiblings(box: BoxLayout, layouts: BoxLayout[]): boolean {
   if (!box.parents || box.parents.length === 0) return false
 
-  return box.parents.some((parent) => {
-    if (!parent.children) return false
-    return parent.children.some((child) => child.id !== box.id)
+  const byIndex = new Map(layouts.map((l) => [l.index, l]))
+  return box.parents.some((parentIndex) => {
+    const parent = byIndex.get(parentIndex)
+    return parent?.children?.some((childIndex) => childIndex !== box.index)
   })
 }
 
 export function getRandomSibling(
   box: BoxLayout,
+  layouts: BoxLayout[],
   rand: () => number = Math.random,
 ): number | undefined {
   if (!box.parents || box.parents.length === 0) return undefined
 
-  const siblings: BoxLayout[] = []
+  const byIndex = new Map(layouts.map((l) => [l.index, l]))
+  const siblings: number[] = []
 
-  for (const parent of box.parents) {
-    if (!parent.children) continue
-
-    for (const child of parent.children) {
-      if (child.id !== box.id) {
-        siblings.push(child)
-      }
+  for (const parentIndex of box.parents) {
+    const parent = byIndex.get(parentIndex)
+    for (const childIndex of parent?.children ?? []) {
+      if (childIndex !== box.index) siblings.push(childIndex)
     }
   }
 
   if (siblings.length === 0) return undefined
 
-  const randomIndex = Math.floor(rand() * siblings.length)
-  return siblings[randomIndex].index
+  return siblings[Math.floor(rand() * siblings.length)]
 }
 
 export function mutateSingle(
@@ -54,6 +53,7 @@ export function mutateWithChildren(
   delta: { x: number; y: number },
   maxDepth: number,
 ): BoxLayout[] {
+  const byIndex = new Map(layouts.map((l) => [l.index, l]))
   const visited = new Set<number>()
 
   function apply(box: BoxLayout, depth: number) {
@@ -61,9 +61,8 @@ export function mutateWithChildren(
     visited.add(box.index)
     box.x += delta.x
     box.y += delta.y
-    for (const { index } of box.children ?? []) {
-      const child = layouts.find((v) => v.index === index)!
-      apply(child, depth - 1)
+    for (const index of box.children ?? []) {
+      apply(byIndex.get(index)!, depth - 1)
     }
   }
 
@@ -77,6 +76,7 @@ export function mutateWithParents(
   delta: { x: number; y: number },
   maxDepth: number,
 ): BoxLayout[] {
+  const byIndex = new Map(layouts.map((l) => [l.index, l]))
   const visited = new Set<number>()
 
   function apply(box: BoxLayout, depth: number) {
@@ -84,9 +84,8 @@ export function mutateWithParents(
     visited.add(box.index)
     box.x += delta.x
     box.y += delta.y
-    for (const { index } of box.parents ?? []) {
-      const parent = layouts.find((v) => v.index === index)!
-      apply(parent, depth - 1)
+    for (const index of box.parents ?? []) {
+      apply(byIndex.get(index)!, depth - 1)
     }
   }
 
@@ -132,13 +131,10 @@ export function mutateSwapRandom(target: BoxLayout, layouts: BoxLayout[], rand) 
 }
 
 export function mutateSwapSibling(target: BoxLayout, layouts: BoxLayout[], rand) {
-  if (!hasSiblings(target)) {
-    return layouts
-  }
+  if (!hasSiblings(target, layouts)) return layouts
 
-  const is = getRandomSibling(target, rand)!
-  const ind = layouts.findIndex((v) => v.index === is)
-  const src = layouts[ind]
+  const is = getRandomSibling(target, layouts, rand)!
+  const src = layouts.find((v) => v.index === is)!
   swap(target, src)
   return layouts
 }
