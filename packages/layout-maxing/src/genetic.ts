@@ -94,7 +94,7 @@ export async function createPopulation(
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
-  getFitness?: (layouts: BoxLayout[], lines: Line[]) => Promise<Fitness>,
+  getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
 ) {
   const individuals: Layouts[] = []
 
@@ -118,7 +118,7 @@ export async function createPopulation(
 
   // Run fitness in parallel
   const fitnessPromises = individuals.map((ind) => {
-    const result = getFitness ? getFitness(ind.layouts, lines) : fitness(ind.layouts, lines, cfg)
+    const result = getFitness ? getFitness(ind.layouts, lines, cfg) : fitness(ind.layouts, lines, cfg)
 
     return Promise.resolve(result).then((value) => {
       ind.fitness = value
@@ -136,7 +136,7 @@ async function runGenetic(
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
-  getFitness?: (layouts: BoxLayout[], lines: Line[]) => Promise<Fitness>,
+  getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: BoxLayout[]) => void,
   onGenerationEnd?: (stop: number) => void,
   log?: (...args) => void,
@@ -144,7 +144,7 @@ async function runGenetic(
   // Create population
   let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
   const initialFitness = getFitness
-    ? await getFitness(population[0].layouts, lines)
+    ? await getFitness(population[0].layouts, lines, cfg)
     : fitness(population[0].layouts, lines, cfg)
   if (log)
     log(`Initial fitness ${initialFitness.score.toFixed(0)}\n${JSON.stringify(initialFitness)}`)
@@ -164,7 +164,7 @@ async function runGenetic(
     const fitnessPromises = population.map(async (ind) => {
       if (ind.fitness === undefined) {
         ind.fitness = getFitness
-          ? await getFitness(ind.layouts, lines)
+          ? await getFitness(ind.layouts, lines, cfg)
           : fitness(ind.layouts, lines, cfg)
       }
 

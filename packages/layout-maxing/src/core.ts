@@ -44,7 +44,7 @@ function applyBestLayout(rnbo: RNBO, best: BoxLayout[]) {
 
 export async function main(
   rnbo: RNBO,
-  getFitness?: (layouts: BoxLayout[], lines: Line[]) => Promise<Fitness>,
+  getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: BoxLayout[]) => void,
   cfg?: Config,
   onGenerationEnd?: (stop: number) => void,
@@ -59,7 +59,7 @@ export async function main(
   // Build initial layouts
   const baseLayouts = createInitialLayouts(patcher)
   const inputFitness = getFitness
-    ? await getFitness(baseLayouts, lines)
+    ? await getFitness(baseLayouts, lines, c)
     : fitness(baseLayouts, lines, c)
 
   if (log) log(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness)}`)
