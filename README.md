@@ -1,4 +1,4 @@
-#  Layout Maxing
+# Layout Maxing
 
 ## Development (Vite+ Monorepo)
 
