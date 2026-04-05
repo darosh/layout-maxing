@@ -23,7 +23,6 @@ export interface Config {
   mutationRate?: number
   maxChildren?: number
   maxParents?: number
-  siblingsSwapRate?: number
   crossoverRate?: number
   crossoverMix?: number
   tournamentSize?: number
@@ -64,10 +63,8 @@ export const defaultConfig: Required<Config> = {
   popSize: 15,
   generations: 100000,
   mutationRate: 0.95,
-  noProgressBoost: 0,
   maxChildren: 9,
   maxParents: 9,
-  siblingsSwapRate: 0.5,
   crossoverRate: 0.75,
   crossoverMix: 0.25,
   tournamentSize: 0.5,

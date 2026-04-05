@@ -5,11 +5,11 @@
 - [ ] mirror
 - [ ] try remove best clones
 - [ ] structural cross-over
-- [ ] box/lines stats
-- [ ] title to top left
 - [ ] single outlet self collision tolerance (`attrui`)
 - [ ] include original
 
+- [x] box/lines stats
+- [x] title to top left
 - [x] remove initial randomization
 - [x] multiple Dagre starters
 - [x] mutation type weights
