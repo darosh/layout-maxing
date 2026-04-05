@@ -38,91 +38,6 @@ export function getRandomSibling(
   return siblings[randomIndex].index
 }
 
-export function mutate(
-  layouts: BoxLayout[],
-  mutationsRate: number,
-  rand: () => number,
-  cfg: Required<Config>,
-): BoxLayout[] {
-  const mutated = cloneLayouts(layouts)
-
-  function mutateChildren(box: BoxLayout, x: number, y: number, max = 2) {
-    if (max === 0) {
-      return
-    }
-
-    for (const { index } of box.children ?? []) {
-      const child = mutated.find((v) => v.index === index)!
-
-      child.x += x
-      child.y += y
-
-      if (rand() < cfg.mutateChildren) {
-        mutateChildren(child, x, y, max - 1)
-      }
-    }
-  }
-
-  function mutateParents(box: BoxLayout, x: number, y: number, max = 2) {
-    if (max === 0) {
-      return
-    }
-
-    for (const { index } of box.parents ?? []) {
-      const parent = mutated.find((v) => v.index === index)!
-
-      parent.x += x
-      parent.y += y
-
-      if (rand() < cfg.mutateParents) {
-        mutateParents(parent, x, y, max - 1)
-      }
-    }
-  }
-
-  for (const box of mutated) {
-    if (rand() < mutationsRate) {
-      const mxy = rand()
-
-      const x = mxy < 0.6 ? Math.round((rand() - 0.5) * cfg.mutate) * cfg.gridX : 0
-      const y = mxy > 0.4 ? Math.round((rand() - 0.5) * cfg.mutate) * cfg.gridY : 0
-
-      box.x += x
-      box.y += y
-
-      if (rand() < cfg.mutateChildren) {
-        mutateChildren(box, x, y, Math.round(cfg.maxChildren * rand()))
-      }
-
-      if (rand() < cfg.mutateParents) {
-        mutateParents(box, x, y, Math.round(cfg.maxParents * rand()))
-      }
-    }
-
-    if (rand() < cfg.swapRate) {
-      let ind
-
-      if (rand() < cfg.siblingsSwapRate && hasSiblings(box)) {
-        const is = getRandomSibling(box, rand)!
-        ind = mutated.findIndex((v) => v.index === is)
-      } else {
-        ind = Math.floor(rand() * mutated.length) % mutated.length
-      }
-
-      const src = mutated[ind]
-      const x = box.x
-      const y = box.y
-      box.x = src.x
-      box.y = src.y
-      src.x = x
-      src.y = y
-    }
-  }
-
-  // return fixOverlaps(mutated)
-  return mutated
-}
-
 export function mutateSingle(
   target: BoxLayout,
   layouts: BoxLayout[],
@@ -209,8 +124,7 @@ export function swap(box: BoxLayout, src: BoxLayout) {
   src.y = y
 }
 
-export function mutateSwapRandom(target: BoxLayout,
-                                 layouts: BoxLayout[], rand) {
+export function mutateSwapRandom(target: BoxLayout, layouts: BoxLayout[], rand) {
   const ind = Math.floor(rand() * layouts.length) % layouts.length
   const src = layouts[ind]
   swap(target, src)

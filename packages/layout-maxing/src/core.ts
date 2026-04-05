@@ -61,7 +61,7 @@ export async function main(
     ? await getFitness(baseLayouts, lines)
     : fitness(baseLayouts, lines, c)
 
-  log && log(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness)}`)
+  if (log) log(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness)}`)
   fillDepths(baseLayouts, lines)
 
   if (c.useDagre) {

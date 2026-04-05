@@ -21,10 +21,6 @@ export interface Config {
   popSize?: number
   generations?: number
   mutationRate?: number
-  swapRate?: number
-  noProgressBoost?: number
-  mutateChildren?: number
-  mutateParents?: number
   maxChildren?: number
   maxParents?: number
   siblingsSwapRate?: number
@@ -32,6 +28,13 @@ export interface Config {
   crossoverMix?: number
   tournamentSize?: number
   mutate?: number
+  // Mutation weights (unitless, roulette selection)
+  mutWeightQuadrant?: number
+  mutWeightSingle?: number
+  mutWeightChildren?: number
+  mutWeightParents?: number
+  mutWeightSwapSibling?: number
+  mutWeightSwapRandom?: number
   // Control flags
   showStraightLines?: boolean
   deterministic?: boolean
@@ -61,17 +64,20 @@ export const defaultConfig: Required<Config> = {
   popSize: 15,
   generations: 100000,
   mutationRate: 0.95,
-  swapRate: 0.004,
   noProgressBoost: 0,
-  mutateChildren: 0.75,
-  mutateParents: 0,
   maxChildren: 9,
-  maxParents: 0,
+  maxParents: 9,
   siblingsSwapRate: 0.5,
   crossoverRate: 0.75,
   crossoverMix: 0.25,
   tournamentSize: 0.5,
   mutate: 0.5,
+  mutWeightQuadrant: 30,
+  mutWeightSingle: 30,
+  mutWeightChildren: 30,
+  mutWeightParents: 0,
+  mutWeightSwapSibling: 20,
+  mutWeightSwapRandom: 20,
   showStraightLines: false,
   deterministic: true,
   useDagre: true,

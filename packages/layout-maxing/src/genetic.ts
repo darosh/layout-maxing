@@ -2,10 +2,26 @@ import { type Config } from './config.ts'
 import { type BoxLayout, type Line, fixOverlaps } from './layout.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import {
-  cloneLayouts, mutate, crossover, mutateSingle, mutateWithChildren, mutateWithParents, mutateByQuadrant,
-  mutateSwapSibling, mutateSwapRandom
+  cloneLayouts,
+  crossover,
+  mutateSingle,
+  mutateWithChildren,
+  mutateWithParents,
+  mutateByQuadrant,
+  mutateSwapSibling,
+  mutateSwapRandom,
 } from './mutation.ts'
 import { getViewPort } from './geometry.ts'
+
+function roulette(weights: number[], rand: () => number): number {
+  const total = weights.reduce((a, b) => a + b, 0)
+  let r = rand() * total
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i]
+    if (r <= 0) return i
+  }
+  return weights.length - 1
+}
 
 interface Layouts {
   layouts: BoxLayout[]
@@ -29,7 +45,13 @@ function minBy<T>(arr: T[], fn: (item: T) => number): T | undefined {
   return minItem
 }
 
-function uniqueIndexes(count: number, min: number, max: number, rand: () => number, exclude?: number[]): number[] {
+function uniqueIndexes(
+  count: number,
+  min: number,
+  max: number,
+  rand: () => number,
+  exclude?: number[],
+): number[] {
   const result: number[] = []
   const excluded = new Set(exclude)
   while (result.length < count) {
@@ -49,7 +71,13 @@ function tournamentSelect(
   cfg: Required<Config>,
   exclude?: number[],
 ): number {
-  const [initial, ...rest] = uniqueIndexes(Math.round(cfg.tournamentSize * population.length), 0, population.length, rand, exclude)
+  const [initial, ...rest] = uniqueIndexes(
+    Math.round(cfg.tournamentSize * population.length),
+    0,
+    population.length,
+    rand,
+    exclude,
+  )
   let bestIdx = initial
 
   for (const candidate of rest) {
@@ -116,15 +144,14 @@ async function runGenetic(
   const initialFitness = getFitness
     ? await getFitness(population[0].layouts, lines)
     : fitness(population[0].layouts, lines, cfg)
-  log &&
+  if (log)
     log(`Initial fitness ${initialFitness.score.toFixed(0)}\n${JSON.stringify(initialFitness)}`)
 
   let bestFitnessScore = Infinity
   let bestFitness = undefined
-  let bestGen = 0
   let bestIndividual: BoxLayout[] = cloneLayouts(baseLayouts)
 
-  log && log('Starting genetic layout optimization...')
+  if (log) log('Starting genetic layout optimization...')
   let stop = cfg.stop
 
   for (let gen = 0; gen < cfg.generations; gen++) {
@@ -148,7 +175,6 @@ async function runGenetic(
       bestFitness = fitnessValues[currentBestIdx]
       bestFitnessScore = bestFitness.score
       bestIndividual = cloneLayouts(population[currentBestIdx].layouts)
-      bestGen = gen
       stop = cfg.stop
     } else {
       stop--
@@ -158,7 +184,7 @@ async function runGenetic(
     }
 
     if (gen % 20 === 0 || gen === cfg.generations - 1) {
-      log &&
+      if (log)
         log(
           `GEN: ${gen + 1} | SCO: ${bestFitnessScore.toFixed(0)} | COL/OVE/CRO/ARE ${bestFitness?.collisions}/${bestFitness?.overlaps}/${bestFitness?.crossings}/${bestFitness?.area.toFixed(
             0,
@@ -204,9 +230,7 @@ async function runGenetic(
 
     const bestByView = minBy<Layouts>(populationCopy, (v) => v.fitness!.view)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByView), 1)
-    rand() < .5 ? population : newPopulation.push(bestByView)
-
-    const mutationRate = cfg.mutationRate + (gen - bestGen) * cfg.noProgressBoost
+    newPopulation.push(bestByView)
 
     // const props = <(keyof Fitness)[]>['score', 'view', 'crossings']
     const props = <(keyof Fitness)[]>['score', 'view']
@@ -218,32 +242,47 @@ async function runGenetic(
 
       let child: BoxLayout[]
       if (rand() < cfg.crossoverRate) {
-        const i2 = tournamentSelect(population, props[(newPopulation.length + 1) % props.length], rand, cfg, [i1])
+        const i2 = tournamentSelect(
+          population,
+          props[(newPopulation.length + 1) % props.length],
+          rand,
+          cfg,
+          [i1],
+        )
         child = crossover(p1.layouts, population[i2].layouts, rand, cfg)
       } else {
         child = cloneLayouts(p1.layouts)
 
-        // Mutate child
-        // child = mutate(child, mutationRate, rand, cfg)
-
-        if (rand() < mutationRate) {
+        if (rand() < cfg.mutationRate) {
           const mxy = rand()
-          const [ x_ , y_, w, h] = getViewPort(child)
+          const [_x, _y, w, h] = getViewPort(child)
           const mutateX = w * cfg.mutate
           const mutateY = h * cfg.mutate
-          const x = mxy < 0.6 ? Math.round((rand() - 0.5) * mutateX / cfg.gridX) * cfg.gridX: 0
-          const y = mxy > 0.4 ? Math.round((rand() - 0.5) * mutateY / cfg.gridY) * cfg.gridY : 0
-          const r = rand()
+          const x = mxy < 0.6 ? Math.round(((rand() - 0.5) * mutateX) / cfg.gridX) * cfg.gridX : 0
+          const y = mxy > 0.4 ? Math.round(((rand() - 0.5) * mutateY) / cfg.gridY) * cfg.gridY : 0
           const mutationTarget = child[Math.floor(rand() * child.length)]
+          const mutIdx = roulette(
+            [
+              cfg.mutWeightQuadrant,
+              cfg.mutWeightSingle,
+              cfg.mutWeightChildren,
+              cfg.mutWeightParents,
+              cfg.mutWeightSwapSibling,
+              cfg.mutWeightSwapRandom,
+            ],
+            rand,
+          )
 
-          if (r < .3) {
+          if (mutIdx === 0) {
             const quadrant = Math.floor(rand() * 4)
             child = mutateByQuadrant(mutationTarget, child, { x, y }, quadrant)
-          } else if (r < .4) {
+          } else if (mutIdx === 1) {
             child = mutateSingle(mutationTarget, child, { x, y })
-          } else if (r < .6) {
+          } else if (mutIdx === 2) {
             child = mutateWithChildren(mutationTarget, child, { x, y }, cfg.maxChildren)
-          } else if (r < .8) {
+          } else if (mutIdx === 3) {
+            child = mutateWithParents(mutationTarget, child, { x, y }, cfg.maxParents)
+          } else if (mutIdx === 4) {
             child = mutateSwapSibling(mutationTarget, child, rand)
           } else {
             child = mutateSwapRandom(mutationTarget, child, rand)
@@ -257,7 +296,7 @@ async function runGenetic(
     population = newPopulation
   }
 
-  log &&
+  if (log)
     log(
       `Optimization finished. Final fitness: ${bestFitnessScore.toFixed(2)}\n${JSON.stringify(bestFitness)}`,
     )
