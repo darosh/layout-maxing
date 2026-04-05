@@ -246,7 +246,11 @@ export function simpleFlow(baseLayouts: BoxLayout[], cfg: Required<Config>) {
   }
 }
 
-export function dagreFlow(layouts: BoxLayout[], lines: Line[], rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB') {
+export function dagreFlow(
+  layouts: BoxLayout[],
+  lines: Line[],
+  rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB',
+) {
   // Create a new directed graph
   const g = new dagre.graphlib.Graph()
 

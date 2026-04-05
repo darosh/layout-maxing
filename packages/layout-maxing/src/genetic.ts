@@ -118,7 +118,9 @@ export async function createPopulation(
 
   // Run fitness in parallel
   const fitnessPromises = individuals.map((ind) => {
-    const result = getFitness ? getFitness(ind.layouts, lines, cfg) : fitness(ind.layouts, lines, cfg)
+    const result = getFitness
+      ? getFitness(ind.layouts, lines, cfg)
+      : fitness(ind.layouts, lines, cfg)
 
     return Promise.resolve(result).then((value) => {
       ind.fitness = value

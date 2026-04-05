@@ -68,7 +68,7 @@ export async function main(
   let startingLayouts: BoxLayout[][]
 
   if (c.useDagre) {
-    startingLayouts = (['TB', /*'LR', 'BT', 'RL'*/] as const).map((dir) => {
+    startingLayouts = (['TB' /*'LR', 'BT', 'RL'*/] as const).map((dir) => {
       const clone = cloneLayouts(baseLayouts)
       dagreFlow(clone, lines, dir)
       return clone
