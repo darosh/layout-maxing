@@ -8,6 +8,7 @@ import {
   dagreFlow,
   simpleFlow,
 } from './layout.ts'
+import { cloneLayouts } from './mutation.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import runGenetic from './genetic.ts'
 
@@ -64,14 +65,21 @@ export async function main(
   if (log) log(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness)}`)
   fillDepths(baseLayouts, lines)
 
+  let startingLayouts: BoxLayout[][]
+
   if (c.useDagre) {
-    dagreFlow(baseLayouts, lines)
+    startingLayouts = (['TB', /*'LR', 'BT', 'RL'*/] as const).map((dir) => {
+      const clone = cloneLayouts(baseLayouts)
+      dagreFlow(clone, lines, dir)
+      return clone
+    })
   } else {
     simpleFlow(baseLayouts, c)
+    startingLayouts = [baseLayouts]
   }
 
   const bestIndividual = await runGenetic(
-    baseLayouts,
+    startingLayouts,
     lines,
     rand,
     c,

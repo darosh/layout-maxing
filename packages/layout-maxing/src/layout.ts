@@ -246,14 +246,12 @@ export function simpleFlow(baseLayouts: BoxLayout[], cfg: Required<Config>) {
   }
 }
 
-export function dagreFlow(layouts: BoxLayout[], lines: Line[]) {
+export function dagreFlow(layouts: BoxLayout[], lines: Line[], rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB') {
   // Create a new directed graph
   const g = new dagre.graphlib.Graph()
 
   // Set an object for the graph label
-  // g.setGraph({ align: 'UL', rankdir: 'TB', ranker: 'network-simplex' })
-  // g.setGraph({ align: 'UL', rankdir: 'TB', ranker: 'tight-tree' })
-  g.setGraph({ align: 'UL', rankdir: 'TB', ranker: 'longest-path' })
+  g.setGraph({ align: 'UL', rankdir, ranker: 'longest-path' })
 
   // Default to assigning a new object as a label for each new edge.
   g.setDefaultEdgeLabel(function () {

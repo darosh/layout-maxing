@@ -90,7 +90,7 @@ function tournamentSelect(
 }
 
 export async function createPopulation(
-  baseLayouts: BoxLayout[],
+  startingLayouts: BoxLayout[][],
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
@@ -99,15 +99,17 @@ export async function createPopulation(
   const individuals: Layouts[] = []
 
   for (let i = 0; i < cfg.popSize; i++) {
-    let ind = cloneLayouts(baseLayouts)
+    const base = startingLayouts[i % startingLayouts.length]
+    let ind = cloneLayouts(base)
 
-    if (i > 0) {
-      // Add controlled diversity to the first generation
-      for (const box of ind) {
-        box.x = rand() * Math.sqrt(baseLayouts.length / 2)
-        box.y = rand() * Math.sqrt(baseLayouts.length / 2)
-      }
-    }
+    // this does not lead to meaningful population
+    // if (i >= startingLayouts.length) {
+    //   // Add controlled diversity to the first generation
+    //   for (const box of ind) {
+    //     box.x = rand() * Math.sqrt(base.length / 2)
+    //     box.y = rand() * Math.sqrt(base.length / 2)
+    //   }
+    // }
 
     ind = fixOverlaps(ind, cfg)
 
@@ -130,7 +132,7 @@ export async function createPopulation(
 }
 
 async function runGenetic(
-  baseLayouts: BoxLayout[],
+  startingLayouts: BoxLayout[][],
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
@@ -140,16 +142,20 @@ async function runGenetic(
   log?: (...args) => void,
 ): Promise<BoxLayout[]> {
   // Create population
-  let population = await createPopulation(baseLayouts, lines, rand, cfg, getFitness)
+  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
   const initialFitness = getFitness
     ? await getFitness(population[0].layouts, lines)
     : fitness(population[0].layouts, lines, cfg)
   if (log)
     log(`Initial fitness ${initialFitness.score.toFixed(0)}\n${JSON.stringify(initialFitness)}`)
 
-  let bestFitnessScore = Infinity
-  let bestFitness = undefined
-  let bestIndividual: BoxLayout[] = cloneLayouts(baseLayouts)
+  const bestInitIdx = population.reduce(
+    (bi, ind, i) => (ind.fitness!.score < population[bi].fitness!.score ? i : bi),
+    0,
+  )
+  let bestFitnessScore = population[bestInitIdx].fitness!.score
+  let bestFitness: Fitness | undefined = population[bestInitIdx].fitness
+  let bestIndividual: BoxLayout[] = cloneLayouts(population[bestInitIdx].layouts)
 
   if (log) log('Starting genetic layout optimization...')
   let stop = cfg.stop
