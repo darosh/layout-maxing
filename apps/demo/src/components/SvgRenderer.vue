@@ -39,7 +39,7 @@ const fullScore = computed(() => {
 <template>
   <div class="svg-renderer">
     <div v-if="!store.displayedSvg" class="placeholder">
-      <i class="pi pi-image placeholder-icon" />
+      <i class="pi pi-objects-column placeholder-icon" />
       <span>Preview will appear here during optimization</span>
     </div>
 

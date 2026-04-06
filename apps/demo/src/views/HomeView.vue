@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
+import Toolbar from 'primevue/toolbar'
 import FileDropZone from '@/components/FileDropZone.vue'
 import ConfigPanel from '@/components/ConfigPanel.vue'
 import ProgressPanel from '@/components/ProgressPanel.vue'
@@ -9,6 +10,7 @@ import { useOptimizerStore } from '@/stores/optimizer'
 import { computed } from 'vue'
 
 const store = useOptimizerStore()
+const version = __APP_VERSION__
 
 function copyRnbo() {
   const data = store.getExportRnbo()
@@ -37,50 +39,68 @@ const btnPause = computed(() => store.status === 'running')
   <div class="home">
     <main class="app-body">
       <aside class="sidebar">
-        <FileDropZone />
-        <div class="action-row">
-          <Button
-            :label="btnStart ? 'Optimize' : 'Stop'"
-            size="small"
-            :variant="btnStart ? undefined : 'outlined'"
-            :severity="
-              btnStart ? (btnStart && !store.canStart ? 'secondary' : undefined) : 'secondary'
-            "
-            :disabled="btnStart && !store.canStart"
-            @click="btnStart ? store.startOptimization() : store.stopOptimization()"
-          />
-          <Button
-            v-if="btnPauseResume"
-            :label="btnPause ? 'Pause' : 'Resume'"
-            variant="outlined"
-            size="small"
-            severity="secondary"
-            @click="btnPause ? store.pauseOptimization() : store.resumeOptimization()"
-          />
-          <Button v-else style="visibility: hidden" variant="outlined" size="small" disabled />
-          <Button
-            v-if="store.inputSource === 'clipboard'"
-            label="Copy"
-            variant="outlined"
-            size="small"
-            :severity="!store.canExport ? 'secondary' : 'info'"
-            :disabled="!store.canExport"
-            @click="copyRnbo()"
-          />
-          <Button
-            v-else
-            label="Download"
-            variant="outlined"
-            size="small"
-            :severity="!store.canExport ? 'secondary' : undefined"
-            :disabled="!store.canExport"
-            @click="downloadRnbo()"
-          />
+        <div class="sidebar-scroll">
+          <FileDropZone />
+          <div class="action-row">
+            <Button
+              :label="btnStart ? 'Optimize' : 'Stop'"
+              size="small"
+              :variant="btnStart ? (!store.canStart ? 'outlined' : undefined) : 'outlined'"
+              :severity="
+                btnStart ? (btnStart && !store.canStart ? 'secondary' : undefined) : 'secondary'
+              "
+              :disabled="btnStart && !store.canStart"
+              @click="btnStart ? store.startOptimization() : store.stopOptimization()"
+            />
+            <Button
+              v-if="btnPauseResume"
+              :label="btnPause ? 'Pause' : 'Resume'"
+              variant="outlined"
+              size="small"
+              severity="secondary"
+              @click="btnPause ? store.pauseOptimization() : store.resumeOptimization()"
+            />
+            <Button v-else style="visibility: hidden" variant="outlined" size="small" disabled />
+            <Button
+              v-if="store.inputSource === 'clipboard'"
+              label="Copy"
+              variant="outlined"
+              size="small"
+              :severity="!store.canExport ? 'secondary' : 'info'"
+              :disabled="!store.canExport"
+              @click="copyRnbo()"
+            />
+            <Button
+              v-else
+              label="Download"
+              variant="outlined"
+              size="small"
+              :severity="!store.canExport ? 'secondary' : undefined"
+              :disabled="!store.canExport"
+              @click="downloadRnbo()"
+            />
+          </div>
+          <div class="section-divider"></div>
+          <ProgressPanel />
+          <div class="section-divider" style="margin-bottom: 0.5rem"></div>
+          <ConfigPanel />
         </div>
-        <div class="section-divider"></div>
-        <ProgressPanel />
-        <div class="section-divider" style="margin-bottom: 0.5rem"></div>
-        <ConfigPanel />
+        <Toolbar class="sidebar-toolbar">
+          <template #start>
+            <span class="sidebar-title">layout-maxing</span>
+            <span class="sidebar-version">v{{ version }}</span>
+          </template>
+          <template #end>
+            <a
+              href="https://github.com/darosh/layout-maxing"
+              target="_blank"
+              rel="noopener"
+              class="gh-link"
+            >
+              <i class="pi pi-github" />
+            </a>
+          </template>
+        </Toolbar>
       </aside>
 
       <section class="canvas-col">
@@ -142,10 +162,52 @@ const btnPause = computed(() => store.status === 'running')
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  overflow-y: auto;
   background: var(--p-surface-900);
   border-right: 1px solid var(--p-surface-800);
+}
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.sidebar-toolbar {
+  flex-shrink: 0;
+  border-radius: 0;
+  border-top: 1px solid var(--p-surface-700);
+  border-bottom: none;
+  border-left: none;
+  border-right: none;
+  background: var(--p-surface-900);
+  padding: 1rem 1rem;
+}
+
+.sidebar-title {
+  font-family: monospace;
+  color: var(--p-surface-400);
+}
+
+.sidebar-version {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--p-surface-500);
+  margin-left: 1rem;
+}
+
+.gh-link {
+  color: var(--p-surface-500);
+  font-size: 1.15rem;
+  line-height: 1;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.gh-link:hover {
+  color: var(--p-surface-100);
 }
 
 .section-divider {
