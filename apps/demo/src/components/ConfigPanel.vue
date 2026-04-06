@@ -8,12 +8,30 @@ import InputNumber from 'primevue/inputnumber'
 import ToggleSwitch from 'primevue/toggleswitch'
 import Button from 'primevue/button'
 import { useOptimizerStore } from '@/stores/optimizer'
-import { defaultConfig } from 'layout-maxing'
+import { configMeta, defaultConfig } from 'layout-maxing'
 import type { Config } from 'layout-maxing'
 
 const store = useOptimizerStore()
-const { config: cfg, progressInterval, svgInterval, topN, allTimeTop,
-        isConfigDefault } = storeToRefs(store)
+const {
+  config: cfg,
+  progressInterval,
+  svgInterval,
+  topN,
+  allTimeTop,
+  isConfigDefault,
+} = storeToRefs(store)
+
+function numProps(key: keyof Config) {
+  const [, min, max, step] = configMeta[key]
+  const stepStr = step !== null ? String(step) : ''
+  const decimals = stepStr.includes('.') ? (stepStr.split('.')[1]?.length ?? 0) : 0
+  return {
+    min: min as number,
+    max: max as number,
+    ...(step !== null ? { step: step as number } : {}),
+    ...(decimals > 0 ? { minFractionDigits: decimals } : {}),
+  }
+}
 
 function copyConfig() {
   const nonDefault: Record<string, unknown> = {}
@@ -77,19 +95,54 @@ function copyCli() {
         <AccordionContent>
           <div class="fields-grid">
             <label>gridX</label>
-            <InputNumber v-model="cfg.gridX" :min="1" :max="200" size="small" />
+            <InputNumber
+              v-model="cfg.gridX"
+              v-bind="numProps('gridX')"
+              size="small"
+              v-tooltip.top="configMeta.gridX[4]"
+            />
             <label>gridY</label>
-            <InputNumber v-model="cfg.gridY" :min="1" :max="200" size="small" />
+            <InputNumber
+              v-model="cfg.gridY"
+              v-bind="numProps('gridY')"
+              size="small"
+              v-tooltip.top="configMeta.gridY[4]"
+            />
             <label>minDistX</label>
-            <InputNumber v-model="cfg.minDistX" :min="0" :max="200" size="small" />
+            <InputNumber
+              v-model="cfg.minDistX"
+              v-bind="numProps('minDistX')"
+              size="small"
+              v-tooltip.top="configMeta.minDistX[4]"
+            />
             <label>minDistY</label>
-            <InputNumber v-model="cfg.minDistY" :min="0" :max="200" size="small" />
+            <InputNumber
+              v-model="cfg.minDistY"
+              v-bind="numProps('minDistY')"
+              size="small"
+              v-tooltip.top="configMeta.minDistY[4]"
+            />
             <label>boxZone</label>
-            <InputNumber v-model="cfg.boxZone" :min="0" :max="50" size="small" />
+            <InputNumber
+              v-model="cfg.boxZone"
+              v-bind="numProps('boxZone')"
+              size="small"
+              v-tooltip.top="configMeta.boxZone[4]"
+            />
             <label>letOffset</label>
-            <InputNumber v-model="cfg.letOffest" :min="0" :max="50" :step="0.5" size="small" />
+            <InputNumber
+              v-model="cfg.letOffest"
+              v-bind="numProps('letOffest')"
+              size="small"
+              v-tooltip.top="configMeta.letOffest[4]"
+            />
             <label>curveControl</label>
-            <InputNumber v-model="cfg.curveControl" :min="0" :max="100" size="small" />
+            <InputNumber
+              v-model="cfg.curveControl"
+              v-bind="numProps('curveControl')"
+              size="small"
+              v-tooltip.top="configMeta.curveControl[4]"
+            />
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -99,39 +152,53 @@ function copyCli() {
         <AccordionContent>
           <div class="fields-grid">
             <label>crossPenalty</label>
-            <InputNumber v-model="cfg.crossPenalty" :min="0" :max="20" :step="0.1" size="small" />
+            <InputNumber
+              v-model="cfg.crossPenalty"
+              v-bind="numProps('crossPenalty')"
+              size="small"
+              v-tooltip.top="configMeta.crossPenalty[4]"
+            />
             <label>overPenalty</label>
-            <InputNumber v-model="cfg.overPenalty" :min="0" :max="20" :step="0.1" size="small" />
+            <InputNumber
+              v-model="cfg.overPenalty"
+              v-bind="numProps('overPenalty')"
+              size="small"
+              v-tooltip.top="configMeta.overPenalty[4]"
+            />
             <label>reversePenalty</label>
-            <InputNumber v-model="cfg.reversePenalty" :min="0" :max="20" :step="0.1" size="small" />
+            <InputNumber
+              v-model="cfg.reversePenalty"
+              v-bind="numProps('reversePenalty')"
+              size="small"
+              v-tooltip.top="configMeta.reversePenalty[4]"
+            />
             <label>areaPenalty</label>
-            <InputNumber v-model="cfg.areaPenalty" :min="0" :max="20" :step="0.1" size="small" />
+            <InputNumber
+              v-model="cfg.areaPenalty"
+              v-bind="numProps('areaPenalty')"
+              size="small"
+              v-tooltip.top="configMeta.areaPenalty[4]"
+            />
             <label>totalCross×</label>
             <InputNumber
               v-model="cfg.totalCrossPenalty"
-              :min="1"
-              :max="2"
-              :step="0.01"
-              :minFractionDigits="2"
+              v-bind="numProps('totalCrossPenalty')"
               size="small"
+              v-tooltip.top="configMeta.totalCrossPenalty[4]"
             />
             <label>totalOver×</label>
             <InputNumber
               v-model="cfg.totalOverPenalty"
-              :min="1"
-              :max="2"
-              :step="0.01"
-              :minFractionDigits="2"
+              v-bind="numProps('totalOverPenalty')"
               size="small"
+              v-tooltip.top="configMeta.totalOverPenalty[4]"
             />
             <label>totalCollision×</label>
             <InputNumber
               v-model="cfg.totalCollisionPenalty"
-              :min="1"
-              :max="2"
-              :step="0.01"
-              :minFractionDigits="2"
+              v-bind="numProps('totalCollisionPenalty')"
               size="small"
+              v-tooltip.top="configMeta.totalCollisionPenalty[4]"
             />
           </div>
         </AccordionContent>
@@ -142,82 +209,130 @@ function copyCli() {
         <AccordionContent>
           <div class="fields-grid">
             <label>popSize</label>
-            <InputNumber v-model="cfg.popSize" :min="10" :max="1000" size="small" />
+            <InputNumber
+              v-model="cfg.popSize"
+              v-bind="numProps('popSize')"
+              size="small"
+              v-tooltip.top="configMeta.popSize[4]"
+            />
             <label>generations</label>
-            <InputNumber v-model="cfg.generations" :min="100" :max="1000000" size="small" />
+            <InputNumber
+              v-model="cfg.generations"
+              v-bind="numProps('generations')"
+              size="small"
+              v-tooltip.top="configMeta.generations[4]"
+            />
             <label>stop</label>
-            <InputNumber v-model="cfg.stop" :min="1" :max="100000" size="small" />
+            <InputNumber
+              v-model="cfg.stop"
+              v-bind="numProps('stop')"
+              size="small"
+              v-tooltip.top="configMeta.stop[4]"
+            />
             <label>mutationRate</label>
             <InputNumber
               v-model="cfg.mutationRate"
-              :min="0"
-              :max="1"
-              :step="0.001"
-              :minFractionDigits="3"
+              v-bind="numProps('mutationRate')"
               size="small"
+              v-tooltip.top="configMeta.mutationRate[4]"
             />
             <label>crossoverRate</label>
             <InputNumber
               v-model="cfg.crossoverRate"
-              :min="0"
-              :max="1"
-              :step="0.01"
-              :minFractionDigits="2"
+              v-bind="numProps('crossoverRate')"
               size="small"
+              v-tooltip.top="configMeta.crossoverRate[4]"
             />
             <label>crossoverMix</label>
             <InputNumber
               v-model="cfg.crossoverMix"
-              :min="0"
-              :max="1"
-              :step="0.01"
-              :minFractionDigits="2"
+              v-bind="numProps('crossoverMix')"
               size="small"
+              v-tooltip.top="configMeta.crossoverMix[4]"
             />
             <label>tournamentSize</label>
             <InputNumber
               v-model="cfg.tournamentSize"
-              :min="0"
-              :max="1"
-              :minFractionDigits="1"
-              :step="0.1"
+              v-bind="numProps('tournamentSize')"
               size="small"
+              v-tooltip.top="configMeta.tournamentSize[4]"
             />
             <label>mutate</label>
             <InputNumber
               v-model="cfg.mutate"
-              :min="0"
-              :max="10"
-              :minFractionDigits="1"
-              :step="0.1"
+              v-bind="numProps('mutate')"
               size="small"
+              v-tooltip.top="configMeta.mutate[4]"
             />
             <label>maxChildren</label>
-            <InputNumber v-model="cfg.maxChildren" :min="1" :max="20" size="small" />
+            <InputNumber
+              v-model="cfg.maxChildren"
+              v-bind="numProps('maxChildren')"
+              size="small"
+              v-tooltip.top="configMeta.maxChildren[4]"
+            />
             <label>maxParents</label>
-            <InputNumber v-model="cfg.maxParents" :min="1" :max="20" size="small" />
+            <InputNumber
+              v-model="cfg.maxParents"
+              v-bind="numProps('maxParents')"
+              size="small"
+              v-tooltip.top="configMeta.maxParents[4]"
+            />
             <label>weightQuadrant</label>
-            <InputNumber v-model="cfg.mutWeightQuadrant" :min="0" :max="100" size="small" />
+            <InputNumber
+              v-model="cfg.mutWeightQuadrant"
+              v-bind="numProps('mutWeightQuadrant')"
+              size="small"
+              v-tooltip.top="configMeta.mutWeightQuadrant[4]"
+            />
             <label>weightSingle</label>
-            <InputNumber v-model="cfg.mutWeightSingle" :min="0" :max="100" size="small" />
+            <InputNumber
+              v-model="cfg.mutWeightSingle"
+              v-bind="numProps('mutWeightSingle')"
+              size="small"
+              v-tooltip.top="configMeta.mutWeightSingle[4]"
+            />
             <label>weightChildren</label>
-            <InputNumber v-model="cfg.mutWeightChildren" :min="0" :max="100" size="small" />
+            <InputNumber
+              v-model="cfg.mutWeightChildren"
+              v-bind="numProps('mutWeightChildren')"
+              size="small"
+              v-tooltip.top="configMeta.mutWeightChildren[4]"
+            />
             <label>weightParents</label>
-            <InputNumber v-model="cfg.mutWeightParents" :min="0" :max="100" size="small" />
+            <InputNumber
+              v-model="cfg.mutWeightParents"
+              v-bind="numProps('mutWeightParents')"
+              size="small"
+              v-tooltip.top="configMeta.mutWeightParents[4]"
+            />
             <label>weightSwapSibling</label>
-            <InputNumber v-model="cfg.mutWeightSwapSibling" :min="0" :max="100" size="small" />
+            <InputNumber
+              v-model="cfg.mutWeightSwapSibling"
+              v-bind="numProps('mutWeightSwapSibling')"
+              size="small"
+              v-tooltip.top="configMeta.mutWeightSwapSibling[4]"
+            />
             <label>weightSwapRandom</label>
-            <InputNumber v-model="cfg.mutWeightSwapRandom" :min="0" :max="100" size="small" />
+            <InputNumber
+              v-model="cfg.mutWeightSwapRandom"
+              v-bind="numProps('mutWeightSwapRandom')"
+              size="small"
+              v-tooltip.top="configMeta.mutWeightSwapRandom[4]"
+            />
           </div>
           <div class="toggles-grid">
             <label>useDagre</label>
-            <ToggleSwitch v-model="cfg.useDagre" />
+            <ToggleSwitch v-model="cfg.useDagre" v-tooltip.top="configMeta.useDagre[4]" />
             <label>useInput</label>
-            <ToggleSwitch v-model="cfg.useInput" />
+            <ToggleSwitch v-model="cfg.useInput" v-tooltip.top="configMeta.useInput[4]" />
             <label>showStraightLines</label>
-            <ToggleSwitch v-model="cfg.showStraightLines" />
+            <ToggleSwitch
+              v-model="cfg.showStraightLines"
+              v-tooltip.top="configMeta.showStraightLines[4]"
+            />
             <label>deterministic</label>
-            <ToggleSwitch v-model="cfg.deterministic" />
+            <ToggleSwitch v-model="cfg.deterministic" v-tooltip.top="configMeta.deterministic[4]" />
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -227,24 +342,45 @@ function copyCli() {
         <AccordionHeader>Run Settings</AccordionHeader>
         <AccordionContent>
           <div class="fields-grid">
-            <label title="Post stats every N evaluations">progressInterval</label>
-            <InputNumber v-model="progressInterval" :min="200" :max="10000" size="small" />
-            <label title="Post SVG update every N milliseconds">svgInterval</label>
-            <InputNumber v-model="svgInterval" :min="200" :max="10000" size="small" />
-            <label title="Number of top candidates to track and preview">topN</label>
-            <InputNumber v-model="topN" :min="1" :max="100" size="small" />
+            <label>progressInterval</label>
+            <InputNumber
+              v-model="progressInterval"
+              :min="200"
+              :max="10000"
+              size="small"
+              v-tooltip.top="'Post stats every N evaluations'"
+            />
+            <label>svgInterval</label>
+            <InputNumber
+              v-model="svgInterval"
+              :min="200"
+              :max="10000"
+              size="small"
+              v-tooltip.top="'Post SVG update every N milliseconds'"
+            />
+            <label>topN</label>
+            <InputNumber
+              v-model="topN"
+              :min="1"
+              :max="100"
+              size="small"
+              v-tooltip.top="'Number of top candidates to track and preview'"
+            />
           </div>
           <div class="toggles-grid">
-            <label title="Show best across all time (on) or current population only (off)">allTimeTop</label>
-            <ToggleSwitch v-model="allTimeTop" />
-            <label title="Log info messages to console (start, done, stop)">logInfo</label>
-            <ToggleSwitch v-model="cfg.logInfo" />
-            <label title="Log progress stats to console">logProgress</label>
-            <ToggleSwitch v-model="cfg.logProgress" />
-            <label title="Write SVG file (CLI only)">writeSvg</label>
-            <ToggleSwitch v-model="cfg.writeSvg" />
-            <label title="Write JSON data file (CLI only)">writeJson</label>
-            <ToggleSwitch v-model="cfg.writeJson" />
+            <label>allTimeTop</label>
+            <ToggleSwitch
+              v-model="allTimeTop"
+              v-tooltip.top="'Show best across all time (on) or current population only (off)'"
+            />
+            <label>logInfo</label>
+            <ToggleSwitch v-model="cfg.logInfo" v-tooltip.top="configMeta.logInfo[4]" />
+            <label>logProgress</label>
+            <ToggleSwitch v-model="cfg.logProgress" v-tooltip.top="configMeta.logProgress[4]" />
+            <label>writeSvg</label>
+            <ToggleSwitch v-model="cfg.writeSvg" v-tooltip.top="configMeta.writeSvg[4]" />
+            <label>writeJson</label>
+            <ToggleSwitch v-model="cfg.writeJson" v-tooltip.top="configMeta.writeJson[4]" />
           </div>
         </AccordionContent>
       </AccordionPanel>

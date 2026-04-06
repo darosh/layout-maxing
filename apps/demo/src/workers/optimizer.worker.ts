@@ -224,7 +224,10 @@ self.onmessage = async (e: MessageEvent) => {
             bestFitness,
             stopIn,
           })
-          if (c.logProgress) console.log(`[progress] gen=${generation} evals=${evalCount} best=${bestScore?.toFixed(2)} stopIn=${stopIn}`)
+          if (c.logProgress)
+            console.log(
+              `[progress] gen=${generation} evals=${evalCount} best=${bestScore?.toFixed(2)} stopIn=${stopIn}`,
+            )
         }
 
         // SVG update (time-based, every svgInterval ms)
@@ -272,7 +275,10 @@ self.onmessage = async (e: MessageEvent) => {
     // main() writes optimised positions back via applyBestLayout
     const finalLayouts = createInitialLayouts(rnbo.patcher)
     const svg = toSvg(finalLayouts, lines, cfg)
-    if (c.logInfo) console.log(`[optimizer] done — ${evalCount} evals, best=${bestScore?.toFixed(2)}`)
+    if (c.logInfo)
+      console.log(
+        `[optimizer] done — ${evalCount} evals, best=${bestScore == null ? 'n/a' : (bestScore as number).toFixed(2)}`,
+      )
     post({
       type: 'done',
       svg,

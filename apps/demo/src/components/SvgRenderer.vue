@@ -30,9 +30,7 @@ const fullScore = computed(() => {
   const sliced = str.slice(0, 20)
   const lastCommaIndex = sliced.lastIndexOf(',')
 
-  return lastCommaIndex !== -1
-    ? `${sliced.slice(0, lastCommaIndex + 1)}…`
-    : `${sliced}…`
+  return lastCommaIndex !== -1 ? `${sliced.slice(0, lastCommaIndex + 1)}…` : `${sliced}…`
 })
 </script>
 
@@ -50,15 +48,16 @@ const fullScore = computed(() => {
       <!-- Bottom-left: score + selection label -->
       <div class="overlay overlay-bl">
         <span class="score-value">{{ fmt(store.displayedFitness?.score) }}</span>
-        <span class="score-value selection-label">{{
-          fullScore
-        }}</span>
+        <span class="score-value selection-label">{{ fullScore }}</span>
       </div>
 
       <div class="overlay overlay-tl">
         <span v-if="selectionLabel" class="selection-label">
           <template v-if="store.selection.kind === 'current'">
-            {{selectionLabel.slice(0, selectionLabel.length - 2)}}<span class="selection-label-ordinal">{{selectionLabel.slice(selectionLabel.length - 2)}}</span>
+            {{ selectionLabel.slice(0, selectionLabel.length - 2)
+            }}<span class="selection-label-ordinal">{{
+              selectionLabel.slice(selectionLabel.length - 2)
+            }}</span>
           </template>
           <template v-else>{{ selectionLabel }}</template>
         </span>

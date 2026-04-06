@@ -28,13 +28,21 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const inputSource = ref<'file' | 'clipboard' | null>(null)
   // Load persisted config from localStorage
   const savedConfig = (() => {
-    try { return JSON.parse(localStorage.getItem(CONFIG_KEY) ?? 'null') } catch { return null }
+    try {
+      return JSON.parse(localStorage.getItem(CONFIG_KEY) ?? 'null')
+    } catch {
+      return null
+    }
   })()
-  const config = ref<Config>({ ...defaultConfig, ...(savedConfig ?? {}) })
+  const config = ref<Config>({ ...defaultConfig, ...(savedConfig ?? undefined) })
 
   // Load persisted run settings from localStorage
   const savedRun = (() => {
-    try { return JSON.parse(localStorage.getItem(RUN_KEY) ?? 'null') } catch { return null }
+    try {
+      return JSON.parse(localStorage.getItem(RUN_KEY) ?? 'null')
+    } catch {
+      return null
+    }
   })()
 
   // UI-only run settings (not part of Config)
@@ -43,18 +51,25 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const topN = ref<number>(savedRun?.topN ?? 15)
   const allTimeTop = ref<boolean>(savedRun?.allTimeTop ?? true)
   // Persist config changes
-  watch(config, (val) => {
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(val))
-  }, { deep: true })
+  watch(
+    config,
+    (val) => {
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(val))
+    },
+    { deep: true },
+  )
 
   // Persist run settings changes
   watch([progressInterval, svgInterval, topN, allTimeTop], () => {
-    localStorage.setItem(RUN_KEY, JSON.stringify({
-      progressInterval: progressInterval.value,
-      svgInterval: svgInterval.value,
-      topN: topN.value,
-      allTimeTop: allTimeTop.value,
-    }))
+    localStorage.setItem(
+      RUN_KEY,
+      JSON.stringify({
+        progressInterval: progressInterval.value,
+        svgInterval: svgInterval.value,
+        topN: topN.value,
+        allTimeTop: allTimeTop.value,
+      }),
+    )
   })
 
   const isConfigDefault = computed(() =>

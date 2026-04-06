@@ -83,7 +83,9 @@ let o: string
         @click="store.selection = { kind: 'current', index: i }"
       >
         <div class="thumb-svg" v-html="entry.svg" />
-        <span class="thumb-label">{{void(o = ordinal(i + 1))}}{{ o.slice(0, o.length - 2) }}<span class="thumb-label-ordinal">{{o.slice(o.length - 2)}}</span>
+        <span class="thumb-label"
+          >{{ void (o = ordinal(i + 1)) }}{{ o.slice(0, o.length - 2)
+          }}<span class="thumb-label-ordinal">{{ o.slice(o.length - 2) }}</span>
         </span>
         <span class="thumb-score">{{ formatScore(entry.score) }}</span>
       </button>

@@ -29,7 +29,7 @@ function formatElapsed(ms: number): string {
         <span class="stat-label">Stop In</span>
         <span class="stat-value">{{ store.progress.stopIn.toLocaleString() }}</span>
         <ProgressBar
-          :value="Math.round(store.progress.stopIn / store.config.stop! * 1000) / 10"
+          :value="Math.round((store.progress.stopIn / store.config.stop!) * 1000) / 10"
           :show-value="false"
           class="progress-bar progress-bar-small"
         />
@@ -93,7 +93,7 @@ function formatElapsed(ms: number): string {
   margin-bottom: -5px;
   margin-top: 3px;
   margin-right: 6px;
-  --p-progressbar-value-background: var(--p-surface-300)
+  --p-progressbar-value-background: var(--p-surface-300);
 }
 
 .stats-row {

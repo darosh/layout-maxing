@@ -1,4 +1,4 @@
-import { createInitialLayouts, defaultConfig, fitness, main, toSvg } from 'layout-maxing'
+import { createInitialLayouts, defaultConfig, fitness, help, main, toSvg } from 'layout-maxing'
 import type { BoxLayout, Config, Fitness, RNBO } from 'layout-maxing'
 import { cpus } from 'node:os'
 import { dirname, parse, format } from 'jsr:@std/path'
@@ -189,8 +189,10 @@ async function cli() {
       const inputFitness = fitness(baseLayouts, lines, cfg)
 
       console.log(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness)}`)
+    } else if (command === 'help') {
+      console.log(help())
     } else {
-      console.log('Command missing')
+      console.log('Commands: layout <input.json> [output.json], fitness <input.json>, help')
     }
   }
 }
