@@ -156,8 +156,7 @@ export async function runCalibrate(
 }
 
 export function printCalibrateResults(result: CalibrateResult): void {
-  const { paramResults, combinedBestScore, defaultScore, closestToDefault } =
-    result
+  const { paramResults, combinedBestScore, defaultScore, closestToDefault } = result
 
   function fmt(n: number): string {
     if (n === 0) return '0'
