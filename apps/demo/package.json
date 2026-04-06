@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vp dev",
     "build": "run-p type-check \"build-only {@}\" --",
+    "build:ghp": "run-p type-check build-only:ghp",
+    "build-only:ghp": "vp build --base=./ --outDir=../../docs",
     "preview": "vp preview",
     "test:unit": "vp test",
     "test:e2e": "playwright test",
