@@ -2,7 +2,7 @@
 
 > A Max patch layout utility
 
-[Live demo](https://github.com/darosh/layout-maxing)
+[Live demo](https://darosh.github.io/layout-maxing)
 
 ## Development (Vite+ Monorepo)
 
