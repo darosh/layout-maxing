@@ -42,14 +42,35 @@ function applyBestLayout(rnbo: RNBO, best: BoxLayout[]) {
   }
 }
 
+type FlatObject<T> = {
+  [K in keyof T]?: string | number | boolean | null | undefined
+}
+
+export function jsonDiff<T>(defaults: FlatObject<T>, tgt: FlatObject<T>): FlatObject<T> {
+  const result: FlatObject = {}
+
+  for (const key in tgt) {
+    if (tgt[key] !== defaults[key]) {
+      result[key] = tgt[key]
+    }
+  }
+
+  return result
+}
+
 export async function main(
   rnbo: RNBO,
   getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: BoxLayout[]) => void,
   cfg?: Config,
   onGenerationEnd?: (stop: number) => void,
-  log?: (...args) => void,
+  logProgress?: (...args) => void,
+  logInfo?: (...args) => void,
 ) {
+  if (logInfo) {
+    logInfo(`Configuration\n${JSON.stringify(jsonDiff<Config>(defaultConfig, cfg))}`)
+  }
+
   const c = { ...defaultConfig, ...cfg }
   const rand = c.deterministic ? createDeterministicRandom() : Math.random
 
@@ -62,7 +83,10 @@ export async function main(
     ? await getFitness(baseLayouts, lines, c)
     : fitness(baseLayouts, lines, c)
 
-  if (log) log(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness)}`)
+  if (logInfo)
+    logInfo(
+      `Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`,
+    )
   fillDepths(baseLayouts, lines)
 
   let startingLayouts: BoxLayout[][]
@@ -90,7 +114,8 @@ export async function main(
     getFitness,
     onIntermediate,
     onGenerationEnd,
-    log,
+    logProgress,
+    logInfo,
   )
 
   // Apply best positions back to original RNBO structure

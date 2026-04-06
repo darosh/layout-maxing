@@ -1,13 +1,16 @@
 # TODO
 
-- [ ] gh-pages build
-- [ ] fix progress log
 - [ ] swap with children
 - [ ] top level swap fix
 - [ ] mirror
 - [ ] structural cross-over
 - [ ] group support
 
+- [x] split UI settings
+- [x] cli config print
+- [x] test CLI layout/fitness/help
+- [x] fix progress log
+- [x] gh-pages build
 - [x] socials meta
 - [x] favicon
 - [x] paste config

@@ -18,6 +18,7 @@ export default defineConfig({
     options: {
       typeAware: true,
     },
+    ignorePatterns: ['docs/'],
   },
   run: {
     cache: true,

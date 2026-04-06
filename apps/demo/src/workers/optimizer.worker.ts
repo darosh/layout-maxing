@@ -224,10 +224,6 @@ self.onmessage = async (e: MessageEvent) => {
             bestFitness,
             stopIn,
           })
-          if (c.logProgress)
-            console.log(
-              `[progress] gen=${generation} evals=${evalCount} best=${bestScore?.toFixed(2)} stopIn=${stopIn}`,
-            )
         }
 
         // SVG update (time-based, every svgInterval ms)
@@ -254,6 +250,8 @@ self.onmessage = async (e: MessageEvent) => {
       (stop: number) => {
         stopIn = stop
       },
+      c.logProgress ? console.log : undefined,
+      c.logInfo ? console.log : undefined,
     )
 
     pool.terminate()

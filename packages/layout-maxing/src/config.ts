@@ -43,6 +43,7 @@ export interface Config {
   // Logging / debug output
   logInfo?: boolean
   logProgress?: boolean
+  logProgressInterval?: number
   writeSvg?: boolean
   writeJson?: boolean
 }
@@ -121,6 +122,7 @@ export const configMeta: ConfigMeta = {
   // Logging / debug output
   logInfo: [true, false, true, null, 'Log info messages to console (start, done, stop)'],
   logProgress: [true, false, true, null, 'Log progress stats to console each interval'],
+  logProgressInterval: [2000, 200, 60000, 500, 'Min ms between progress log lines'],
   writeSvg: [false, false, true, null, 'Write SVG visualization file (CLI only)'],
   writeJson: [false, false, true, null, 'Write JSON data file with layouts and lines (CLI only)'],
 }

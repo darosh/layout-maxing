@@ -373,9 +373,37 @@ function copyCli() {
         </AccordionContent>
       </AccordionPanel>
 
-      <!-- Run settings (not part of Config) -->
+      <!-- Run settings (part of Config) -->
       <AccordionPanel value="run">
         <AccordionHeader>Run Settings</AccordionHeader>
+        <AccordionContent>
+          <div class="fields-grid">
+            <label>logProgressInterval</label>
+            <InputNumber
+              v-model="cfg.logProgressInterval"
+              :min="200"
+              :max="60000"
+              :step="500"
+              size="small"
+              v-tip.right="configMeta.logProgressInterval[4]"
+            />
+          </div>
+          <div class="toggles-grid">
+            <label>logInfo</label>
+            <ToggleSwitch v-model="cfg.logInfo" v-tip.right="configMeta.logInfo[4]" />
+            <label>logProgress</label>
+            <ToggleSwitch v-model="cfg.logProgress" v-tip.right="configMeta.logProgress[4]" />
+            <label>writeSvg</label>
+            <ToggleSwitch v-model="cfg.writeSvg" v-tip.right="configMeta.writeSvg[4]" />
+            <label>writeJson</label>
+            <ToggleSwitch v-model="cfg.writeJson" v-tip.right="configMeta.writeJson[4]" />
+          </div>
+        </AccordionContent>
+      </AccordionPanel>
+
+      <!-- UI settings (not part of Config) -->
+      <AccordionPanel value="ui">
+        <AccordionHeader>UI Settings</AccordionHeader>
         <AccordionContent>
           <div class="fields-grid">
             <label>progressInterval</label>
@@ -409,14 +437,6 @@ function copyCli() {
               v-model="allTimeTop"
               v-tip.right="'Show best across all time (on) or current population only (off)'"
             />
-            <label>logInfo</label>
-            <ToggleSwitch v-model="cfg.logInfo" v-tip.right="configMeta.logInfo[4]" />
-            <label>logProgress</label>
-            <ToggleSwitch v-model="cfg.logProgress" v-tip.right="configMeta.logProgress[4]" />
-            <label>writeSvg</label>
-            <ToggleSwitch v-model="cfg.writeSvg" v-tip.right="configMeta.writeSvg[4]" />
-            <label>writeJson</label>
-            <ToggleSwitch v-model="cfg.writeJson" v-tip.right="configMeta.writeJson[4]" />
           </div>
         </AccordionContent>
       </AccordionPanel>

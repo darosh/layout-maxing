@@ -141,15 +141,18 @@ async function runGenetic(
   getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: BoxLayout[]) => void,
   onGenerationEnd?: (stop: number) => void,
-  log?: (...args) => void,
+  logProgress?: (...args) => void,
+  logInfo?: (...args) => void,
 ): Promise<BoxLayout[]> {
   // Create population
   let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
   const initialFitness = getFitness
     ? await getFitness(population[0].layouts, lines, cfg)
     : fitness(population[0].layouts, lines, cfg)
-  if (log)
-    log(`Initial fitness ${initialFitness.score.toFixed(0)}\n${JSON.stringify(initialFitness)}`)
+  if (logInfo)
+    logInfo(
+      `Initial fitness ${initialFitness.score.toFixed(0)}\n${JSON.stringify(initialFitness, null, 2)}`,
+    )
 
   const bestInitIdx = population.reduce(
     (bi, ind, i) => (ind.fitness!.score < population[bi].fitness!.score ? i : bi),
@@ -159,8 +162,9 @@ async function runGenetic(
   let bestFitness: Fitness | undefined = population[bestInitIdx].fitness
   let bestIndividual: BoxLayout[] = cloneLayouts(population[bestInitIdx].layouts)
 
-  if (log) log('Starting genetic layout optimization...')
+  if (logInfo) logInfo('Starting genetic layout optimization...')
   let stop = cfg.stop
+  let lastProgressLog = 0
 
   for (let gen = 0; gen < cfg.generations; gen++) {
     const fitnessPromises = population.map(async (ind) => {
@@ -191,13 +195,16 @@ async function runGenetic(
       }
     }
 
-    if (gen % 20 === 0 || gen === cfg.generations - 1) {
-      if (log)
-        log(
+    if (logProgress) {
+      const now = Date.now()
+      if (now - lastProgressLog >= cfg.logProgressInterval || gen === cfg.generations - 1) {
+        lastProgressLog = now
+        logProgress(
           `GEN: ${gen + 1} | SCO: ${bestFitnessScore.toFixed(0)} | COL/OVE/CRO/ARE ${bestFitness?.collisions}/${bestFitness?.overlaps}/${bestFitness?.crossings}/${bestFitness?.area.toFixed(
             0,
           )} | STO: ${stop}`,
         )
+      }
     }
 
     onGenerationEnd?.(stop)
@@ -304,9 +311,9 @@ async function runGenetic(
     population = newPopulation
   }
 
-  if (log)
-    log(
-      `Optimization finished. Final fitness: ${bestFitnessScore.toFixed(2)}\n${JSON.stringify(bestFitness)}`,
+  if (logInfo)
+    logInfo(
+      `Optimization finished. Final fitness: ${bestFitnessScore.toFixed(0)}\n${JSON.stringify(bestFitness, null, 2)}`,
     )
 
   return bestIndividual

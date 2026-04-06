@@ -1,4 +1,12 @@
-import { createInitialLayouts, defaultConfig, fitness, help, main, toSvg } from 'layout-maxing'
+import {
+  createInitialLayouts,
+  defaultConfig,
+  fitness,
+  help,
+  jsonDiff,
+  main,
+  toSvg,
+} from 'layout-maxing'
 import type { BoxLayout, Config, Fitness, RNBO } from 'layout-maxing'
 import { cpus } from 'node:os'
 import { dirname, parse, format } from 'jsr:@std/path'
@@ -139,7 +147,6 @@ async function cli() {
 
       await Deno.mkdir(dirname(outputPath), { recursive: true })
 
-      let genCount = 0
       await main(
         rnbo,
         getFitness,
@@ -153,10 +160,9 @@ async function cli() {
           }
         },
         cfg,
-        (stop: number) => {
-          genCount++
-          if (c.logProgress) console.log(`[progress] gen=${genCount} stopIn=${stop}`)
-        },
+        undefined,
+        c.logProgress ? console.log : undefined,
+        c.logInfo ? console.log : undefined,
       )
 
       // Write optimized file
@@ -188,11 +194,19 @@ async function cli() {
       const baseLayouts = createInitialLayouts(rnbo.patcher)
       const inputFitness = fitness(baseLayouts, lines, cfg)
 
-      console.log(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness)}`)
+      if (cfg.logInfo) {
+        console.log(`Configuration\n${JSON.stringify(jsonDiff<Config>(defaultConfig, cfg))}`)
+      }
+
+      console.log(
+        `Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`,
+      )
     } else if (command === 'help') {
       console.log(help())
+    } else if (command === 'config') {
+      console.log(JSON.stringify(defaultConfig, null, 2))
     } else {
-      console.log('Commands: layout <input.json> [output.json], fitness <input.json>, help')
+      console.log('Commands: layout <input.json> [output.json], fitness <input.json>, config, help')
     }
   }
 }

@@ -29,9 +29,11 @@
     "dev": "vp pack --watch",
     "test:node": "vp test",
     "test:cli": "deno run -A ./src/index.ts",
+    "test:cli:help": "deno run -A ./src/index.ts help",
+    "test:cli:config": "deno run -A ./src/index.ts config",
     "test:cli:fitness": "deno run -A ./src/index.ts fitness ./tests/fixtures/test.maxpat",
-    "test:cli:layout": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat",
-    "test:cli:layout:short": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat --population 10",
+    "test:cli:layout": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat --logProgressInterval 100",
+    "test:cli:layout:short": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat --generations 10",
     "check": "vp check",
     "prepublishOnly": "vp run build"
   },
