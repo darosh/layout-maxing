@@ -87,8 +87,8 @@ export const configMeta: ConfigMeta = {
   ],
   totalCrossPenalty: [1.01, 1, 2, 0.01, 'Exponential multiplier applied when any crossing exists'],
   totalOverPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier applied when any overlap exists'],
-  reversePenalty: [3, 0, 20, 0.1, 'Penalty for edges going in the wrong direction'],
-  areaPenalty: [1.5, 0, 20, 0.1, 'Penalty proportional to total bounding area used'],
+  reversePenalty: [3, 0, 20, 0.1, 'Penalty for lines connecting to inlet in upper box'],
+  areaPenalty: [1.5, 1, 2, 0.1, 'Exponential multiplier based on number of overlapping boxes'],
   // GA parameters
   svgAtStop: [9995, 0, 100000, 1, 'Generation count at which to write final SVG snapshot'],
   stop: [10000, 1, 100000, 1, 'Stop after this many generations without improvement'],
