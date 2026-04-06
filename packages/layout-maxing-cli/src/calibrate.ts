@@ -1,4 +1,11 @@
-import { type BoxLayout, type Config, defaultConfig, configMeta } from 'layout-maxing'
+import {
+  type BoxLayout,
+  type Config,
+  type Line,
+  type Fitness,
+  defaultConfig,
+  configMeta,
+} from 'layout-maxing'
 
 // Uses configMeta min/max by default — override with [min, max] only when the meta range
 // includes trivially-good values (e.g. exponential bases that go to 1.0).
@@ -7,10 +14,9 @@ const calibrateDefault: Partial<Record<keyof Config, true | [number, number]>> =
   overPenalty: true,
   totalCollisionPenalty: [1.01, 2],
   totalSSCPenalty: [1.01, 2],
-  totalCrossPenalty: [1.005, 2],
-  totalOverPenalty: [1.005, 2],
+  totalCrossPenalty: [1.01, 2],
+  totalOverPenalty: [1.01, 2],
   reversePenalty: true,
-  // areaPenalty: true,
 }
 
 interface ParamResult {

@@ -61,16 +61,16 @@ export type ConfigMeta = Record<keyof Config, ConfigMetaEntry>
 
 export const configMeta: ConfigMeta = {
   // Grid & spacing
-  gridX: [30, 1, 200, 1, 'Horizontal grid snap size in pixels'],
-  gridY: [60, 1, 200, 1, 'Vertical grid snap size in pixels'],
-  minDistX: [15, 0, 200, 1, 'Minimum horizontal distance between boxes'],
-  minDistY: [60, 0, 200, 1, 'Minimum vertical distance between boxes'],
+  gridX: [30, 1, 100, 1, 'Horizontal grid snap size in pixels'],
+  gridY: [60, 1, 100, 1, 'Vertical grid snap size in pixels'],
+  minDistX: [15, 0, 100, 1, 'Minimum horizontal distance between boxes'],
+  minDistY: [60, 0, 100, 1, 'Minimum vertical distance between boxes'],
   boxZone: [5, 0, 50, 1, 'Extra padding zone around each box for collision'],
   letOffest: [9.5, 0, 50, 0.5, 'Letter/label offset from the box edge'],
   curveControl: [15, 0, 100, 1, 'Bezier curve control point distance for edge routing'],
   // Fitness penalties
-  crossPenalty: [1.5, 0, 20, 0.1, 'Penalty per edge crossing'],
-  overPenalty: [6, 0, 20, 0.1, 'Penalty per box overlap'],
+  crossPenalty: [1.5, 1, 10, 0.1, 'Penalty per edge crossing'],
+  overPenalty: [6, 1, 10, 0.1, 'Penalty per box overlap'],
   totalCollisionPenalty: [
     1.04,
     1,
@@ -87,7 +87,7 @@ export const configMeta: ConfigMeta = {
   ],
   totalCrossPenalty: [1.01, 1, 2, 0.01, 'Exponential multiplier applied when any crossing exists'],
   totalOverPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier applied when any overlap exists'],
-  reversePenalty: [3, 0, 20, 0.1, 'Penalty for lines connecting to inlet in upper box'],
+  reversePenalty: [3, 1, 10, 0.1, 'Penalty for lines connecting to inlet in upper box'],
   areaPenalty: [1.5, 1, 2, 0.1, 'Exponential multiplier based on number of overlapping boxes'],
   // GA parameters
   svgAtStop: [9995, 0, 100000, 1, 'Generation count at which to write final SVG snapshot'],
