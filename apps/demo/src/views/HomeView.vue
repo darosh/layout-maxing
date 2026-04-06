@@ -3,14 +3,16 @@ import Button from 'primevue/button'
 import Toolbar from 'primevue/toolbar'
 import FileDropZone from '@/components/FileDropZone.vue'
 import ConfigPanel from '@/components/ConfigPanel.vue'
+import HelpDialog from '@/components/HelpDialog.vue'
 import ProgressPanel from '@/components/ProgressPanel.vue'
 import SvgRenderer from '@/components/SvgRenderer.vue'
 import TopResultsBar from '@/components/TopResultsBar.vue'
 import { useOptimizerStore } from '@/stores/optimizer'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const store = useOptimizerStore()
 const version = __APP_VERSION__
+const helpVisible = ref(false)
 
 function copyRnbo() {
   const data = store.getExportRnbo()
@@ -91,6 +93,9 @@ const btnPause = computed(() => store.status === 'running')
             <span class="sidebar-version">v{{ version }}</span>
           </template>
           <template #end>
+            <a rounded class="gh-link" style="margin-right: 1rem" @click="helpVisible = true">
+              <i class="pi pi-question-circle" />
+            </a>
             <a
               href="https://github.com/darosh/layout-maxing"
               target="_blank"
@@ -110,6 +115,7 @@ const btnPause = computed(() => store.status === 'running')
         <TopResultsBar />
       </section>
     </main>
+    <HelpDialog v-model:visible="helpVisible" />
   </div>
 </template>
 
