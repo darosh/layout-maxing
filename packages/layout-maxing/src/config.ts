@@ -73,13 +73,7 @@ export const configMeta: ConfigMeta = {
   // Fitness penalties
   crossPenalty: [1.5, 1, 10, 0.1, 'Multiplier penalty for line-line crossing'],
   overPenalty: [6, 1, 10, 0.1, 'Multiplier penalty line overlaps'],
-  totalCollisionPenalty: [
-    1.04,
-    1,
-    2,
-    0.01,
-    'Exponential multiplier for line-box collisions'
-  ],
+  totalCollisionPenalty: [1.04, 1, 2, 0.01, 'Exponential multiplier for line-box collisions'],
   totalSSCPenalty: [
     1.04,
     1,
