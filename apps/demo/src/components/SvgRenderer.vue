@@ -76,6 +76,13 @@ const fullScore = computed(() => {
         >
         <span
           class="metric metric-interactive"
+          @mouseenter="tooltip?.show($event, fitnessTooltip('singleSelfCollisions'))"
+          @mouseleave="tooltip?.hide()"
+          ><span class="metric-label">ssc</span
+          >{{ fmt(store.displayedFitness?.singleSelfCollisions) }}</span
+        >
+        <span
+          class="metric metric-interactive"
           @mouseenter="tooltip?.show($event, fitnessTooltip('overlaps'))"
           @mouseleave="tooltip?.hide()"
           ><span class="metric-label">ove</span>{{ fmt(store.displayedFitness?.overlaps) }}</span

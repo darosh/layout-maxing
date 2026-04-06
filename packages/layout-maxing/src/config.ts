@@ -11,6 +11,7 @@ export interface Config {
   crossPenalty?: number
   overPenalty?: number
   totalCollisionPenalty?: number
+  totalSSCPenalty?: number
   totalCrossPenalty?: number
   totalOverPenalty?: number
   reversePenalty?: number
@@ -75,6 +76,13 @@ export const configMeta: ConfigMeta = {
     2,
     0.01,
     'Exponential multiplier applied when any collision exists',
+  ],
+  totalSSCPenalty: [
+    1.04,
+    1,
+    2,
+    0.01,
+    'Exponential multiplier for single-outlet single-connection self-collisions (SSC)',
   ],
   totalCrossPenalty: [1.01, 1, 2, 0.01, 'Exponential multiplier applied when any crossing exists'],
   totalOverPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier applied when any overlap exists'],

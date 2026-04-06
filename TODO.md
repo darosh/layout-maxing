@@ -8,8 +8,9 @@
 - [ ] top level swap fix
 - [ ] mirror
 - [ ] structural cross-over
-- [ ] single outlet self collision tolerance (`attrui`)
+- [ ] group support
 
+- [x] single outlet self collision tolerance (`attrui`)
 - [x] config meta: min, max, step, description
 - [x] config tooltips
 - [x] better tooltips top / svg fitness

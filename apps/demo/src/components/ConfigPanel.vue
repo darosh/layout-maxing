@@ -215,6 +215,13 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.totalCollisionPenalty[4]"
             />
+            <label>totalSSCPenalty</label>
+            <InputNumber
+              v-model="cfg.totalSSCPenalty"
+              v-bind="numProps('totalSSCPenalty')"
+              size="small"
+              v-tip.right="configMeta.totalSSCPenalty[4]"
+            />
           </div>
         </AccordionContent>
       </AccordionPanel>

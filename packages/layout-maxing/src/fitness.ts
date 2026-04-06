@@ -18,6 +18,7 @@ export interface Fitness {
   length: number
   overlaps: number
   collisions: number
+  singleSelfCollisions: number
   area: number
   view: number
 }
@@ -33,6 +34,11 @@ export const fitnessMeta: FitnessMeta = {
   length: ['Length', 'LEN', 'Total line length'],
   overlaps: ['Overlaps', 'OVE', 'Number of line-line overlaps'],
   collisions: ['Collisions', 'COL', 'Number of line-box collisions'],
+  singleSelfCollisions: [
+    'Single Self Collisions',
+    'SSC',
+    'Box-line collisions from single-outlet single-connection boxes with themselves',
+  ],
   area: ['Area', 'ARE', 'Number of box-box intersection areas'],
   view: ['View', 'VIE', 'Viewport size'],
 }
@@ -47,6 +53,18 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
   let crossings = 0
   let overlaps = 0
   let collisions = 0
+  let singleSelfCollisions = 0
+
+  // Precompute SSC source boxes: numOutlets === 1 and exactly 1 outgoing line
+  const outgoingCount = new Map<BoxId, number>()
+  for (const l of lines) {
+    const src = l.patchline.source[0]
+    outgoingCount.set(src, (outgoingCount.get(src) ?? 0) + 1)
+  }
+  const sscSourceIds = new Set<BoxId>()
+  for (const b of layouts) {
+    if (b.numOutlets === 1 && outgoingCount.get(b.id) === 1) sscSourceIds.add(b.id)
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const l1 = lines[i]
@@ -78,8 +96,15 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
       }
     }
 
+    const sourceBoxId = l1.patchline.source[0]
     for (const box of layouts) {
-      collisions += boxLineCollision(box, pts1, c.boxZone) ? 1 : 0
+      if (boxLineCollision(box, pts1, c.boxZone)) {
+        if (sscSourceIds.has(sourceBoxId) && box.id === sourceBoxId) {
+          singleSelfCollisions++
+        } else {
+          collisions++
+        }
+      }
     }
 
     const segmentLength = bezierLength(pts1.sx, pts1.sy, c1x, c1y, c2x, c2y, pts1.ex, pts1.ey)
@@ -108,12 +133,14 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
       totalLength *
       view ** (1 / layouts.length) *
       c.totalCollisionPenalty ** collisions *
+      c.totalSSCPenalty ** singleSelfCollisions *
       c.totalCrossPenalty ** crossings *
       c.totalOverPenalty ** overlaps *
       c.areaPenalty ** area,
     crossings,
     overlaps,
     collisions,
+    singleSelfCollisions,
     area,
     view,
     length: totalRawLength,
