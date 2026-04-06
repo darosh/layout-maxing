@@ -314,42 +314,42 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.maxParents[4]"
             />
-            <label>weightQuadrant</label>
+            <label>mutWeightQuadrant</label>
             <InputNumber
               v-model="cfg.mutWeightQuadrant"
               v-bind="numProps('mutWeightQuadrant')"
               size="small"
               v-tip.right="configMeta.mutWeightQuadrant[4]"
             />
-            <label>weightSingle</label>
+            <label>mutWeightSingle</label>
             <InputNumber
               v-model="cfg.mutWeightSingle"
               v-bind="numProps('mutWeightSingle')"
               size="small"
               v-tip.right="configMeta.mutWeightSingle[4]"
             />
-            <label>weightChildren</label>
+            <label>mutWeightChildren</label>
             <InputNumber
               v-model="cfg.mutWeightChildren"
               v-bind="numProps('mutWeightChildren')"
               size="small"
               v-tip.right="configMeta.mutWeightChildren[4]"
             />
-            <label>weightParents</label>
+            <label>mutWeightParents</label>
             <InputNumber
               v-model="cfg.mutWeightParents"
               v-bind="numProps('mutWeightParents')"
               size="small"
               v-tip.right="configMeta.mutWeightParents[4]"
             />
-            <label>weightSwapSibling</label>
+            <label>mutWeightSwapSibling</label>
             <InputNumber
               v-model="cfg.mutWeightSwapSibling"
               v-bind="numProps('mutWeightSwapSibling')"
               size="small"
               v-tip.right="configMeta.mutWeightSwapSibling[4]"
             />
-            <label>weightSwapRandom</label>
+            <label>mutWeightSwapRandom</label>
             <InputNumber
               v-model="cfg.mutWeightSwapRandom"
               v-bind="numProps('mutWeightSwapRandom')"
