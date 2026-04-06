@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 
+const tooltipEl = ref<HTMLElement | null>(null)
 const tooltipText = ref('')
 const tooltipLeft = ref(0)
 const tooltipTop = ref(0)
@@ -9,7 +10,7 @@ const tooltipMoving = ref(false)
 
 let hideTimer: ReturnType<typeof setTimeout> | null = null
 
-function show(e: MouseEvent, text: string) {
+async function show(e: MouseEvent, text: string) {
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
   const el = e.currentTarget as HTMLElement
   const rect = el.getBoundingClientRect()
@@ -18,6 +19,15 @@ function show(e: MouseEvent, text: string) {
   tooltipTop.value = rect.top
   tooltipText.value = text
   tooltipVisible.value = true
+
+  await nextTick()
+  if (tooltipEl.value) {
+    const tip = tooltipEl.value.getBoundingClientRect()
+    const margin = 8
+    const minLeft = margin + tip.width / 2
+    const maxLeft = window.innerWidth - margin - tip.width / 2
+    tooltipLeft.value = Math.min(Math.max(tooltipLeft.value, minLeft), maxLeft)
+  }
 }
 
 function hide() {
@@ -34,6 +44,7 @@ defineExpose({ show, hide })
 <template>
   <Teleport to="body">
     <div
+      ref="tooltipEl"
       class="flying-tooltip"
       :class="{ visible: tooltipVisible, moving: tooltipMoving }"
       :style="{ left: tooltipLeft + 'px', top: tooltipTop + 'px' }"
