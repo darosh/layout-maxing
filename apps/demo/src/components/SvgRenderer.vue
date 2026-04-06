@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useOptimizerStore } from '@/stores/optimizer'
 import { formatFullScore, formatScore as fmt } from '../utils/formatScore'
 import { BEST_LABEL, INPUT_LABEL } from '@/utils/consts.ts'
+import FlyingTooltip from './FlyingTooltip.vue'
+import { fitnessMeta } from 'layout-maxing'
 
 const store = useOptimizerStore()
+const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
+
+function fitnessTooltip(key: keyof typeof fitnessMeta): string {
+  const [label, shortcut, description] = fitnessMeta[key]
+  return `${shortcut}: ${label}\n${description}`
+}
 
 function ordinal(n: number): string {
   const s = ['th', 'st', 'nd', 'rd']
@@ -28,6 +36,7 @@ const fullScore = computed(() => {
 </script>
 
 <template>
+  <FlyingTooltip ref="tooltip" />
   <div class="svg-renderer">
     <div v-if="!store.displayedSvg" class="placeholder">
       <i class="pi pi-objects-column placeholder-icon" />
@@ -58,17 +67,25 @@ const fullScore = computed(() => {
 
       <!-- Bottom-right: detail metrics -->
       <div class="overlay overlay-br">
-        <!--        <span class="metric"><span class="metric-label">len</span>{{ fmt(store.displayedFitness?.length) }}</span>-->
-        <span class="metric"
+        <!--        <span class="metric metric-interactive"><span class="metric-label">len</span>{{ fmt(store.displayedFitness?.length) }}</span>-->
+        <span class="metric metric-interactive"
+          @mouseenter="tooltip?.show($event, fitnessTooltip('collisions'))"
+          @mouseleave="tooltip?.hide()"
           ><span class="metric-label">col</span>{{ fmt(store.displayedFitness?.collisions) }}</span
         >
-        <span class="metric"
+        <span class="metric metric-interactive"
+          @mouseenter="tooltip?.show($event, fitnessTooltip('overlaps'))"
+          @mouseleave="tooltip?.hide()"
           ><span class="metric-label">ove</span>{{ fmt(store.displayedFitness?.overlaps) }}</span
         >
-        <span class="metric"
+        <span class="metric metric-interactive"
+          @mouseenter="tooltip?.show($event, fitnessTooltip('crossings'))"
+          @mouseleave="tooltip?.hide()"
           ><span class="metric-label">cro</span>{{ fmt(store.displayedFitness?.crossings) }}</span
         >
-        <span class="metric"
+        <span class="metric metric-interactive"
+          @mouseenter="tooltip?.show($event, fitnessTooltip('area'))"
+          @mouseleave="tooltip?.hide()"
           ><span class="metric-label">are</span>{{ fmt(store.displayedFitness?.area) }}</span
         >
       </div>
@@ -186,5 +203,10 @@ const fullScore = computed(() => {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--p-surface-400);
+}
+
+.metric-interactive {
+  pointer-events: auto;
+  cursor: default;
 }
 </style>
