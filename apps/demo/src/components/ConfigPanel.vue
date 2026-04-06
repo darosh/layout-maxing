@@ -208,6 +208,20 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.areaPenalty[4]"
             />
+            <label>arPenalty</label>
+            <InputNumber
+              v-model="cfg.arPenalty"
+              v-bind="numProps('arPenalty')"
+              size="small"
+              v-tip.right="configMeta.arPenalty[4]"
+            />
+            <label>arMax</label>
+            <InputNumber
+              v-model="cfg.arMax"
+              v-bind="numProps('arMax')"
+              size="small"
+              v-tip.right="configMeta.arMax[4]"
+            />
             <label>totalCrossPenalty</label>
             <InputNumber
               v-model="cfg.totalCrossPenalty"

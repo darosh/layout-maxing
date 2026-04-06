@@ -126,6 +126,8 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
 
   const vp = getViewPort(layouts)
   const view = vp[2] * vp[3]
+  let ar = Math.max(vp[2] / vp[3], vp[3] / vp[2])
+  ar = ar > cfg.arMax ? ar : 0
 
   // Apply crossing penalty
   return {
@@ -136,7 +138,8 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
       c.totalSSCPenalty ** singleSelfCollisions *
       c.totalCrossPenalty ** crossings *
       c.totalOverPenalty ** overlaps *
-      c.areaPenalty ** area,
+      c.areaPenalty ** area *
+      c.arPenalty ** ar,
     crossings,
     overlaps,
     collisions,

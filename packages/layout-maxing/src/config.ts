@@ -16,6 +16,8 @@ export interface Config {
   totalOverPenalty?: number
   reversePenalty?: number
   areaPenalty?: number
+  arPenalty?: number
+  arMax?: number
   // GA parameters
   svgAtStop?: number
   stop?: number
@@ -89,6 +91,8 @@ export const configMeta: ConfigMeta = {
   totalOverPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier applied when any overlap exists'],
   reversePenalty: [3, 1, 10, 0.1, 'Penalty for lines connecting to inlet in upper box'],
   areaPenalty: [1.5, 1, 2, 0.1, 'Exponential multiplier based on number of overlapping boxes'],
+  arPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier based on aspect ratio of the viewport'],
+  arMax: [5, 1, 25, 0.01, 'Maximum non-penalized aspect ratio'],
   // GA parameters
   svgAtStop: [9995, 0, 100000, 1, 'Generation count at which to write final SVG snapshot'],
   stop: [10000, 1, 100000, 1, 'Stop after this many generations without improvement'],
