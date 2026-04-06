@@ -1,7 +1,5 @@
 # TODO
 
-- [ ] favicon
-- [ ] socials meta
 - [ ] gh-pages build
 - [ ] fix progress log
 - [ ] swap with children
@@ -10,6 +8,9 @@
 - [ ] structural cross-over
 - [ ] group support
 
+- [x] socials meta
+- [x] favicon
+- [x] paste config
 - [x] single outlet self collision tolerance (`attrui`)
 - [x] config meta: min, max, step, description
 - [x] config tooltips

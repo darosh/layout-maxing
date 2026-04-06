@@ -1,4 +1,8 @@
-# Layout Maxing
+# layout-maxing
+
+> A Max patch layout utility
+
+[Live demo](https://github.com/darosh/layout-maxing)
 
 ## Development (Vite+ Monorepo)
 
