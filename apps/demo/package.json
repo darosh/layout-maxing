@@ -1,6 +1,6 @@
 {
   "name": "demo",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,7 +16,8 @@
     "lint": "run-s lint:*",
     "lint:oxlint": "vp lint . --fix",
     "lint:eslint": "eslint . --fix --cache",
-    "format": "vp fmt src/"
+    "format": "vp fmt src/",
+    "bump": "npm version patch"
   },
   "dependencies": {
     "@primevue/themes": "^4.3.3",

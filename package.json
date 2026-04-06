@@ -12,7 +12,7 @@
     "ready": "vp fmt && vp lint --format=stylish && vp run -r test && vp run -r build",
     "dev": "vp run demo#dev",
     "build": "vp run -r build",
-    "build-only:ghp": "vp run demo#build-only:ghp",
+    "build-only:ghp": " vp run demo#bump && vp run demo#build-only:ghp",
     "lint": "vp lint --fix"
   },
   "devDependencies": {
