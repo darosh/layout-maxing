@@ -1,17 +1,17 @@
 # TODO
 
-- [ ] config meta: min, max, step, description
-- [ ] config tooltips
-- [ ] better tooltips top / svg fitness
 - [ ] fix progress log
-- [ ] add help with config description
-- [ ] add fitness description
 - [ ] swap with children
 - [ ] top level swap fix
 - [ ] mirror
 - [ ] structural cross-over
 - [ ] single outlet self collision tolerance (`attrui`)
 
+- [x] config meta: min, max, step, description
+- [x] config tooltips
+- [x] better tooltips top / svg fitness
+- [x] add help with config description
+- [x] add fitness description
 - [x] include original
 - [x] try remove best clones
 - [x] add 2nd best, worst score
