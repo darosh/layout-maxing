@@ -13,6 +13,7 @@ export interface Config {
   totalCollisionPenalty?: number
   totalSSCPenalty?: number
   misalignedSSPenalty?: number
+  misalignedFirstPenalty?: number
   totalCrossPenalty?: number
   totalOverPenalty?: number
   reversePenalty?: number
@@ -88,6 +89,13 @@ export const configMeta: ConfigMeta = {
     2,
     0.01,
     'Exponential multiplier for misaligned SSC sibling sources sharing a common child',
+  ],
+  misalignedFirstPenalty: [
+    0,
+    0,
+    10,
+    0.1,
+    'Additive penalty per pixel of x-misalignment for first-outlet to first-inlet connections',
   ],
   totalCrossPenalty: [1.01, 1, 2, 0.01, 'Exponential multiplier line-line crossings'],
   totalOverPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier line-line overlaps'],

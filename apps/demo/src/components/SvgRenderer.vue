@@ -106,6 +106,13 @@ const fullScore = computed(() => {
           @mouseleave="tooltip?.hide()"
           ><span class="metric-label">are</span>{{ fmt(store.displayedFitness?.area) }}</span
         >
+        <span
+          class="metric metric-interactive"
+          @mouseenter="tooltip?.show($event, fitnessTooltip('misalignedFirst'))"
+          @mouseleave="tooltip?.hide()"
+          ><span class="metric-label">mst</span
+          >{{ fmt(store.displayedFitness?.misalignedFirst) }}</span
+        >
       </div>
     </template>
   </div>

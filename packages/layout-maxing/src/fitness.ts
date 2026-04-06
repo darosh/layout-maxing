@@ -20,6 +20,7 @@ export interface Fitness {
   collisions: number
   singleSelfCollisions: number
   misalignedSS: number
+  misalignedFirst: number
   area: number
   view: number
 }
@@ -44,6 +45,11 @@ export const fitnessMeta: FitnessMeta = {
     'Misaligned SS',
     'MSS',
     'Misaligned SSC sibling sources sharing a common child without shared x or y',
+  ],
+  misalignedFirst: [
+    'Misaligned First',
+    'MST',
+    'Number of first-outlet to first-inlet lines with x-misalignment penalty applied',
   ],
   area: ['Area', 'ARE', 'Number of box-box intersection areas'],
   view: ['View', 'VIE', 'Viewport size'],
@@ -87,6 +93,7 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
   }
 
   let misalignedSS = 0
+  let misalignedFirst = 0
   for (const siblings of sscByChild.values()) {
     if (siblings.length < 2) continue
     const cols = Math.round(siblings.length * 0.25)
@@ -139,8 +146,15 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
 
     const segmentLength = bezierLength(pts1.sx, pts1.sy, c1x, c1y, c2x, c2y, pts1.ex, pts1.ey)
     totalRawLength += segmentLength
+
+    let firstMisalignmentPenalty = 0
+    if (l1.patchline.source[1] === 0 && l1.patchline.destination[1] === 0 && pts1.sx !== pts1.ex) {
+      misalignedFirst++
+      firstMisalignmentPenalty = Math.abs(pts1.sx - pts1.ex) * c.misalignedFirstPenalty
+    }
+
     totalLength +=
-      segmentLength *
+      (segmentLength + firstMisalignmentPenalty) *
       (cross_pen ? cross_pen * c.crossPenalty : 1) *
       (over_pen ? over_pen * c.overPenalty : 1) *
       reverse_pen
@@ -176,6 +190,7 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
     collisions,
     singleSelfCollisions,
     misalignedSS,
+    misalignedFirst,
     area,
     view,
     length: totalRawLength,

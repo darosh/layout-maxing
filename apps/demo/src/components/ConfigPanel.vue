@@ -257,6 +257,13 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.misalignedSSPenalty[4]"
             />
+            <label>misalignedFirstPenalty</label>
+            <InputNumber
+              v-model="cfg.misalignedFirstPenalty"
+              v-bind="numProps('misalignedFirstPenalty')"
+              size="small"
+              v-tip.right="configMeta.misalignedFirstPenalty[4]"
+            />
           </div>
         </AccordionContent>
       </AccordionPanel>

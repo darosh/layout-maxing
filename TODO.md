@@ -5,7 +5,13 @@
 - [ ] mirror
 - [ ] structural cross-over
 - [ ] group support
+- [ ] row/col shift
+- [ ] shift up/down/enter min/max/reset
+- [ ] presets?
+- [ ] remove segments patchline.midpoints
+- [ ] ignore solo
 
+- [x] misalignedFirst
 - [x] split UI settings
 - [x] cli config print
 - [x] test CLI layout/fitness/help
