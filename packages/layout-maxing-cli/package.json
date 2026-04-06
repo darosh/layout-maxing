@@ -32,6 +32,7 @@
     "test:cli:help": "deno run -A ./src/index.ts help",
     "test:cli:config": "deno run -A ./src/index.ts config",
     "test:cli:fitness": "deno run -A ./src/index.ts fitness ./tests/fixtures/test.maxpat",
+    "test:cli:fitness:ssc": "deno run -A ./src/index.ts fitness ./tests/fixtures/the-synth.maxpat",
     "test:cli:layout": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat --logProgressInterval 100",
     "test:cli:layout:short": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat --generations 10",
     "test:cli:calibrate": "deno run -A ./src/index.ts calibrate ./tests/fixtures/the-synth.maxpat --depth 1000",

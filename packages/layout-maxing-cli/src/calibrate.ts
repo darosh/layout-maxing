@@ -14,6 +14,7 @@ const calibrateDefault: Partial<Record<keyof Config, true | [number, number]>> =
   overPenalty: true,
   totalCollisionPenalty: [1.01, 2],
   totalSSCPenalty: [1.01, 2],
+  misalignedSSPenalty: [1.01, 2],
   totalCrossPenalty: [1.01, 2],
   totalOverPenalty: [1.01, 2],
   reversePenalty: true,

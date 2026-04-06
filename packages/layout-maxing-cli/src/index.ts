@@ -1,4 +1,4 @@
-import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg } from 'layout-maxing'
+import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg, fitness } from 'layout-maxing'
 import type { BoxLayout, Config, Fitness, RNBO } from 'layout-maxing'
 import { runCalibrate, getNumericParams, printCalibrateResults } from './calibrate.ts'
 import { cpus } from 'node:os'

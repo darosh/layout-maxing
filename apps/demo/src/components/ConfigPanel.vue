@@ -250,6 +250,13 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.totalSSCPenalty[4]"
             />
+            <label>misalignedSSPenalty</label>
+            <InputNumber
+              v-model="cfg.misalignedSSPenalty"
+              v-bind="numProps('misalignedSSPenalty')"
+              size="small"
+              v-tip.right="configMeta.misalignedSSPenalty[4]"
+            />
           </div>
         </AccordionContent>
       </AccordionPanel>

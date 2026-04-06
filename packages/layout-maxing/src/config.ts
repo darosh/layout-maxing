@@ -12,6 +12,7 @@ export interface Config {
   overPenalty?: number
   totalCollisionPenalty?: number
   totalSSCPenalty?: number
+  misalignedSSPenalty?: number
   totalCrossPenalty?: number
   totalOverPenalty?: number
   reversePenalty?: number
@@ -80,6 +81,13 @@ export const configMeta: ConfigMeta = {
     2,
     0.01,
     'Exponential multiplier for single-outlet single-connection self-collisions (SSC)',
+  ],
+  misalignedSSPenalty: [
+    1.02,
+    1,
+    2,
+    0.01,
+    'Exponential multiplier for misaligned SSC sibling sources sharing a common child',
   ],
   totalCrossPenalty: [1.01, 1, 2, 0.01, 'Exponential multiplier line-line crossings'],
   totalOverPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier line-line overlaps'],

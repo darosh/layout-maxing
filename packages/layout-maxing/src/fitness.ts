@@ -19,6 +19,7 @@ export interface Fitness {
   overlaps: number
   collisions: number
   singleSelfCollisions: number
+  misalignedSS: number
   area: number
   view: number
 }
@@ -39,6 +40,11 @@ export const fitnessMeta: FitnessMeta = {
     'SSC',
     'Box-line collisions from single-outlet single-connection boxes with themselves',
   ],
+  misalignedSS: [
+    'Misaligned SS',
+    'MSS',
+    'Misaligned SSC sibling sources sharing a common child without shared x or y',
+  ],
   area: ['Area', 'ARE', 'Number of box-box intersection areas'],
   view: ['View', 'VIE', 'Viewport size'],
 }
@@ -55,15 +61,39 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
   let collisions = 0
   let singleSelfCollisions = 0
 
-  // Precompute SSC source boxes: numOutlets === 1 and exactly 1 outgoing line
+  // Precompute SSC source boxes: numOutlets === 1, exactly 1 outgoing line, no incoming lines
   const outgoingCount = new Map<BoxId, number>()
+  const incomingCount = new Map<BoxId, number>()
   for (const l of lines) {
     const src = l.patchline.source[0]
+    const dst = l.patchline.destination[0]
     outgoingCount.set(src, (outgoingCount.get(src) ?? 0) + 1)
+    incomingCount.set(dst, (incomingCount.get(dst) ?? 0) + 1)
   }
   const sscSourceIds = new Set<BoxId>()
   for (const b of layouts) {
-    if (b.numOutlets === 1 && outgoingCount.get(b.id) === 1) sscSourceIds.add(b.id)
+    if (b.numOutlets === 1 && outgoingCount.get(b.id) === 1 && !incomingCount.has(b.id))
+      sscSourceIds.add(b.id)
+  }
+
+  // Compute misalignedSS: SSC sibling pairs sharing a child without shared x or y
+  const sscByChild = new Map<BoxId, BoxLayout[]>()
+  for (const l of lines) {
+    const srcId = l.patchline.source[0]
+    if (!sscSourceIds.has(srcId)) continue
+    const dstId = l.patchline.destination[0]
+    if (!sscByChild.has(dstId)) sscByChild.set(dstId, [])
+    sscByChild.get(dstId)!.push(boxMap.get(srcId)!)
+  }
+
+  let misalignedSS = 0
+  for (const siblings of sscByChild.values()) {
+    if (siblings.length < 2) continue
+    const cols = Math.round(siblings.length * 0.25)
+    for (const a of siblings) {
+      const hasAligned = siblings.filter((b) => b !== a && b.x === a.x).length > cols
+      if (!hasAligned) misalignedSS++
+    }
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -136,6 +166,7 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
       view ** (1 / layouts.length) *
       c.totalCollisionPenalty ** collisions *
       c.totalSSCPenalty ** singleSelfCollisions *
+      c.misalignedSSPenalty ** misalignedSS *
       c.totalCrossPenalty ** crossings *
       c.totalOverPenalty ** overlaps *
       c.areaPenalty ** area *
@@ -144,6 +175,7 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
     overlaps,
     collisions,
     singleSelfCollisions,
+    misalignedSS,
     area,
     view,
     length: totalRawLength,
