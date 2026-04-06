@@ -2,6 +2,7 @@
 import ProgressBar from 'primevue/progressbar'
 import { useOptimizerStore } from '@/stores/optimizer'
 import { formatScore } from '@/utils/formatScore.ts'
+import { watch } from 'vue'
 
 const store = useOptimizerStore()
 
@@ -16,10 +17,17 @@ function formatMs(ms: number | null): string {
 function formatElapsed(ms: number): string {
   return formatMs(ms)
 }
+
+let idle = true
+
+watch(
+  () => store.status,
+  () => (idle = false),
+)
 </script>
 
 <template>
-  <div class="progress-panel">
+  <div class="progress-panel" :class="{ idle: idle }">
     <div class="stats-row">
       <div class="stat">
         <span class="stat-label">Generation</span>
@@ -60,7 +68,7 @@ function formatElapsed(ms: number): string {
       </div>
       <div class="stat">
         <span class="stat-label">Status</span>
-        <span class="stat-value" style="text-transform: capitalize">{{ store.status }}</span>
+        <span class="stat-value status" style="text-transform: capitalize">{{ store.status }}</span>
       </div>
     </div>
     <ProgressBar
@@ -121,5 +129,10 @@ function formatElapsed(ms: number): string {
   font-size: 0.875rem;
   font-family: monospace;
   color: var(--p-surface-200);
+}
+
+.progress-panel.idle .stat-value:not(.status),
+.progress-panel.idle .progress-bar {
+  opacity: 0.4;
 }
 </style>
