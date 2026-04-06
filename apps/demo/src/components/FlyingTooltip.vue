@@ -51,6 +51,10 @@ async function show(e: Event, text: string, position: 'top' | 'right' = 'top') {
 }
 
 function hide() {
+  if (hideTimer) {
+    clearTimeout(hideTimer)
+    hideTimer = null
+  }
   hideTimer = setTimeout(() => {
     tooltipVisible.value = false
     tooltipMoving.value = false
@@ -103,6 +107,7 @@ defineExpose({ show, hide })
 .flying-tooltip.moving {
   transition:
     left 0.15s ease,
+    top 0.15s ease,
     opacity 0.1s;
 }
 
