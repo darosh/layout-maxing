@@ -1,13 +1,6 @@
-import {
-  createInitialLayouts,
-  defaultConfig,
-  fitness,
-  help,
-  jsonDiff,
-  main,
-  toSvg,
-} from 'layout-maxing'
+import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg } from 'layout-maxing'
 import type { BoxLayout, Config, Fitness, RNBO } from 'layout-maxing'
+import { runCalibrate, getNumericParams, printCalibrateResults } from './calibrate.ts'
 import { cpus } from 'node:os'
 import { dirname, parse, format } from 'jsr:@std/path'
 
@@ -201,12 +194,38 @@ async function cli() {
       console.log(
         `Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`,
       )
+    } else if (command === 'calibrate') {
+      const filePath = positional[0]
+      if (!filePath) {
+        console.error('Usage: calibrate <input.json> [--depth N]')
+        Deno.exit(1)
+      }
+
+      const depthIdx = Deno.args.indexOf('--depth')
+      const depth =
+        depthIdx !== -1 && Deno.args[depthIdx + 1] ? parseInt(Deno.args[depthIdx + 1], 10) : 3
+
+      const { getFitness, terminateWorkers } = getWorkers()
+      const rnbo: RNBO = JSON.parse(await Deno.readTextFile(filePath))
+      const layouts = createInitialLayouts(rnbo.patcher)
+      const lines = rnbo.patcher.lines
+      const params = getNumericParams()
+
+      console.log(
+        `Calibrating ${params.length} numeric params at depth=${depth} (${params.length * depth + 1} evaluations)...`,
+      )
+
+      const result = await runCalibrate(layouts, lines, depth, getFitness)
+      printCalibrateResults(result)
+      terminateWorkers()
     } else if (command === 'help') {
       console.log(help())
     } else if (command === 'config') {
       console.log(JSON.stringify(defaultConfig, null, 2))
     } else {
-      console.log('Commands: layout <input.json> [output.json], fitness <input.json>, config, help')
+      console.log(
+        'Commands: layout <input.json> [output.json], fitness <input.json>, calibrate <input.json> [--depth N], config, help',
+      )
     }
   }
 }
