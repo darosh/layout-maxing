@@ -22,6 +22,7 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
     :visible="visible"
     header="Help"
     modal
+    dismissable-mask
     :closeButtonProps="{ text: true, size: 'small' }"
     :style="{ naxWidth: '100%', maxHeight: '80vh' }"
     :draggable="false"

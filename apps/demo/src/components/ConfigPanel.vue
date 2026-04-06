@@ -67,7 +67,7 @@ function copyCli() {
           size="small"
           severity="secondary"
           text
-          title="Copy config JSON (non-default values)"
+          v-tooltip.top="'Copy config JSON'"
           @click="copyConfig"
         />
         <Button
@@ -75,7 +75,7 @@ function copyCli() {
           size="small"
           severity="secondary"
           text
-          title="Copy CLI command"
+          v-tooltip.top="'Copy CLI command'"
           @click="copyCli"
         />
         <Button

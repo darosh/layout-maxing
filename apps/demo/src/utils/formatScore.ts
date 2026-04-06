@@ -19,3 +19,14 @@ export function formatScore(n: number | undefined | null): string {
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}${SP}k`
   return n.toFixed(0)
 }
+
+export function formatFullScore (score: number) {
+  const str = score.toLocaleString('en-US', { maximumFractionDigits: 0 })!
+
+  if (str.length <= 20) return str
+
+  const sliced = str.slice(0, 20)
+  const lastCommaIndex = sliced.lastIndexOf(',')
+
+  return lastCommaIndex !== -1 ? `${sliced.slice(0, lastCommaIndex + 1)}…` : `${sliced}…`
+}

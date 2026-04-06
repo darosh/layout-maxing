@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useOptimizerStore } from '@/stores/optimizer'
-import { formatScore as fmt } from '../utils/formatScore'
+import { formatFullScore, formatScore as fmt } from '../utils/formatScore'
 import { BEST_LABEL, INPUT_LABEL } from '@/utils/consts.ts'
 
 const store = useOptimizerStore()
@@ -23,14 +23,7 @@ const selectionLabel = computed(() => {
 })
 
 const fullScore = computed(() => {
-  const str = store.displayedFitness?.score.toLocaleString('en-US', { maximumFractionDigits: 0 })!
-
-  if (str.length <= 20) return str
-
-  const sliced = str.slice(0, 20)
-  const lastCommaIndex = sliced.lastIndexOf(',')
-
-  return lastCommaIndex !== -1 ? `${sliced.slice(0, lastCommaIndex + 1)}…` : `${sliced}…`
+  return formatFullScore(store.displayedFitness?.score)
 })
 </script>
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useOptimizerStore } from '@/stores/optimizer'
 import type { Selection } from '@/stores/optimizer'
-import { formatScore } from '@/utils/formatScore.ts'
+import { formatFullScore, formatScore } from '@/utils/formatScore.ts'
 
 const store = useOptimizerStore()
 
@@ -22,20 +22,53 @@ function isActive(sel: Selection): boolean {
 
 const displaySet = computed(() => (store.allTimeTop ? store.top : store.currentGenTop))
 let o: string
+
+const barRef = ref<HTMLElement | null>(null)
+const tooltipText = ref('')
+const tooltipLeft = ref(0)
+const tooltipTop = ref(0)
+const tooltipVisible = ref(false)
+const tooltipMoving = ref(false)
+
+let hideTimer: ReturnType<typeof setTimeout> | null = null
+
+function showTooltip(e: MouseEvent, text: string) {
+  if (hideTimer) { clearTimeout(hideTimer); hideTimer = null }
+  const btn = e.currentTarget as HTMLElement
+  const btnRect = btn.getBoundingClientRect()
+  tooltipMoving.value = tooltipVisible.value
+  tooltipLeft.value = btnRect.left + btnRect.width / 2
+  tooltipTop.value = btnRect.top
+  tooltipText.value = text
+  tooltipVisible.value = true
+}
+
+function hideTooltip() {
+  hideTimer = setTimeout(() => {
+    tooltipVisible.value = false
+    tooltipMoving.value = false
+    hideTimer = null
+  }, 200)
+}
 </script>
 
 <template>
-  <div v-if="store.originalSvg || store.top.length" class="top-results-bar">
+  <Teleport to="body">
+    <div
+      class="flying-tooltip"
+      :class="{ visible: tooltipVisible, moving: tooltipMoving }"
+      :style="{ left: tooltipLeft + 'px', top: tooltipTop + 'px' }"
+    v-html="tooltipText.replace(/\n/g, '<br>')" />
+  </Teleport>
+  <div v-if="store.originalSvg || store.top.length" ref="barRef" class="top-results-bar">
+
     <!-- Original layout -->
     <button
       v-if="store.originalSvg"
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'original' }) }"
-      :title="
-        store.originalFitness
-          ? `Original · Score: ${store.originalFitness.score.toFixed(0)}`
-          : 'Original layout'
-      "
+      @mouseenter="showTooltip($event, store.originalFitness ? `Original input\nScore: ${formatFullScore(store.originalFitness.score)}` : 'Original input')"
+      @mouseleave="hideTooltip()"
       @click="store.selection = { kind: 'original' }"
     >
       <div class="thumb-svg" v-html="store.originalSvg" />
@@ -50,7 +83,8 @@ let o: string
       v-if="store.top.length"
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'best' }) }"
-      :title="`All-time best · Score: ${store.top[0]!.score.toFixed(0)}`"
+      @mouseenter="showTooltip($event, `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)"
+      @mouseleave="hideTooltip()"
       @click="store.selection = { kind: 'best' }"
     >
       <div class="thumb-svg" v-html="store.top[0]!.svg" />
@@ -65,7 +99,8 @@ let o: string
         :key="i"
         class="thumb-btn"
         :class="{ active: isActive({ kind: 'allTime', index: i }) }"
-        :title="`#${i + 1} · Score: ${entry.score.toFixed(0)}`"
+        @mouseenter="showTooltip($event, `Top #${i + 1}\nScore: ${formatFullScore(entry.score)}`)"
+        @mouseleave="hideTooltip()"
         @click="store.selection = { kind: 'allTime', index: i }"
       >
         <div class="thumb-svg" v-html="entry.svg" />
@@ -79,7 +114,8 @@ let o: string
         :key="i"
         class="thumb-btn"
         :class="{ active: isActive({ kind: 'current', index: i }) }"
-        :title="`${ordinal(i + 1)} · Score: ${entry.score.toFixed(0)}`"
+        @mouseenter="showTooltip($event, `Current ${ordinal(i + 1)}\nScore: ${formatFullScore(entry.score)}`)"
+        @mouseleave="hideTooltip()"
         @click="store.selection = { kind: 'current', index: i }"
       >
         <div class="thumb-svg" v-html="entry.svg" />
@@ -93,12 +129,39 @@ let o: string
   </div>
 </template>
 
+<style>
+/* teleported — cannot use scoped */
+.flying-tooltip {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 6px));
+  background: var(--p-surface-700);
+  color: var(--p-surface-0);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 9999;
+  transition: opacity 0.1s;
+}
+
+.flying-tooltip.moving {
+  transition: left 0.15s ease, opacity 0.1s;
+}
+
+.flying-tooltip.visible {
+  opacity: 1;
+}
+</style>
+
 <style scoped>
 .top-results-bar {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
+  padding: 1rem 0.75rem 0.75rem 0.75rem;
   border-top: 1px solid var(--p-surface-800);
   background: var(--p-surface-950);
   flex-shrink: 0;
@@ -118,13 +181,18 @@ let o: string
   flex-shrink: 0;
   opacity: 0.5;
   transition:
-    opacity 0.15s,
-    transform 0.15s;
+    opacity 0.0s,
+    transform 0.1s ease-in-out;
 }
 
 .thumb-btn:hover {
   opacity: 0.85;
   transform: translateY(-2px);
+}
+
+.thumb-btn:active {
+  opacity: 1;
+  transform: translateY(4px);
 }
 
 .thumb-btn.active {
