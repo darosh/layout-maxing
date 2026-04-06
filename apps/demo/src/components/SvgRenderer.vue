@@ -68,22 +68,26 @@ const fullScore = computed(() => {
       <!-- Bottom-right: detail metrics -->
       <div class="overlay overlay-br">
         <!--        <span class="metric metric-interactive"><span class="metric-label">len</span>{{ fmt(store.displayedFitness?.length) }}</span>-->
-        <span class="metric metric-interactive"
+        <span
+          class="metric metric-interactive"
           @mouseenter="tooltip?.show($event, fitnessTooltip('collisions'))"
           @mouseleave="tooltip?.hide()"
           ><span class="metric-label">col</span>{{ fmt(store.displayedFitness?.collisions) }}</span
         >
-        <span class="metric metric-interactive"
+        <span
+          class="metric metric-interactive"
           @mouseenter="tooltip?.show($event, fitnessTooltip('overlaps'))"
           @mouseleave="tooltip?.hide()"
           ><span class="metric-label">ove</span>{{ fmt(store.displayedFitness?.overlaps) }}</span
         >
-        <span class="metric metric-interactive"
+        <span
+          class="metric metric-interactive"
           @mouseenter="tooltip?.show($event, fitnessTooltip('crossings'))"
           @mouseleave="tooltip?.hide()"
           ><span class="metric-label">cro</span>{{ fmt(store.displayedFitness?.crossings) }}</span
         >
-        <span class="metric metric-interactive"
+        <span
+          class="metric metric-interactive"
           @mouseenter="tooltip?.show($event, fitnessTooltip('area'))"
           @mouseleave="tooltip?.hide()"
           ><span class="metric-label">are</span>{{ fmt(store.displayedFitness?.area) }}</span

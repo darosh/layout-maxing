@@ -31,13 +31,19 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
 <template>
   <FlyingTooltip ref="tooltip" />
   <div v-if="store.originalSvg || store.top.length" ref="barRef" class="top-results-bar">
-
     <!-- Original layout -->
     <button
       v-if="store.originalSvg"
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'original' }) }"
-      @mouseenter="tooltip?.show($event, store.originalFitness ? `Original input\nScore: ${formatFullScore(store.originalFitness.score)}` : 'Original input')"
+      @mouseenter="
+        tooltip?.show(
+          $event,
+          store.originalFitness
+            ? `Original input\nScore: ${formatFullScore(store.originalFitness.score)}`
+            : 'Original input',
+        )
+      "
       @mouseleave="tooltip?.hide()"
       @click="store.selection = { kind: 'original' }"
     >
@@ -53,7 +59,9 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
       v-if="store.top.length"
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'best' }) }"
-      @mouseenter="tooltip?.show($event, `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)"
+      @mouseenter="
+        tooltip?.show($event, `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)
+      "
       @mouseleave="tooltip?.hide()"
       @click="store.selection = { kind: 'best' }"
     >
@@ -84,7 +92,9 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         :key="i"
         class="thumb-btn"
         :class="{ active: isActive({ kind: 'current', index: i }) }"
-        @mouseenter="tooltip?.show($event, `Current ${ordinal(i + 1)}\nScore: ${formatFullScore(entry.score)}`)"
+        @mouseenter="
+          tooltip?.show($event, `Current ${ordinal(i + 1)}\nScore: ${formatFullScore(entry.score)}`)
+        "
         @mouseleave="tooltip?.hide()"
         @click="store.selection = { kind: 'current', index: i }"
       >
@@ -125,7 +135,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
   flex-shrink: 0;
   opacity: 0.5;
   transition:
-    opacity 0.0s,
+    opacity 0s,
     transform 0.1s ease-in-out;
 }
 

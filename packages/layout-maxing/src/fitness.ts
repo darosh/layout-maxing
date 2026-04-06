@@ -23,22 +23,18 @@ export interface Fitness {
 }
 
 // Tuple: [label, shortcut, description]
-export type FitnessMetaEntry = [
-  label: string,
-  shortcut: string,
-  description: string,
-]
+export type FitnessMetaEntry = [label: string, shortcut: string, description: string]
 
 export type FitnessMeta = Record<keyof Fitness, FitnessMetaEntry>
 
 export const fitnessMeta: FitnessMeta = {
-  score:      ['Score',      'SCO', 'Overall composite fitness score (lower is better)'],
-  crossings:  ['Crossings',  'CRO', 'Number of line-line crossings'],
-  length:     ['Length',     'LEN', 'Total line length'],
-  overlaps:   ['Overlaps',   'OVE', 'Number of line-line overlaps'],
+  score: ['Score', 'SCO', 'Overall composite fitness score (lower is better)'],
+  crossings: ['Crossings', 'CRO', 'Number of line-line crossings'],
+  length: ['Length', 'LEN', 'Total line length'],
+  overlaps: ['Overlaps', 'OVE', 'Number of line-line overlaps'],
   collisions: ['Collisions', 'COL', 'Number of line-box collisions'],
-  area:       ['Area',       'ARE', 'Number of box-box intersection areas'],
-  view:       ['View',       'VIE', 'Viewport size'],
+  area: ['Area', 'ARE', 'Number of box-box intersection areas'],
+  view: ['View', 'VIE', 'Viewport size'],
 }
 
 export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitness {

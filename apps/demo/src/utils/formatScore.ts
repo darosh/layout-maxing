@@ -20,7 +20,11 @@ export function formatScore(n: number | undefined | null): string {
   return n.toFixed(0)
 }
 
-export function formatFullScore (score: number) {
+export function formatFullScore(score?: number) {
+  if (score === undefined) {
+    return '?'
+  }
+
   const str = score.toLocaleString('en-US', { maximumFractionDigits: 0 })!
 
   if (str.length <= 20) return str
