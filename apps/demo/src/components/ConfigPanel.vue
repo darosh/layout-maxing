@@ -8,24 +8,67 @@ import InputNumber from 'primevue/inputnumber'
 import ToggleSwitch from 'primevue/toggleswitch'
 import Button from 'primevue/button'
 import { useOptimizerStore } from '@/stores/optimizer'
+import { defaultConfig } from 'layout-maxing'
+import type { Config } from 'layout-maxing'
 
 const store = useOptimizerStore()
-// storeToRefs extracts reactive refs — v-model on cfg.X correctly reads/writes the store
-const { config: cfg, progressInterval, svgInterval, topN, allTimeTop } = storeToRefs(store)
+const { config: cfg, progressInterval, svgInterval, topN, allTimeTop,
+        isConfigDefault } = storeToRefs(store)
+
+function copyConfig() {
+  const nonDefault: Record<string, unknown> = {}
+  for (const k of Object.keys(defaultConfig) as (keyof Config)[]) {
+    if (cfg.value[k] !== defaultConfig[k]) nonDefault[k] = cfg.value[k]
+  }
+  navigator.clipboard.writeText(JSON.stringify(nonDefault, null, 2))
+}
+
+function copyCli() {
+  const parts = ['deno run -A packages/layout-maxing-cli/src/index.ts layout <input.json>']
+  for (const k of Object.keys(defaultConfig) as (keyof Config)[]) {
+    const val = cfg.value[k]
+    const def = defaultConfig[k]
+    if (val === def) continue
+    if (typeof def === 'boolean') {
+      parts.push(val ? `--${k}` : `--${k} false`)
+    } else {
+      parts.push(`--${k} ${val}`)
+    }
+  }
+  navigator.clipboard.writeText(parts.join(' \\\n  '))
+}
 </script>
 
 <template>
   <div class="config-panel">
     <div class="config-header">
-      <span class="config-title">Configuration</span>
-      <Button
-        label="Reset"
-        icon="pi pi-refresh"
-        size="small"
-        severity="secondary"
-        text
-        @click="store.resetConfig()"
-      />
+      <span class="config-title">Config</span>
+      <div class="config-actions">
+        <Button
+          icon="pi pi-copy"
+          size="small"
+          severity="secondary"
+          text
+          title="Copy config JSON (non-default values)"
+          @click="copyConfig"
+        />
+        <Button
+          icon="pi pi-chevron-right"
+          size="small"
+          severity="secondary"
+          text
+          title="Copy CLI command"
+          @click="copyCli"
+        />
+        <Button
+          label="Reset"
+          icon="pi pi-refresh"
+          size="small"
+          :severity="isConfigDefault ? 'secondary' : 'warning'"
+          text
+          @click="store.resetConfig()"
+        />
+      </div>
     </div>
 
     <Accordion :value="[]" multiple>
@@ -103,7 +146,7 @@ const { config: cfg, progressInterval, svgInterval, topN, allTimeTop } = storeTo
             <label>generations</label>
             <InputNumber v-model="cfg.generations" :min="100" :max="1000000" size="small" />
             <label>stop</label>
-            <InputNumber v-model="cfg.stop" :min="100" :max="100000" size="small" />
+            <InputNumber v-model="cfg.stop" :min="1" :max="100000" size="small" />
             <label>mutationRate</label>
             <InputNumber
               v-model="cfg.mutationRate"
@@ -190,10 +233,18 @@ const { config: cfg, progressInterval, svgInterval, topN, allTimeTop } = storeTo
             <InputNumber v-model="svgInterval" :min="200" :max="10000" size="small" />
             <label title="Number of top candidates to track and preview">topN</label>
             <InputNumber v-model="topN" :min="1" :max="100" size="small" />
-            <label title="Show best across all time (on) or current population only (off)"
-              >allTimeTop</label
-            >
+          </div>
+          <div class="toggles-grid">
+            <label title="Show best across all time (on) or current population only (off)">allTimeTop</label>
             <ToggleSwitch v-model="allTimeTop" />
+            <label title="Log info messages to console (start, done, stop)">logInfo</label>
+            <ToggleSwitch v-model="cfg.logInfo" />
+            <label title="Log progress stats to console">logProgress</label>
+            <ToggleSwitch v-model="cfg.logProgress" />
+            <label title="Write SVG file (CLI only)">writeSvg</label>
+            <ToggleSwitch v-model="cfg.writeSvg" />
+            <label title="Write JSON data file (CLI only)">writeJson</label>
+            <ToggleSwitch v-model="cfg.writeJson" />
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -218,6 +269,12 @@ const { config: cfg, progressInterval, svgInterval, topN, allTimeTop } = storeTo
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.config-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .config-title {

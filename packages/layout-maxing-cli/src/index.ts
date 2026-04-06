@@ -125,7 +125,9 @@ async function cli() {
     if (command === 'layout') {
       const { CPUS, getFitness, terminateWorkers } = getWorkers()
 
-      console.log(`Using ${CPUS} workers.`)
+      const c = { ...defaultConfig, ...cfg }
+
+      if (c.logInfo) console.log(`Using ${CPUS} workers.`)
 
       const filePath = positional[0]
       const outPath = positional[1]
@@ -137,37 +139,45 @@ async function cli() {
 
       await Deno.mkdir(dirname(outputPath), { recursive: true })
 
+      let genCount = 0
       await main(
         rnbo,
         getFitness,
         (layouts: BoxLayout[]) => {
-          const svg = toSvg(layouts, lines, cfg)
-          const svgPath = `${outputPath}.svg`
-
-          void Deno.writeTextFile(svgPath, svg).then(() => {
-            console.log(`SVG visualization of the layout written to: ${svgPath}`)
-          })
+          if (c.writeSvg) {
+            const svg = toSvg(layouts, lines, cfg)
+            const svgPath = `${outputPath}.svg`
+            void Deno.writeTextFile(svgPath, svg).then(() => {
+              if (c.logInfo) console.log(`SVG visualization of the layout written to: ${svgPath}`)
+            })
+          }
         },
         cfg,
+        (stop: number) => {
+          genCount++
+          if (c.logProgress) console.log(`[progress] gen=${genCount} stopIn=${stop}`)
+        },
       )
 
       // Write optimized file
       await Deno.writeTextFile(outputPath, JSON.stringify(rnbo, null, 2))
-      console.log(`Full RNBO JSON with optimized layout written to: ${outputPath}`)
+      if (c.logInfo) console.log(`Full RNBO JSON with optimized layout written to: ${outputPath}`)
 
       const layouts = createInitialLayouts(rnbo.patcher)
 
-      // Write JSON file
-      const json = JSON.stringify({ layouts, lines }, null, 0)
-      const jsonPath = `${outputPath}.json`
-      await Deno.writeTextFile(jsonPath, json)
-      console.log(`JSON data written to: ${jsonPath}`)
+      if (c.writeJson) {
+        const json = JSON.stringify({ layouts, lines }, null, 0)
+        const jsonPath = `${outputPath}.json`
+        await Deno.writeTextFile(jsonPath, json)
+        if (c.logInfo) console.log(`JSON data written to: ${jsonPath}`)
+      }
 
-      // Write SVG file
-      const svg = toSvg(layouts, lines, cfg)
-      const svgPath = `${outputPath}.svg`
-      await Deno.writeTextFile(svgPath, svg)
-      console.log(`SVG visualization of the layout written to: ${svgPath}`)
+      if (c.writeSvg) {
+        const svg = toSvg(layouts, lines, cfg)
+        const svgPath = `${outputPath}.svg`
+        await Deno.writeTextFile(svgPath, svg)
+        if (c.logInfo) console.log(`SVG visualization of the layout written to: ${svgPath}`)
+      }
 
       terminateWorkers()
     } else if (command === 'fitness') {

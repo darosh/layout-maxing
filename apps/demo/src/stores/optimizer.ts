@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref, computed, toRaw } from 'vue'
+import { ref, computed, toRaw, watch } from 'vue'
 import { defaultConfig } from 'layout-maxing'
 import type { RNBO, Config, Fitness } from 'layout-maxing'
+
+const CONFIG_KEY = 'layout-maxing-config'
+const RUN_KEY = 'layout-maxing-run'
 
 export type Status = 'idle' | 'running' | 'paused' | 'done' | 'error'
 
@@ -23,13 +26,42 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const rnbo = ref<RNBO | null>(null)
   const fileName = ref('')
   const inputSource = ref<'file' | 'clipboard' | null>(null)
-  const config = ref<Config>({ ...defaultConfig })
+  // Load persisted config from localStorage
+  const savedConfig = (() => {
+    try { return JSON.parse(localStorage.getItem(CONFIG_KEY) ?? 'null') } catch { return null }
+  })()
+  const config = ref<Config>({ ...defaultConfig, ...(savedConfig ?? {}) })
+
+  // Load persisted run settings from localStorage
+  const savedRun = (() => {
+    try { return JSON.parse(localStorage.getItem(RUN_KEY) ?? 'null') } catch { return null }
+  })()
 
   // UI-only run settings (not part of Config)
-  const progressInterval = ref(200) // evals between progress messages
-  const svgInterval = ref(1000) // ms between SVG messages
-  const topN = ref(15) // how many top candidates to track
-  const allTimeTop = ref(true) // show all-time top or current generation top in TopResultsBar
+  const progressInterval = ref<number>(savedRun?.progressInterval ?? 200)
+  const svgInterval = ref<number>(savedRun?.svgInterval ?? 1000)
+  const topN = ref<number>(savedRun?.topN ?? 15)
+  const allTimeTop = ref<boolean>(savedRun?.allTimeTop ?? true)
+  // Persist config changes
+  watch(config, (val) => {
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(val))
+  }, { deep: true })
+
+  // Persist run settings changes
+  watch([progressInterval, svgInterval, topN, allTimeTop], () => {
+    localStorage.setItem(RUN_KEY, JSON.stringify({
+      progressInterval: progressInterval.value,
+      svgInterval: svgInterval.value,
+      topN: topN.value,
+      allTimeTop: allTimeTop.value,
+    }))
+  })
+
+  const isConfigDefault = computed(() =>
+    (Object.keys(defaultConfig) as (keyof Config)[]).every(
+      (k) => config.value[k] === defaultConfig[k],
+    ),
+  )
 
   const status = ref<Status>('idle')
   const progress = ref({
@@ -265,6 +297,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   }
 
   function resetConfig() {
+    localStorage.removeItem(CONFIG_KEY)
     config.value = { ...defaultConfig }
   }
 
@@ -304,6 +337,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     svgInterval,
     topN,
     allTimeTop,
+    isConfigDefault,
     status,
     progress,
     svg,

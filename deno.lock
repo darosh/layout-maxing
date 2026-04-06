@@ -3369,6 +3369,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:typescript@6.0",
         "npm:vite-plus@latest"
       ],
       "overrides": {
@@ -3381,6 +3382,7 @@
         "packageJson": {
           "dependencies": [
             "npm:@playwright/test@^1.58.2",
+            "npm:@primevue/themes@^4.3.3",
             "npm:@tsconfig/node24@^24.0.4",
             "npm:@types/jsdom@^28.0.1",
             "npm:@types/node@^24.12.0",
@@ -3401,6 +3403,8 @@
             "npm:layout-maxing@0.0.0",
             "npm:npm-run-all2@^8.0.4",
             "npm:pinia@^3.0.4",
+            "npm:primeicons@7",
+            "npm:primevue@^4.3.3",
             "npm:typescript@6.0",
             "npm:vite-plugin-vue-devtools@^8.1.1",
             "npm:vite-plus@latest",

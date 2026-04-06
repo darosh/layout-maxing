@@ -39,6 +39,11 @@ export interface Config {
   deterministic?: boolean
   useDagre?: boolean
   useInput?: boolean
+  // Logging / debug output
+  logInfo?: boolean
+  logProgress?: boolean
+  writeSvg?: boolean
+  writeJson?: boolean
 }
 
 export const defaultConfig: Required<Config> = {
@@ -80,4 +85,8 @@ export const defaultConfig: Required<Config> = {
   deterministic: true,
   useDagre: true,
   useInput: false,
+  logInfo: true,
+  logProgress: true,
+  writeSvg: false,
+  writeJson: false,
 }
