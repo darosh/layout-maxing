@@ -194,21 +194,21 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.areaPenalty[4]"
             />
-            <label>totalCross×</label>
+            <label>totalCrossPenalty</label>
             <InputNumber
               v-model="cfg.totalCrossPenalty"
               v-bind="numProps('totalCrossPenalty')"
               size="small"
               v-tip.right="configMeta.totalCrossPenalty[4]"
             />
-            <label>totalOver×</label>
+            <label>totalOverPenalty</label>
             <InputNumber
               v-model="cfg.totalOverPenalty"
               v-bind="numProps('totalOverPenalty')"
               size="small"
               v-tip.right="configMeta.totalOverPenalty[4]"
             />
-            <label>totalCollision×</label>
+            <label>totalCollisionPenalty</label>
             <InputNumber
               v-model="cfg.totalCollisionPenalty"
               v-bind="numProps('totalCollisionPenalty')"
@@ -439,7 +439,7 @@ function copyCli() {
 
 .fields-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: auto 80px;
   gap: 0.4rem 0.75rem;
   align-items: center;
   justify-items: right;
@@ -452,16 +452,18 @@ function copyCli() {
 }
 
 .fields-grid:deep(.p-inputnumber > *) {
-  width: 120px;
+  width: 80px;
 }
 
 .toggles-grid {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 80px;
   gap: 0.5rem 0.75rem;
   align-items: center;
   font-size: 0.8rem;
   margin-top: 0.75rem;
+  justify-items: right;
+
 }
 
 .toggles-grid label {

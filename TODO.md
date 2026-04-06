@@ -1,5 +1,8 @@
 # TODO
 
+- [ ] favicon
+- [ ] socials meta
+- [ ] gh-pages build
 - [ ] fix progress log
 - [ ] swap with children
 - [ ] top level swap fix
