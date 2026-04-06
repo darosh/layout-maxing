@@ -463,7 +463,6 @@ function copyCli() {
   font-size: 0.8rem;
   margin-top: 0.75rem;
   justify-items: right;
-
 }
 
 .toggles-grid label {
