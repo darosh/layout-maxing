@@ -56,6 +56,12 @@ function copyConfig() {
   navigator.clipboard.writeText(JSON.stringify(nonDefault, null, 2))
 }
 
+async function pasteConfig() {
+  const text = await navigator.clipboard.readText()
+  const parsed = JSON.parse(text)
+  Object.assign(cfg.value, parsed)
+}
+
 function copyCli() {
   const parts = ['deno run -A packages/layout-maxing-cli/src/index.ts layout <input.json>']
   for (const k of Object.keys(defaultConfig) as (keyof Config)[]) {
@@ -84,6 +90,14 @@ function copyCli() {
           text
           v-tip.top="'Copy config JSON'"
           @click="copyConfig"
+        />
+        <Button
+          icon="pi pi-clipboard"
+          size="small"
+          severity="secondary"
+          text
+          v-tip.top="'Paste config JSON'"
+          @click="pasteConfig"
         />
         <Button
           icon="pi pi-chevron-right"
