@@ -6,6 +6,7 @@ export default defineConfig({
   fmt: {
     semi: false,
     singleQuote: true,
+    ignorePatterns: ['docs/'],
   },
   lint: {
     plugins: ['eslint', 'typescript', 'unicorn', 'oxc', 'vue', 'vitest'],
