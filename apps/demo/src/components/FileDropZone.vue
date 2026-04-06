@@ -94,6 +94,7 @@ async function pasteFromClipboard() {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: relative;
 }
 
 .drop-area {
@@ -155,8 +156,8 @@ async function pasteFromClipboard() {
 
 .file-meta {
   position: absolute;
-  top: 1.5rem;
-  left: 2.5rem;
+  top: 0.25rem;
+  left: 1rem;
   font-size: 0.75rem;
   font-family: monospace;
   color: var(--p-surface-400);
