@@ -38,6 +38,7 @@ export interface Config {
   showStraightLines?: boolean
   deterministic?: boolean
   useDagre?: boolean
+  useInput?: boolean
 }
 
 export const defaultConfig: Required<Config> = {
@@ -78,4 +79,5 @@ export const defaultConfig: Required<Config> = {
   showStraightLines: false,
   deterministic: true,
   useDagre: true,
+  useInput: false,
 }

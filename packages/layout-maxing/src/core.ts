@@ -78,6 +78,10 @@ export async function main(
     startingLayouts = [baseLayouts]
   }
 
+  if (c.useInput) {
+    startingLayouts = [cloneLayouts(baseLayouts), ...startingLayouts]
+  }
+
   const bestIndividual = await runGenetic(
     startingLayouts,
     lines,

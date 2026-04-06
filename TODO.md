@@ -3,11 +3,12 @@
 - [ ] swap with children
 - [ ] top level swap fix
 - [ ] mirror
-- [ ] try remove best clones
 - [ ] structural cross-over
 - [ ] single outlet self collision tolerance (`attrui`)
-- [ ] include original
 
+- [x] include original
+- [x] try remove best clones
+- [x] add 2nd best, worst score
 - [x] box/lines stats
 - [x] title to top left
 - [x] remove initial randomization
