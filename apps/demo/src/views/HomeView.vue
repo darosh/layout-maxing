@@ -31,12 +31,12 @@ function downloadRnbo() {
   URL.revokeObjectURL(url)
 }
 
-const shiftDown = ref(false)
+const optionDown = ref(false)
 function onKeyDown(e: KeyboardEvent) {
-  shiftDown.value = e.altKey
+  optionDown.value = e.altKey
 }
 function onKeyUp(e: KeyboardEvent) {
-  shiftDown.value = e.altKey
+  optionDown.value = e.altKey
 }
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
@@ -61,16 +61,16 @@ const btnPause = computed(() => store.status === 'running')
           <FileDropZone />
           <div class="action-row">
             <Button
-              :label="btnStart ? (shiftDown ? 'Re-run' : 'Optimize') : 'Stop'"
+              :label="btnStart ? (optionDown ? 'Re-run' : 'Optimize') : 'Stop'"
               size="small"
               :variant="btnStart ? (!store.canStart ? 'outlined' : undefined) : 'outlined'"
               :severity="
                 btnStart ? (btnStart && !store.canStart ? 'secondary' : undefined) : 'secondary'
               "
-              :disabled="btnStart && (!store.canStart || (shiftDown && !store.top.length))"
+              :disabled="btnStart && (!store.canStart || (optionDown && !store.top.length))"
               @click="
                 btnStart
-                  ? shiftDown
+                  ? optionDown
                     ? store.startReOptimization()
                     : store.startOptimization()
                   : store.stopOptimization()
@@ -86,18 +86,18 @@ const btnPause = computed(() => store.status === 'running')
             />
             <Button v-else style="visibility: hidden" variant="outlined" size="small" disabled />
             <Button
-              :label="store.inputSource === 'clipboard' || shiftDown ? 'Copy' : 'Download'"
+              :label="store.inputSource === 'clipboard' || optionDown ? 'Copy' : 'Download'"
               variant="outlined"
               size="small"
               :severity="
                 !store.canExport
                   ? 'secondary'
-                  : store.inputSource === 'clipboard' || shiftDown
+                  : store.inputSource === 'clipboard' || optionDown
                     ? 'info'
                     : undefined
               "
               :disabled="!store.canExport"
-              @click="store.inputSource === 'clipboard' || shiftDown ? copyRnbo() : downloadRnbo()"
+              @click="store.inputSource === 'clipboard' || optionDown ? copyRnbo() : downloadRnbo()"
             />
           </div>
           <div class="section-divider"></div>
