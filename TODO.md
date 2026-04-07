@@ -1,15 +1,31 @@
 # TODO
 
+### Mutation
+
 - [ ] swap with children
 - [ ] top level swap fix
 - [ ] mirror
 - [ ] structural cross-over
-- [ ] group support
 - [ ] row/col shift
-- [ ] presets?
+
+### Fitness
+
 - [ ] overlap for SSCs
+
+### UI
+
+- [ ] presets?
+
+### Structure
+
+- [ ] group support
+
+### Run settings
+
 - [ ] shift to [0,0]
 - [ ] ignore solo
+
+## DONE
 
 - [x] shift up/down/enter min/max/reset
 - [x] highlight non default values
