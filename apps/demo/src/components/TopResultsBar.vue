@@ -127,7 +127,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
   width: 120px;
   height: 80px;
   border: none;
-  border-radius: 6px;
+  border-radius: 3px;
   background: none;
   cursor: pointer;
   overflow: hidden;
@@ -139,7 +139,13 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
     transform 0.1s ease-in-out;
 }
 
-.thumb-btn:hover {
+.thumb-btn:focus {
+  /*outline: 1px solid var(--p-surface-500);*/
+  outline: none;
+}
+
+.thumb-btn:hover,
+.thumb-btn:focus {
   opacity: 0.85;
   transform: translateY(-2px);
 }

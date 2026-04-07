@@ -89,7 +89,13 @@ const btnPause = computed(() => store.status === 'running')
               :label="store.inputSource === 'clipboard' || shiftDown ? 'Copy' : 'Download'"
               variant="outlined"
               size="small"
-              :severity="!store.canExport ? 'secondary' : (store.inputSource === 'clipboard' || shiftDown ? 'info' : undefined)"
+              :severity="
+                !store.canExport
+                  ? 'secondary'
+                  : store.inputSource === 'clipboard' || shiftDown
+                    ? 'info'
+                    : undefined
+              "
               :disabled="!store.canExport"
               @click="store.inputSource === 'clipboard' || shiftDown ? copyRnbo() : downloadRnbo()"
             />
@@ -105,7 +111,19 @@ const btnPause = computed(() => store.status === 'running')
             <span class="sidebar-version">v{{ version }}</span>
           </template>
           <template #end>
-            <a rounded class="gh-link" style="margin-right: 1rem" @click="helpVisible = true">
+            <a
+              rounded
+              class="gh-link"
+              href="#"
+              style="margin-right: 1rem"
+              @click="
+                (e) => {
+                  e.preventDefault()
+                  helpVisible = true
+                  return false
+                }
+              "
+            >
               <i class="pi pi-question-circle" />
             </a>
             <a
@@ -222,10 +240,15 @@ const btnPause = computed(() => store.status === 'running')
   text-decoration: none;
   display: flex;
   align-items: center;
+  border-radius: 50%;
 }
 
 .gh-link:hover {
   color: var(--p-surface-100);
+}
+
+.gh-link:focus {
+  outline: 1px solid var(--p-primary-400);
 }
 
 .section-divider {
