@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import Button from 'primevue/button'
 import { useOptimizerStore } from '@/stores/optimizer'
+import { EXAMPLES } from '@/utils/examples.ts'
 
 const store = useOptimizerStore()
 const isDragging = ref(false)
+const showExamples = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
 function onDragOver(e: DragEvent) {
@@ -65,15 +67,36 @@ async function pasteFromClipboard() {
         {{ store.rnbo.patcher.boxes.length }} boxes, {{ store.rnbo.patcher.lines.length }} lines
       </p>
       <div class="drop-actions">
-        <Button variant="outlined" label="Select file" size="small" @click="openPicker" />
-        <Button
-          label="Paste"
-          size="small"
-          variant="outlined"
-          severity="info"
-          @click="pasteFromClipboard()"
-        />
+        <template v-if="showExamples">
+          <Button
+            v-for="(example, i) in EXAMPLES"
+            :key="i"
+            variant="outlined"
+            :label="`${i + 1}`"
+            size="small"
+            severity="info"
+            @click="store.loadFile(example, `example-${i + 1}`, 'clipboard')"
+          />
+        </template>
+        <template v-else>
+          <Button variant="outlined" label="Select file" size="small" @click="openPicker" />
+          <Button
+            label="Paste"
+            size="small"
+            variant="outlined"
+            severity="info"
+            @click="pasteFromClipboard()"
+          />
+        </template>
       </div>
+      <Button
+        style="position: absolute; right: 0; top: 0"
+        label="Examples"
+        size="small"
+        variant="outlined"
+        @click="showExamples = !showExamples"
+        :severity="showExamples ? 'info' : 'secondary'"
+      />
       <input
         ref="fileInput"
         type="file"

@@ -30,9 +30,37 @@ export default defineConfig({
   //   },
   // },
   plugins: [
-    vue(),
     // vueDevTools()
+    {
+      name: 'maxpat-json',
+      enforce: 'pre',
+
+      // Use `load` hook instead of `transform` — it's more reliable for custom module types in Rolldown
+      load(id) {
+        if (id.endsWith('.maxpat') || id.endsWith('.rnbopat')) {
+          try {
+            const content = readFileSync(id, 'utf-8')
+            const json = JSON.parse(content)
+
+            // Return as a proper JS module that exports the JSON object
+            return {
+              code: `export default ${JSON.stringify(json)}`,
+              map: null,
+              // Important for Rolldown: tell it this is JavaScript, not raw JSON or other type
+              moduleType: 'js',
+            }
+          } catch (err) {
+            console.error('Failed to parse .maxpat as JSON:', id)
+            throw err
+          }
+        }
+      },
+    },
+    vue(),
   ],
+
+  assetsInclude: ['**/*.maxpat', '**/*.rnbopat'],
+
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
