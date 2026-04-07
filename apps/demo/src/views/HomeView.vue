@@ -86,22 +86,12 @@ const btnPause = computed(() => store.status === 'running')
             />
             <Button v-else style="visibility: hidden" variant="outlined" size="small" disabled />
             <Button
-              v-if="store.inputSource === 'clipboard'"
-              label="Copy"
+              :label="store.inputSource === 'clipboard' || shiftDown ? 'Copy' : 'Download'"
               variant="outlined"
               size="small"
-              :severity="!store.canExport ? 'secondary' : 'info'"
+              :severity="!store.canExport ? 'secondary' : (store.inputSource === 'clipboard' || shiftDown ? 'info' : undefined)"
               :disabled="!store.canExport"
-              @click="copyRnbo()"
-            />
-            <Button
-              v-else
-              label="Download"
-              variant="outlined"
-              size="small"
-              :severity="!store.canExport ? 'secondary' : undefined"
-              :disabled="!store.canExport"
-              @click="downloadRnbo()"
+              @click="store.inputSource === 'clipboard' || shiftDown ? copyRnbo() : downloadRnbo()"
             />
           </div>
           <div class="section-divider"></div>

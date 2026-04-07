@@ -8,11 +8,12 @@
 - [ ] row/col shift
 - [ ] shift up/down/enter min/max/reset
 - [ ] presets?
-- [ ] ignore solo
 - [ ] highlight non default values
-- [ ] file to clipboard
 - [ ] overlap for SSCs
+- [ ] shift to [0,0]
+- [ ] ignore solo
 
+- [x] file to clipboard
 - [x] remove segments patchline.midpoints
 - [x] reoptimize
 - [x] misalignedFirst
