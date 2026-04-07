@@ -21,7 +21,7 @@ function isActive(sel: Selection): boolean {
   return true
 }
 
-const displaySet = computed(() => (store.allTimeTop ? store.top : store.currentGenTop))
+const displaySet = computed(() => (store.allTimeTop ? store.top.slice(1) : store.currentGenTop))
 let o: string
 
 const barRef = ref<HTMLElement | null>(null)
@@ -76,13 +76,13 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         v-for="(entry, i) in displaySet"
         :key="i"
         class="thumb-btn"
-        :class="{ active: isActive({ kind: 'allTime', index: i }) }"
-        @mouseenter="tooltip?.show($event, `Top #${i + 1}\nScore: ${formatFullScore(entry.score)}`)"
+        :class="{ active: isActive({ kind: 'allTime', index: i + 1 }) }"
+        @mouseenter="tooltip?.show($event, `Top #${i + 2}\nScore: ${formatFullScore(entry.score)}`)"
         @mouseleave="tooltip?.hide()"
-        @click="store.selection = { kind: 'allTime', index: i }"
+        @click="store.selection = { kind: 'allTime', index: i + 1 }"
       >
         <div class="thumb-svg" v-html="entry.svg" />
-        <span class="thumb-label">#{{ i + 1 }}</span>
+        <span class="thumb-label">#{{ i + 2 }}</span>
         <span class="thumb-score">{{ formatScore(entry.score) }}</span>
       </button>
     </template>
