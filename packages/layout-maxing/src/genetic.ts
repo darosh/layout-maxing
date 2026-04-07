@@ -54,7 +54,8 @@ function uniqueIndexes(
 ): number[] {
   const result: number[] = []
   const excluded = new Set(exclude)
-  while (result.length < count) {
+  const sanitizeCount = Math.min(count, max - min - (exclude ? exclude.length : 0))
+  while (result.length < sanitizeCount) {
     const idx = min + Math.floor(rand() * (max - min))
     if (!excluded.has(idx)) {
       excluded.add(idx)
