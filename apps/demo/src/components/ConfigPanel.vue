@@ -737,7 +737,8 @@ function copyCli() {
   flex-direction: column;
   flex-shrink: 0;
   gap: 0.5rem;
-  --p-accordion-header-padding: 0.5rem 0.75rem;
+  --p-accordion-header-padding: 0.75rem 0.75rem 0.75rem 0.75rem;
+  --p-accordion-content-padding: 0 0.75rem 1rem 0;
 }
 
 .config-panel:deep(.p-accordionpanel:last-child) {
@@ -814,5 +815,6 @@ function copyCli() {
 
 .accordion {
   --p-accordion-header-font-weight: initial;
+  font-size: 15px;
 }
 </style>
