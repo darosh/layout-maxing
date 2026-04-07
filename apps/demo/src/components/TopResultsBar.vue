@@ -31,6 +31,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
 <template>
   <FlyingTooltip ref="tooltip" />
   <div v-if="store.originalSvg || store.top.length" ref="barRef" class="top-results-bar">
+    <button class="thumb-btn" @click="store.selection = { kind: 'live' }">Live</button>
     <!-- Original layout -->
     <button
       v-if="store.originalSvg"

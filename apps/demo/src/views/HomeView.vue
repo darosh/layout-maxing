@@ -9,7 +9,10 @@ import SvgRenderer from '@/components/SvgRenderer.vue'
 import TopResultsBar from '@/components/TopResultsBar.vue'
 import { useOptimizerStore } from '@/stores/optimizer'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import SvgAnimatedRenderer from '@/components/SvgAnimatedRenderer.vue'
+import PatchInfo from '@/components/PatchInfo.vue'
 
+const animateSvg = true
 const store = useOptimizerStore()
 const version = __APP_VERSION__
 const helpVisible = ref(false)
@@ -140,9 +143,13 @@ const btnPause = computed(() => store.status === 'running')
 
       <section class="canvas-col">
         <div class="canvas">
-          <SvgRenderer />
+          <SvgAnimatedRenderer v-if="animateSvg" />
+          <SvgRenderer v-else />
         </div>
         <TopResultsBar />
+        <div style="position: absolute; flex: 1; width: calc(100% - 320px - .5rem); height: calc(100vh - 80px - 2rem);">
+          <PatchInfo />
+        </div>
       </section>
     </main>
     <HelpDialog v-model:visible="helpVisible" />
