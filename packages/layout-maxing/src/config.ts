@@ -44,6 +44,7 @@ export interface Config {
   deterministic?: boolean
   useDagre?: boolean
   useInput?: boolean
+  useSimpleFlow?: boolean
   // Logging / debug output
   logInfo?: boolean
   logProgress?: boolean
@@ -133,6 +134,13 @@ export const configMeta: ConfigMeta = {
   deterministic: [true, false, true, null, 'Use a fixed random seed for reproducible results'],
   useDagre: [true, false, true, null, 'Use Dagre for initial layout before GA optimization'],
   useInput: [false, false, true, null, 'Use the input file layout as the GA starting point'],
+  useSimpleFlow: [
+    false,
+    false,
+    true,
+    null,
+    'Use simple flow for initial layout before GA optimization',
+  ],
   // Logging / debug output
   logInfo: [true, false, true, null, 'Log info messages to console'],
   logProgress: [true, false, true, null, 'Log progress stats to console each interval'],

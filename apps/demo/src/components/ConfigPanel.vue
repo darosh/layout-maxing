@@ -398,6 +398,8 @@ function copyCli() {
           <div class="toggles-grid">
             <label>useDagre</label>
             <ToggleSwitch v-model="cfg.useDagre" v-tip.right="configMeta.useDagre[4]" />
+            <label>useSimpleFlow</label>
+            <ToggleSwitch v-model="cfg.useSimpleFlow" v-tip.right="configMeta.useSimpleFlow[4]" />
             <label>useInput</label>
             <ToggleSwitch v-model="cfg.useInput" v-tip.right="configMeta.useInput[4]" />
           </div>

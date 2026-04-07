@@ -89,21 +89,25 @@ export async function main(
     )
   fillDepths(baseLayouts, lines)
 
-  let startingLayouts: BoxLayout[][]
+  let startingLayouts: BoxLayout[][] = []
 
   if (c.useDagre) {
-    startingLayouts = (['TB' /*'LR', 'BT', 'RL'*/] as const).map((dir) => {
+    startingLayouts.push(...(['TB' /*'LR', 'BT', 'RL'*/] as const)).map((dir) => {
       const clone = cloneLayouts(baseLayouts)
       dagreFlow(clone, lines, dir)
       return clone
     })
-  } else {
-    simpleFlow(baseLayouts, c)
-    startingLayouts = [baseLayouts]
   }
 
-  if (c.useInput) {
-    startingLayouts = [cloneLayouts(baseLayouts), ...startingLayouts]
+  if (c.useSimpleFlow) {
+    const clone = cloneLayouts(baseLayouts)
+    simpleFlow(clone, c)
+    startingLayouts.push([baseLayouts])
+  }
+
+  if (c.useInput || !(c.useSimpleFlow || c.useDagre)) {
+    const clone = cloneLayouts(baseLayouts)
+    startingLayouts.push(clone)
   }
 
   const bestIndividual = await runGenetic(
