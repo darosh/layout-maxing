@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, toRaw, watch } from 'vue'
 import { defaultConfig } from 'layout-maxing'
-import type { RNBO, Config, Fitness } from 'layout-maxing'
+import type { RNBO, Config, Fitness, BoxLayout, Line } from 'layout-maxing'
 
 const CONFIG_KEY = 'layout-maxing-config'
 const RUN_KEY = 'layout-maxing-run'
@@ -100,6 +100,10 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const originalSvg = ref('')
   const originalFitness = ref<Fitness | null>(null)
   const originalPositions = ref<{ id: string; x: number; y: number }[]>([])
+  const originalLayouts = ref<BoxLayout[]>([])
+
+  // Current live layouts (updated with each svg message)
+  const layouts = ref<BoxLayout[]>([])
 
   // Selected entry
   const selection = ref<Selection>({ kind: 'live' })
@@ -140,6 +144,22 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     return resolveEntry(sel)?.svg ?? ''
   })
 
+  const displayedLayouts = computed<BoxLayout[]>(() => {
+    const sel = selection.value
+    if (sel.kind === 'live') return layouts.value
+    if (sel.kind === 'original') return originalLayouts.value
+    const entry = resolveEntry(sel)
+    if (!entry) return []
+    // Merge stored positions back into the original layout templates
+    const posMap = new Map(entry.positions.map((p) => [p.id, p]))
+    return originalLayouts.value.map((box) => {
+      const pos = posMap.get(box.id)
+      return pos ? { ...box, x: pos.x, y: pos.y } : box
+    })
+  })
+
+  const lines = computed<Line[]>(() => (rnbo.value?.patcher.lines ?? []) as Line[])
+
   const displayedFitness = computed<Fitness | null>(() => {
     const sel = selection.value
     if (sel.kind === 'live') return progress.value.bestFitness
@@ -151,11 +171,12 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     () => selection.value.kind === 'original' || top.value.length > 0 || resultRnbo.value !== null,
   )
 
-  function loadFile(content: string, name: string, source: 'file' | 'clipboard' = 'file') {
+  function loadFile(content: string | RNBO, name: string, source: 'file' | 'clipboard' = 'file') {
+    console.log(content)
     const wasRunning = status.value === 'running' || status.value === 'paused'
     if (wasRunning) stopOptimization()
     try {
-      rnbo.value = JSON.parse(content) as RNBO
+      rnbo.value = typeof content === 'string' ? (JSON.parse(content) as RNBO) : content
       fileName.value = name
       inputSource.value = source
       svg.value = ''
@@ -179,6 +200,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
       originalSvg.value = ''
       originalFitness.value = null
       originalPositions.value = []
+      originalLayouts.value = []
+      layouts.value = []
     } catch {
       error.value = 'Invalid JSON file'
       return
@@ -233,6 +256,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
           originalSvg.value = msg.svg
           originalFitness.value = msg.fitness
           originalPositions.value = msg.positions
+          originalLayouts.value = msg.layouts ?? []
           break
         case 'progress':
           progress.value = {
@@ -251,12 +275,14 @@ export const useOptimizerStore = defineStore('optimizer', () => {
           svg.value = msg.svg
           if (msg.top?.length) top.value = msg.top
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
+          if (msg.layouts?.length) layouts.value = msg.layouts
           break
         case 'done':
           status.value = 'done'
           if (msg.svg) svg.value = msg.svg
           if (msg.top?.length) top.value = msg.top
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
+          if (msg.layouts?.length) layouts.value = msg.layouts
           resultRnbo.value = msg.rnbo ?? null
           worker?.terminate()
           worker = null
@@ -359,7 +385,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     const rnbo = getExportRnbo()
 
     return {
-      appVersion: rnbo?.patcher.appVersion,
+      appversion: rnbo?.patcher.appversion,
       boxes: rnbo?.patcher.boxes,
       lines: rnbo?.patcher.lines,
     }
@@ -391,6 +417,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     originalFitness,
     displayedSvg,
     displayedFitness,
+    displayedLayouts,
+    lines,
     canExport,
     getExportRnbo,
     getExportClipboard,

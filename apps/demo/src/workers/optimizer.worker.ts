@@ -16,9 +16,28 @@ type ProgressMsg = {
   bestFitness: Fitness | null
   stopIn: number
 }
-type OriginalMsg = { type: 'original'; svg: string; fitness: Fitness; positions: Position[] }
-type SvgMsg = { type: 'svg'; svg: string; top: TopEntry[]; currentGenTop: TopEntry[] }
-type DoneMsg = { type: 'done'; svg: string; top: TopEntry[]; currentGenTop: TopEntry[]; rnbo: RNBO }
+type OriginalMsg = {
+  type: 'original'
+  svg: string
+  fitness: Fitness
+  positions: Position[]
+  layouts: BoxLayout[]
+}
+type SvgMsg = {
+  type: 'svg'
+  svg: string
+  top: TopEntry[]
+  currentGenTop: TopEntry[]
+  layouts: BoxLayout[]
+}
+type DoneMsg = {
+  type: 'done'
+  svg: string
+  top: TopEntry[]
+  currentGenTop: TopEntry[]
+  rnbo: RNBO
+  layouts: BoxLayout[]
+}
 type ErrorMsg = { type: 'error'; message: string }
 
 type WorkerMsg = OriginalMsg | ProgressMsg | SvgMsg | DoneMsg | ErrorMsg
@@ -189,6 +208,7 @@ self.onmessage = async (e: MessageEvent) => {
       svg: toSvg(origLayouts, lines, cfg),
       fitness: origFitness,
       positions: origLayouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
+      layouts: origLayouts,
     })
   } catch {
     // Non-fatal — original evaluation may fail if rnbo has no boxes
@@ -248,6 +268,7 @@ self.onmessage = async (e: MessageEvent) => {
             svg,
             top: buildTopEntries(),
             currentGenTop: buildCurrentGenEntries(),
+            layouts: bestLayouts,
           })
         }
 
@@ -255,9 +276,16 @@ self.onmessage = async (e: MessageEvent) => {
       },
       (layouts: BoxLayout[]) => {
         // onIntermediate: called when approaching stop threshold — always emit SVG here
-        const svg = toSvg(cloneForSvg(layouts), lines, cfg)
+        const snapped = cloneForSvg(layouts)
+        const svg = toSvg(snapped, lines, cfg)
         lastSvgTime = Date.now()
-        post({ type: 'svg', svg, top: buildTopEntries(), currentGenTop: buildCurrentGenEntries() })
+        post({
+          type: 'svg',
+          svg,
+          top: buildTopEntries(),
+          currentGenTop: buildCurrentGenEntries(),
+          layouts: snapped,
+        })
       },
       cfg,
       (stop: number) => {
@@ -284,7 +312,7 @@ self.onmessage = async (e: MessageEvent) => {
       stopIn,
     })
     applyBestLayout(rnbo, bestIndividual, c)
-    const finalLayouts = createInitialLayouts(rnbo.patcher)
+    const finalLayouts = cloneForSvg(createInitialLayouts(rnbo.patcher))
     const svg = toSvg(finalLayouts, lines, cfg)
     if (c.logInfo)
       console.log(
@@ -296,6 +324,7 @@ self.onmessage = async (e: MessageEvent) => {
       top: buildTopEntries(),
       currentGenTop: buildCurrentGenEntries(),
       rnbo,
+      layouts: finalLayouts,
     })
   } catch (err) {
     pool.terminate()
@@ -311,6 +340,7 @@ self.onmessage = async (e: MessageEvent) => {
         top: buildTopEntries(),
         currentGenTop: buildCurrentGenEntries(),
         rnbo,
+        layouts: layouts ?? [],
       })
     } else {
       console.error(err)
