@@ -1,4 +1,4 @@
-import { main, toSvg, defaultConfig, createInitialLayouts } from 'layout-maxing'
+import { main, toSvg, defaultConfig, createInitialLayouts, applyBestLayout } from 'layout-maxing'
 import type { RNBO, Config, BoxLayout, Line, Fitness } from 'layout-maxing'
 
 type Position = { id: string; x: number; y: number }
@@ -195,7 +195,7 @@ self.onmessage = async (e: MessageEvent) => {
   }
 
   try {
-    await main(
+    const bestIndividual = await main(
       rnbo,
       async (layouts: BoxLayout[], batchLines: Line[], batchCfg: Config) => {
         await waitUntilResumed()
@@ -283,7 +283,7 @@ self.onmessage = async (e: MessageEvent) => {
       bestFitness,
       stopIn,
     })
-    // main() writes optimised positions back via applyBestLayout
+    applyBestLayout(rnbo, bestIndividual, c)
     const finalLayouts = createInitialLayouts(rnbo.patcher)
     const svg = toSvg(finalLayouts, lines, cfg)
     if (c.logInfo)
@@ -303,16 +303,7 @@ self.onmessage = async (e: MessageEvent) => {
       if (c.logInfo) console.log(`[optimizer] stopped at ${evalCount} evals`)
       // main() threw before applyBestLayout — apply manually
       const layouts = bestLayouts as BoxLayout[] | null
-      if (layouts) {
-        const map = new Map<string, BoxLayout>(layouts.map((l) => [l.id, l]))
-        for (const b of rnbo.patcher.boxes) {
-          const layout = map.get(b.box.id)
-          if (layout) {
-            b.box.patching_rect[0] = Math.round(layout.x)
-            b.box.patching_rect[1] = Math.round(layout.y)
-          }
-        }
-      }
+      if (layouts) applyBestLayout(rnbo, layouts, c)
       const svg = layouts ? toSvg(layouts, lines, cfg) : ''
       post({
         type: 'done',

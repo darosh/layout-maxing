@@ -41,6 +41,7 @@ export interface Config {
   mutWeightSwapRandom?: number
   // Control flags
   showStraightLines?: boolean
+  removeLineSegments?: boolean
   deterministic?: boolean
   useDagre?: boolean
   useInput?: boolean
@@ -131,6 +132,7 @@ export const configMeta: ConfigMeta = {
   mutWeightSwapRandom: [20, 0, 100, 1, 'Roulette weight for random-pair swap mutation'],
   // Control flags
   showStraightLines: [false, false, true, null, 'Render straight lines instead of curves'],
+  removeLineSegments: [true, false, true, null, 'Remove patchline midpoints after applying layout'],
   deterministic: [true, false, true, null, 'Use a fixed random seed for reproducible results'],
   useDagre: [true, false, true, null, 'Use Dagre for initial layout before GA optimization'],
   useInput: [false, false, true, null, 'Use the input file layout as the GA starting point'],

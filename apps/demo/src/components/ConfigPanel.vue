@@ -435,6 +435,11 @@ function copyCli() {
             />
             <label>writeJson</label>
             <ToggleSwitch v-model="cfg.writeJson" v-tip.right="configMeta.writeJson[4]" />
+            <label>removeLineSegments</label>
+            <ToggleSwitch
+              v-model="cfg.removeLineSegments"
+              v-tip.right="configMeta.removeLineSegments[4]"
+            />
           </div>
         </AccordionContent>
       </AccordionPanel>

@@ -7,6 +7,7 @@ export interface Line {
   patchline: {
     destination: [BoxId, number]
     source: [BoxId, number]
+    midpoints?: number[]
   }
 }
 

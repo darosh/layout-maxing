@@ -1,4 +1,13 @@
-import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg, fitness } from 'layout-maxing'
+import {
+  createInitialLayouts,
+  defaultConfig,
+  jsonDiff,
+  main,
+  toSvg,
+  fitness,
+  help,
+  applyBestLayout,
+} from 'layout-maxing'
 import type { BoxLayout, Config, Fitness, RNBO } from 'layout-maxing'
 import { runCalibrate, getNumericParams, printCalibrateResults } from './calibrate.ts'
 import { cpus } from 'node:os'
@@ -140,7 +149,7 @@ async function cli() {
 
       await Deno.mkdir(dirname(outputPath), { recursive: true })
 
-      await main(
+      const bestIndividual = await main(
         rnbo,
         getFitness,
         (layouts: BoxLayout[]) => {
@@ -157,6 +166,7 @@ async function cli() {
         c.logProgress ? console.log : undefined,
         c.logInfo ? console.log : undefined,
       )
+      applyBestLayout(rnbo, bestIndividual, c)
 
       // Write optimized file
       await Deno.writeTextFile(outputPath, JSON.stringify(rnbo, null, 2))

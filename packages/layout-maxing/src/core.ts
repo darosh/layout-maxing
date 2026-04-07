@@ -29,7 +29,7 @@ function createDeterministicRandom(seed: number = 123456789): () => number {
   }
 }
 
-function applyBestLayout(rnbo: RNBO, best: BoxLayout[]) {
+export function applyBestLayout(rnbo: RNBO, best: BoxLayout[], cfg: Required<Config>) {
   const map = new Map(best.map((l) => [l.id, l]))
   for (const b of rnbo.patcher.boxes) {
     const data = b.box
@@ -40,6 +40,11 @@ function applyBestLayout(rnbo: RNBO, best: BoxLayout[]) {
       // width/height unchanged
     }
   }
+  if (cfg.removeLineSegments) {
+    for (const line of rnbo.patcher.lines) {
+      delete line.patchline.midpoints
+    }
+  }
 }
 
 type FlatObject<T> = {
@@ -47,7 +52,7 @@ type FlatObject<T> = {
 }
 
 export function jsonDiff<T>(defaults: FlatObject<T>, tgt: FlatObject<T>): FlatObject<T> {
-  const result: FlatObject = {}
+  const result: FlatObject<T> = {}
 
   for (const key in tgt) {
     if (tgt[key] !== defaults[key]) {
@@ -64,10 +69,10 @@ export async function main(
   onIntermediate?: (layouts: BoxLayout[]) => void,
   cfg?: Config,
   onGenerationEnd?: (stop: number) => void,
-  logProgress?: (...args) => void,
-  logInfo?: (...args) => void,
+  logProgress?: (...args: any) => void,
+  logInfo?: (...args: any) => void,
 ) {
-  if (logInfo) {
+  if (logInfo && cfg) {
     logInfo(`Configuration\n${JSON.stringify(jsonDiff<Config>(defaultConfig, cfg))}`)
   }
 
@@ -92,17 +97,19 @@ export async function main(
   let startingLayouts: BoxLayout[][] = []
 
   if (c.useDagre) {
-    startingLayouts.push(...(['TB' /*'LR', 'BT', 'RL'*/] as const)).map((dir) => {
-      const clone = cloneLayouts(baseLayouts)
-      dagreFlow(clone, lines, dir)
-      return clone
-    })
+    startingLayouts.push(
+      ...(['TB' /*'LR', 'BT', 'RL'*/] as const).map((dir) => {
+        const clone = cloneLayouts(baseLayouts)
+        dagreFlow(clone, lines, dir)
+        return clone
+      }),
+    )
   }
 
   if (c.useSimpleFlow) {
     const clone = cloneLayouts(baseLayouts)
     simpleFlow(clone, c)
-    startingLayouts.push([baseLayouts])
+    startingLayouts.push(baseLayouts)
   }
 
   if (c.useInput || !(c.useSimpleFlow || c.useDagre)) {
@@ -110,7 +117,7 @@ export async function main(
     startingLayouts.push(clone)
   }
 
-  const bestIndividual = await runGenetic(
+  return runGenetic(
     startingLayouts,
     lines,
     rand,
@@ -121,7 +128,4 @@ export async function main(
     logProgress,
     logInfo,
   )
-
-  // Apply best positions back to original RNBO structure
-  applyBestLayout(rnbo, bestIndividual)
 }

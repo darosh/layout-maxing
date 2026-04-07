@@ -333,6 +333,11 @@ export const useOptimizerStore = defineStore('optimizer', () => {
         b.box.patching_rect[1] = Math.round(pos.y)
       }
     }
+    if (config.value.removeLineSegments) {
+      for (const line of clone.patcher.lines) {
+        delete line.patchline.midpoints
+      }
+    }
     return clone
   }
 
