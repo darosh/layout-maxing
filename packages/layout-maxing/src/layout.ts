@@ -40,7 +40,7 @@ interface Box {
 }
 
 export interface Patcher {
-  appVersion: Record<string, string | number>
+  appversion: Record<string, string | number>
   boxes: Box[]
   lines: Line[]
 }
