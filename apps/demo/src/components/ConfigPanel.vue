@@ -120,7 +120,7 @@ function copyCli() {
 
     <Accordion :value="[]" multiple>
       <AccordionPanel value="grid">
-        <AccordionHeader>Grid &amp; Spacing</AccordionHeader>
+        <AccordionHeader>Geometry</AccordionHeader>
         <AccordionContent>
           <div class="fields-grid">
             <label>gridX</label>
@@ -269,7 +269,7 @@ function copyCli() {
       </AccordionPanel>
 
       <AccordionPanel value="ga">
-        <AccordionHeader>GA Parameters</AccordionHeader>
+        <AccordionHeader>Genetic Algorithm</AccordionHeader>
         <AccordionContent>
           <div class="fields-grid">
             <label>popSize</label>
