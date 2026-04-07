@@ -10,7 +10,11 @@
 - [ ] presets?
 - [ ] remove segments patchline.midpoints
 - [ ] ignore solo
+- [ ] highlight non default values
+- [ ] file to clipboard
+- [ ] overlap for SSCs
 
+- [x] reoptimize
 - [x] misalignedFirst
 - [x] split UI settings
 - [x] cli config print

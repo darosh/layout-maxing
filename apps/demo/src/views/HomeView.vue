@@ -8,7 +8,7 @@ import ProgressPanel from '@/components/ProgressPanel.vue'
 import SvgRenderer from '@/components/SvgRenderer.vue'
 import TopResultsBar from '@/components/TopResultsBar.vue'
 import { useOptimizerStore } from '@/stores/optimizer'
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const store = useOptimizerStore()
 const version = __APP_VERSION__
@@ -31,6 +31,22 @@ function downloadRnbo() {
   URL.revokeObjectURL(url)
 }
 
+const shiftDown = ref(false)
+function onKeyDown(e: KeyboardEvent) {
+  shiftDown.value = e.altKey
+}
+function onKeyUp(e: KeyboardEvent) {
+  shiftDown.value = e.altKey
+}
+onMounted(() => {
+  window.addEventListener('keydown', onKeyDown)
+  window.addEventListener('keyup', onKeyUp)
+})
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeyDown)
+  window.removeEventListener('keyup', onKeyUp)
+})
+
 const btnStart = computed(() => store.status !== 'running' && store.status !== 'paused')
 const btnPauseResume = computed(() => store.status === 'running' || store.status === 'paused')
 const btnResume = computed(() => store.status === 'paused')
@@ -45,14 +61,20 @@ const btnPause = computed(() => store.status === 'running')
           <FileDropZone />
           <div class="action-row">
             <Button
-              :label="btnStart ? 'Optimize' : 'Stop'"
+              :label="btnStart ? (shiftDown ? 'Re-run' : 'Optimize') : 'Stop'"
               size="small"
               :variant="btnStart ? (!store.canStart ? 'outlined' : undefined) : 'outlined'"
               :severity="
                 btnStart ? (btnStart && !store.canStart ? 'secondary' : undefined) : 'secondary'
               "
-              :disabled="btnStart && !store.canStart"
-              @click="btnStart ? store.startOptimization() : store.stopOptimization()"
+              :disabled="btnStart && (!store.canStart || (shiftDown && !store.top.length))"
+              @click="
+                btnStart
+                  ? shiftDown
+                    ? store.startReOptimization()
+                    : store.startOptimization()
+                  : store.stopOptimization()
+              "
             />
             <Button
               v-if="btnPauseResume"

@@ -197,7 +197,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     }
   }
 
-  function startOptimization() {
+  function startOptimization(initialPositions?: { id: string; x: number; y: number }[]) {
     if (!rnbo.value || status.value === 'running') return
     stopOptimization()
 
@@ -283,7 +283,14 @@ export const useOptimizerStore = defineStore('optimizer', () => {
       progressInterval: progressInterval.value,
       svgInterval: svgInterval.value,
       topN: topN.value,
+      initialPositions,
     })
+  }
+
+  function startReOptimization() {
+    const bestPositions = toRaw(top.value[0])?.positions
+    if (!bestPositions) return
+    startOptimization(bestPositions)
   }
 
   function stopOptimization() {
@@ -374,6 +381,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     loadFile,
     loadFixture,
     startOptimization,
+    startReOptimization,
     stopOptimization,
     pauseOptimization,
     resumeOptimization,

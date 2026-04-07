@@ -99,12 +99,25 @@ self.onmessage = async (e: MessageEvent) => {
     progressInterval = 200,
     svgInterval = 1000,
     topN = 10,
+    initialPositions,
   } = e.data as {
     rnbo: RNBO
     cfg: Config
     progressInterval?: number
     svgInterval?: number
     topN?: number
+    initialPositions?: { id: string; x: number; y: number }[]
+  }
+
+  if (initialPositions?.length) {
+    const posMap = new Map(initialPositions.map((p) => [p.id, p]))
+    for (const b of rnbo.patcher.boxes) {
+      const pos = posMap.get(b.box.id)
+      if (pos) {
+        b.box.patching_rect[0] = Math.round(pos.x)
+        b.box.patching_rect[1] = Math.round(pos.y)
+      }
+    }
   }
 
   stopped = false
