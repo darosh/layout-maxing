@@ -15,7 +15,7 @@ const version = __APP_VERSION__
 const helpVisible = ref(false)
 
 function copyRnbo() {
-  const data = store.getExportRnbo()
+  const data = store.getExportClipboard()
   if (data) navigator.clipboard.writeText(JSON.stringify(data))
 }
 

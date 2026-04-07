@@ -355,6 +355,16 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     return applyPositions(entry.positions)
   }
 
+  function getExportClipboard() {
+    const rnbo = getExportRnbo()
+
+    return {
+      appVersion: rnbo?.patcher.appVersion,
+      boxes: rnbo?.patcher.boxes,
+      lines: rnbo?.patcher.lines,
+    }
+  }
+
   return {
     rnbo,
     fileName,
@@ -383,6 +393,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     displayedFitness,
     canExport,
     getExportRnbo,
+    getExportClipboard,
     loadFile,
     loadFixture,
     startOptimization,
