@@ -170,6 +170,5 @@ async function pasteFromClipboard() {
   gap: 0.5rem;
   font-size: 0.875rem;
   color: var(--p-red-400);
-  padding: 0.5rem 0.5rem 0 0.5rem;
 }
 </style>
