@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
 import Dialog from 'primevue/dialog'
 import { configMeta } from 'layout-maxing'
 
@@ -28,6 +28,28 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
     :draggable="false"
     @update:visible="$emit('update:visible', $event)"
   >
+    <h4>Hot keys</h4>
+    <ul class="list">
+      <li>
+        <kbd>Option</kbd>
+        <ul>
+          <li>
+            switching <code>Optimization</code> to <code>Re-run</code> (reusing recent output as
+            input, <code>useInput</code> should be turned on)
+          </li>
+          <li>switching <code>Download</code> to <code>Copy</code></li>
+        </ul>
+      </li>
+      <li>
+        Configuration editing
+        <ul>
+          <li><kbd>Shift + Enter</kbd> resets to default value</li>
+          <li><kbd>Shift + Down</kbd> sets minimum value</li>
+          <li><kbd>Shift + Up</kbd> sets maximum value</li>
+        </ul>
+      </li>
+    </ul>
+    <h4>Configuration</h4>
     <table class="help-table">
       <thead>
         <tr>
@@ -90,5 +112,17 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
   font-family: monospace;
   color: var(--p-surface-400);
   white-space: nowrap;
+}
+
+.list li {
+  line-height: 1.75rem;
+  margin-left: 0rem;
+  padding-left: 0rem;
+}
+
+.list,
+.list ul {
+  padding-inline-start: 2rem;
+  font-size: 1rem;
 }
 </style>
