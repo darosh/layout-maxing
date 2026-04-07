@@ -118,7 +118,7 @@ function copyCli() {
       </div>
     </div>
 
-    <Accordion :value="[]" multiple>
+    <Accordion :value="[]" multiple class="accordion">
       <AccordionPanel value="grid">
         <AccordionHeader>Geometry</AccordionHeader>
         <AccordionContent>
@@ -257,7 +257,7 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.misalignedSSPenalty[4]"
             />
-            <label>misalignedFirstPenalty</label>
+            <label>misalignedFirstPen.</label>
             <InputNumber
               v-model="cfg.misalignedFirstPenalty"
               v-bind="numProps('misalignedFirstPenalty')"
@@ -271,6 +271,10 @@ function copyCli() {
       <AccordionPanel value="ga">
         <AccordionHeader>Genetic Algorithm</AccordionHeader>
         <AccordionContent>
+          <div class="toggles-grid">
+            <label>deterministic</label>
+            <ToggleSwitch v-model="cfg.deterministic" v-tip.right="configMeta.deterministic[4]" />
+          </div>
           <div class="fields-grid">
             <label>popSize</label>
             <InputNumber
@@ -385,18 +389,17 @@ function copyCli() {
               v-tip.right="configMeta.mutWeightSwapRandom[4]"
             />
           </div>
+        </AccordionContent>
+      </AccordionPanel>
+
+      <AccordionPanel value="initial">
+        <AccordionHeader>Initial Population</AccordionHeader>
+        <AccordionContent>
           <div class="toggles-grid">
             <label>useDagre</label>
             <ToggleSwitch v-model="cfg.useDagre" v-tip.right="configMeta.useDagre[4]" />
             <label>useInput</label>
             <ToggleSwitch v-model="cfg.useInput" v-tip.right="configMeta.useInput[4]" />
-            <label>showStraightLines</label>
-            <ToggleSwitch
-              v-model="cfg.showStraightLines"
-              v-tip.right="configMeta.showStraightLines[4]"
-            />
-            <label>deterministic</label>
-            <ToggleSwitch v-model="cfg.deterministic" v-tip.right="configMeta.deterministic[4]" />
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -417,12 +420,17 @@ function copyCli() {
             />
           </div>
           <div class="toggles-grid">
-            <label>logInfo</label>
-            <ToggleSwitch v-model="cfg.logInfo" v-tip.right="configMeta.logInfo[4]" />
             <label>logProgress</label>
             <ToggleSwitch v-model="cfg.logProgress" v-tip.right="configMeta.logProgress[4]" />
+            <label>logInfo</label>
+            <ToggleSwitch v-model="cfg.logInfo" v-tip.right="configMeta.logInfo[4]" />
             <label>writeSvg</label>
             <ToggleSwitch v-model="cfg.writeSvg" v-tip.right="configMeta.writeSvg[4]" />
+            <label>showStraightLines</label>
+            <ToggleSwitch
+              v-model="cfg.showStraightLines"
+              v-tip.right="configMeta.showStraightLines[4]"
+            />
             <label>writeJson</label>
             <ToggleSwitch v-model="cfg.writeJson" v-tip.right="configMeta.writeJson[4]" />
           </div>
@@ -513,6 +521,8 @@ function copyCli() {
   align-items: center;
   justify-items: right;
   font-size: 0.8rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
 }
 
 .fields-grid label {
@@ -527,15 +537,20 @@ function copyCli() {
 .toggles-grid {
   display: grid;
   grid-template-columns: auto 80px;
-  gap: 0.5rem 0.75rem;
+  gap: 0.6rem 0.75rem;
   align-items: center;
   font-size: 0.8rem;
-  margin-top: 0.75rem;
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
   justify-items: right;
 }
 
 .toggles-grid label {
   color: var(--p-surface-300);
   font-family: monospace;
+}
+
+.accordion {
+  --p-accordion-header-font-weight: initial;
 }
 </style>
