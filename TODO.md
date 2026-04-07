@@ -6,13 +6,13 @@
 - [ ] structural cross-over
 - [ ] group support
 - [ ] row/col shift
-- [ ] shift up/down/enter min/max/reset
 - [ ] presets?
-- [ ] highlight non default values
 - [ ] overlap for SSCs
 - [ ] shift to [0,0]
 - [ ] ignore solo
 
+- [x] shift up/down/enter min/max/reset
+- [x] highlight non default values
 - [x] file to clipboard
 - [x] remove segments patchline.midpoints
 - [x] reoptimize
