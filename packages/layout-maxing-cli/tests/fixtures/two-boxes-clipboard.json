@@ -1,0 +1,41 @@
+{
+  "appversion": {
+    "major": 9,
+    "minor": 1,
+    "revision": 3,
+    "architecture": "x64",
+    "modernui": 1
+  },
+  "classnamespace": "box",
+  "boxes": [
+    {
+      "box": {
+        "maxclass": "message",
+        "patching_rect": [76.0, 97.0, 50.0, 22.0],
+        "numinlets": 2,
+        "id": "obj-2",
+        "numoutlets": 1,
+        "outlettype": [""]
+      }
+    },
+    {
+      "box": {
+        "maxclass": "newobj",
+        "text": "b",
+        "patching_rect": [39.0, 39.0, 30.0, 22.0],
+        "numinlets": 1,
+        "id": "obj-1",
+        "numoutlets": 2,
+        "outlettype": ["bang", "bang"]
+      }
+    }
+  ],
+  "lines": [
+    {
+      "patchline": {
+        "source": ["obj-1", 0],
+        "destination": ["obj-2", 0]
+      }
+    }
+  ]
+}
