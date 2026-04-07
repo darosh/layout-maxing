@@ -1,0 +1,317 @@
+<script setup lang="ts">
+import { computed, ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { useOptimizerStore } from '@/stores/optimizer'
+import { getOutletPos, getInletPos, getViewPort } from 'layout-maxing'
+import { defaultConfig } from 'layout-maxing'
+
+const store = useOptimizerStore()
+
+const cfg = computed(() => ({ ...defaultConfig, ...store.config }))
+
+const layouts = computed(() => store.displayedLayouts)
+const lines = computed(() => store.lines)
+
+const viewport = computed(() => {
+  if (!layouts.value.length) return { x: 0, y: 0, width: 800, height: 600 }
+  const vp = getViewPort(layouts.value, cfg.value.gridX)
+  return { x: vp[0]!, y: vp[1]!, width: vp[2]!, height: vp[3]! }
+})
+
+// Container pixel size — drives stableVP aspect so viewBox matches the real
+// available proportions (avoids preserveAspectRatio letterboxing on top of
+// our own scale-to-fit).
+const rootEl = ref<HTMLDivElement | null>(null)
+const containerSize = ref<{ w: number; h: number }>({ w: 0, h: 0 })
+
+let ro: ResizeObserver | null = null
+watch(rootEl, (el) => {
+  if (ro) {
+    ro.disconnect()
+    ro = null
+  }
+  if (!el) return
+  ro = new ResizeObserver(() => {
+    const w = el.clientWidth
+    const h = el.clientHeight
+    if (w > 0 && h > 0) containerSize.value = { w, h }
+  })
+  ro.observe(el)
+  // initialize synchronously too
+  if (el.clientWidth > 0 && el.clientHeight > 0) {
+    containerSize.value = { w: el.clientWidth, h: el.clientHeight }
+  }
+})
+onBeforeUnmount(() => {
+  if (ro) {
+    ro.disconnect()
+    ro = null
+  }
+})
+
+// Stable viewBox in SVG units, aspect-locked to the container. Grows by
+// doubling (both axes) when the live layout no longer fits. Rebuilt when the
+// container aspect changes. Reset when layouts go empty.
+const stableVP = ref<{ w: number; h: number } | null>(null)
+// Disable transitions for one frame whenever viewBox jumps so rootTransform
+// and viewBox update atomically.
+const skipRootTransition = ref(false)
+
+const ASPECT_EPS = 0.01
+
+function jump(next: { w: number; h: number }) {
+  skipRootTransition.value = true
+  stableVP.value = next
+  nextTick(() => {
+    skipRootTransition.value = false
+  })
+}
+
+watch(layouts, (l) => {
+  if (!l.length) stableVP.value = null
+})
+
+watch(
+  [viewport, containerSize],
+  ([vp, cs]) => {
+    if (!layouts.value.length) return
+    if (cs.w <= 0 || cs.h <= 0) return
+
+    const containerAspect = cs.w / cs.h
+    let w: number
+    let h: number
+
+    if (!stableVP.value) {
+      // Seed in pixel-ish units at container size so stroke widths feel right.
+      w = cs.w
+      h = cs.h
+    } else {
+      w = stableVP.value.w
+      h = stableVP.value.h
+      const curAspect = w / h
+      if (Math.abs(curAspect - containerAspect) / containerAspect > ASPECT_EPS) {
+        // Rebuild to new aspect, keeping area roughly comparable.
+        const area = w * h
+        h = Math.sqrt(area / containerAspect)
+        w = h * containerAspect
+      }
+    }
+
+    // Grow by doubling until layout fits (maintains aspect).
+    while (w < vp.width || h < vp.height) {
+      w *= 2
+      h *= 2
+    }
+
+    const prev = stableVP.value
+    if (!prev || prev.w !== w || prev.h !== h) {
+      jump({ w, h })
+    }
+  },
+  { immediate: true },
+)
+
+// viewBox aspect == container aspect ⇒ preserveAspectRatio is a no-op.
+const viewBox = computed(() => {
+  const svp = stableVP.value
+  return svp ? `0 0 ${svp.w} ${svp.h}` : '0 0 512 512'
+})
+
+// Scale so the real layout fills the stable viewport (which now has the
+// container's true proportions), then center + offset to origin.
+const PADDING = 0.95
+const rootTransform = computed(() => {
+  const { x, y, width, height } = viewport.value
+  const svp = stableVP.value
+  if (!svp) return 'none'
+  const { w, h } = svp
+  const scale = Math.min(w / width, h / height) * PADDING
+  const cx = (w - width * scale) / 2
+  const cy = (h - height * scale) / 2
+  const tx = cx - x * scale
+  const ty = cy - y * scale
+  return `translate(${tx}px, ${ty}px) scale(${scale})`
+})
+
+const boxMap = computed(() => {
+  const m = new Map<string, (typeof layouts.value)[number]>()
+  for (const box of layouts.value) m.set(box.id, box)
+  return m
+})
+
+interface PathItem {
+  key: string
+  d: string
+}
+
+interface DotItem {
+  key: string
+  cx: number
+  cy: number
+}
+
+const pathData = computed<PathItem[]>(() => {
+  const result: PathItem[] = []
+  const bm = boxMap.value
+  const c = cfg.value
+
+  for (let i = 0; i < lines.value.length; i++) {
+    const line = lines.value[i]!
+    const p = line.patchline
+    const [sourceId, outletIdx] = p.source
+    const [destId, inletIdx] = p.destination
+
+    const sourceBox = bm.get(sourceId)
+    const destBox = bm.get(destId)
+    if (!sourceBox || !destBox) continue
+
+    const [sx, sy] = getOutletPos(sourceBox, outletIdx, c)
+    const [ex, ey] = getInletPos(destBox, inletIdx, c)
+
+    const c1y = sy + c.curveControl
+    const c2y = ey - c.curveControl
+
+    result.push({
+      key: `l${i}`,
+      d: `M ${sx},${sy} C ${sx},${c1y} ${ex},${c2y} ${ex},${ey}`,
+    })
+  }
+  return result
+})
+
+const portDots = computed<DotItem[]>(() => {
+  const result: DotItem[] = []
+  const bm = boxMap.value
+  const c = cfg.value
+
+  for (let i = 0; i < lines.value.length; i++) {
+    const line = lines.value[i]!
+    const p = line.patchline
+    const [sourceId, outletIdx] = p.source
+    const [destId, inletIdx] = p.destination
+
+    const sourceBox = bm.get(sourceId)
+    const destBox = bm.get(destId)
+    if (!sourceBox || !destBox) continue
+
+    const [sx, sy] = getOutletPos(sourceBox, outletIdx, c)
+    const [ex, ey] = getInletPos(destBox, inletIdx, c)
+
+    result.push({ key: `s${i}`, cx: sx, cy: sy })
+    result.push({ key: `d${i}`, cx: ex, cy: ey })
+  }
+  return result
+})
+</script>
+
+<template>
+  <div ref="rootEl" class="svg-animated-renderer">
+    <div v-if="!layouts.length" class="placeholder">
+      <i class="pi pi-objects-column placeholder-icon" />
+      <span>Preview will appear here during optimization</span>
+    </div>
+
+    <svg v-else :viewBox="viewBox" xmlns="http://www.w3.org/2000/svg" class="svg-canvas">
+      <g
+        :class="['layout-root', { 'layout-root--jump': skipRootTransition }]"
+        :style="{ transform: rootTransform }"
+      >
+        <!-- Boxes: animate position via CSS transform on the group -->
+        <g
+          v-for="box in layouts"
+          :key="box.id"
+          :style="{ transform: `translate(${box.x}px, ${box.y}px)` }"
+          class="box-group"
+        >
+          <rect :width="box.width" :height="box.height" rx="4" class="box" />
+        </g>
+
+        <!-- Lines: d attribute is CSS-animatable in modern browsers -->
+        <path v-for="item in pathData" :key="item.key" :d="item.d" class="line" />
+
+        <!-- Port dots -->
+        <g
+          v-for="dot in portDots"
+          :key="dot.key"
+          :style="{ transform: `translate(${dot.cx}px, ${dot.cy}px)` }"
+          class="port-group"
+        >
+          <circle r="3" class="port" />
+        </g>
+      </g>
+    </svg>
+  </div>
+</template>
+
+<style scoped>
+.svg-animated-renderer {
+  --t-transform: transform 200ms ease;
+  --t-d: d 200ms ease;
+
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--p-surface-600);
+  font-size: 0.875rem;
+}
+
+.placeholder-icon {
+  font-size: 2.5rem;
+}
+
+.svg-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.layout-root {
+  transition: var(--t-transform);
+  transform-origin: 0 0;
+}
+
+.layout-root--jump {
+  transition: none;
+}
+
+.box-group {
+  transition: var(--t-transform);
+}
+
+.box {
+  fill: #ccc;
+  fill-opacity: 0.15;
+  stroke: #666;
+  stroke-width: 3;
+}
+
+.line {
+  fill: none;
+  stroke: #00ccff;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: var(--t-d);
+}
+
+.port-group {
+  transition: var(--t-transform);
+}
+
+.port {
+  fill: #00ccff;
+}
+</style>
