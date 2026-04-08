@@ -18,6 +18,7 @@ export interface Config {
   totalOverPenalty?: number
   reversePenalty?: number
   areaPenalty?: number
+  totalDistPenalty?: number
   arPenalty?: number
   arMax?: number
   // GA parameters
@@ -79,7 +80,7 @@ export const configMeta: ConfigMeta = {
   gridX: [30, 1, 100, 1, 'Horizontal grid snap size in pixels'],
   gridY: [60, 1, 100, 1, 'Vertical grid snap size in pixels'],
   minDistX: [15, 0, 100, 1, 'Minimum horizontal distance between boxes'],
-  minDistY: [60, 0, 100, 1, 'Minimum vertical distance between boxes'],
+  minDistY: [15, 0, 100, 1, 'Minimum vertical distance between boxes'],
   boxZone: [5, 0, 50, 1, 'Extra padding zone around each box for line collision'],
   letOffest: [9.5, 0, 50, 0.5, 'Inlet/outlet offset from the box edge'],
   curveControl: [15, 0, 100, 1, 'Bezier curve control point distance for edge routing'],
@@ -112,6 +113,13 @@ export const configMeta: ConfigMeta = {
   totalOverPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier line-line overlaps'],
   reversePenalty: [3, 1, 10, 0.1, 'Multiplier penalty for lines connecting to inlet in upper box'],
   areaPenalty: [1.5, 1, 2, 0.1, 'Exponential multiplier based on number of overlapping boxes'],
+  totalDistPenalty: [
+    1.4,
+    1,
+    2,
+    0.1,
+    'Exponential multiplier for minDistX/minDistY pair violations',
+  ],
   arPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier based on aspect ratio of the viewport'],
   arMax: [5, 1, 25, 0.01, 'Maximum non-penalized aspect ratio'],
   // GA parameters
