@@ -181,7 +181,7 @@ self.onmessage = async (e: MessageEvent) => {
   function buildTopEntries(): TopEntry[] {
     return top.map((t) => ({
       score: t.score,
-      svg: toSvg(t.layouts, lines, cfg),
+      svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups),
       fitness: t.fitness,
       positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
     }))
@@ -193,7 +193,7 @@ self.onmessage = async (e: MessageEvent) => {
       .slice(0, topN)
       .map((t) => ({
         score: t.score,
-        svg: toSvg(t.layouts, lines, cfg),
+        svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups),
         fitness: t.fitness,
         positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
       }))
@@ -221,7 +221,7 @@ self.onmessage = async (e: MessageEvent) => {
     const origFitness = await pool.getFitness(origLayouts, lines, cfg)
     post({
       type: 'original',
-      svg: toSvg(origLayouts, lines, cfg),
+      svg: toSvg(origLayouts, lines, cfg, rnbo.patcher.boxgroups),
       fitness: origFitness,
       positions: origLayouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
       layouts: origLayouts,
@@ -262,7 +262,7 @@ self.onmessage = async (e: MessageEvent) => {
           const gen1stScore = sortedGen[0]?.score ?? null
           const gen2ndScore = sortedGen[1]?.score ?? null
           const genLastScore = sortedGen[sortedGen.length - 1]?.score ?? null
-          const svgNow = bestLayouts ? toSvg(bestLayouts, lines, cfg) : null
+          const svgNow = bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups) : null
           post({
             type: 'progress',
             evalCount,
@@ -307,14 +307,14 @@ self.onmessage = async (e: MessageEvent) => {
       genLastScore: sortedFinal[sortedFinal.length - 1]?.score ?? null,
       bestFitness,
       stopIn,
-      svg: bestLayouts ? toSvg(bestLayouts, lines, cfg) : null,
+      svg: bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups) : null,
       top: buildTopEntries(),
       currentGenTop: buildCurrentGenEntries(),
       layouts: bestLayouts ? [...bestLayouts] : null,
     })
     applyBestLayout(rnbo, bestIndividual, c)
     const finalLayouts = buildLayoutsForView()
-    const svg = toSvg(finalLayouts, lines, cfg)
+    const svg = toSvg(finalLayouts, lines, cfg, rnbo.patcher.boxgroups)
     if (c.logInfo)
       console.log(
         `[optimizer] done — ${evalCount} evals, best=${bestScore == null ? 'n/a' : (bestScore as number).toFixed(2)}`,
@@ -334,7 +334,7 @@ self.onmessage = async (e: MessageEvent) => {
       // main() threw before applyBestLayout — apply manually
       const layouts = bestLayouts as BoxLayout[] | null
       if (layouts) applyBestLayout(rnbo, layouts, c)
-      const svg = layouts ? toSvg(layouts, lines, cfg) : ''
+      const svg = layouts ? toSvg(layouts, lines, cfg, rnbo.patcher.boxgroups) : ''
       post({
         type: 'done',
         svg,

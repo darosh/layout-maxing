@@ -4,7 +4,14 @@ import { getOutletPos, getInletPos, getStraightLinePoints, getViewPort } from '.
 
 type BoxId = string
 
-export function toSvg(layouts: BoxLayout[], lines: Line[], cfg?: Config): string {
+const GROUP_PAD = 5
+
+export function toSvg(
+  layouts: BoxLayout[],
+  lines: Line[],
+  cfg?: Config,
+  boxgroups?: Array<{ boxes: BoxId[] }>,
+): string {
   const c = { ...defaultConfig, ...cfg }
   const boxMap = new Map<BoxId, BoxLayout>()
   for (const b of layouts) {
@@ -15,8 +22,34 @@ export function toSvg(layouts: BoxLayout[], lines: Line[], cfg?: Config): string
   // style="background:#1e1e1e"
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${viewPort[2]}" height="${viewPort[3]}" viewBox="${viewPort.join(' ')}">`
 
-  // const area = getViewPort(layouts, 0)
-  // svg += `<rect x="${area[0]}" y="${area[1]}" width="${area[2]}" height="${area[3]}" fill="#2e2e2e" fill-opacity=".5" />`
+  // Draw group bounding boxes
+  if (c.keepGroups && boxgroups?.length) {
+    for (const group of boxgroups) {
+      const members = group.boxes.map((id) => boxMap.get(id)).filter(Boolean) as BoxLayout[]
+      if (members.length < 2) continue
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity
+      for (const m of members) {
+        if (m.x < minX) minX = m.x
+        if (m.y < minY) minY = m.y
+        if (m.x + m.width > maxX) maxX = m.x + m.width
+        if (m.y + m.height > maxY) maxY = m.y + m.height
+      }
+      svg += `\n  <rect
+    x="${minX - GROUP_PAD}"
+    y="${minY - GROUP_PAD}"
+    width="${maxX - minX + GROUP_PAD * 2}"
+    height="${maxY - minY + GROUP_PAD * 2}"
+    rx="6"
+    fill="none"
+    stroke="#aaa"
+    stroke-width="1.5"
+    stroke-dasharray="6 4"
+    opacity="0.5"/>`
+    }
+  }
 
   // Draw boxes (rectangles only - no text)
   for (const box of layouts) {

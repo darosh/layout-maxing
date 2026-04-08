@@ -167,6 +167,49 @@ const boxMap = computed(() => {
   return m
 })
 
+interface GroupRect {
+  key: string
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+const GROUP_PAD = 5
+
+const groupRects = computed<GroupRect[]>(() => {
+  if (!store.config.keepGroups) return []
+  const boxgroups = store.rnbo?.patcher.boxgroups
+  if (!boxgroups?.length) return []
+  const bm = boxMap.value
+  const result: GroupRect[] = []
+  for (let i = 0; i < boxgroups.length; i++) {
+    const group = boxgroups[i]!
+    const members = group.boxes
+      .map((id) => bm.get(id))
+      .filter(Boolean) as (typeof layouts.value)[number][]
+    if (members.length < 2) continue
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity
+    for (const m of members) {
+      if (m.x < minX) minX = m.x
+      if (m.y < minY) minY = m.y
+      if (m.x + m.width > maxX) maxX = m.x + m.width
+      if (m.y + m.height > maxY) maxY = m.y + m.height
+    }
+    result.push({
+      key: `g${i}`,
+      x: minX - GROUP_PAD,
+      y: minY - GROUP_PAD,
+      width: maxX - minX + GROUP_PAD * 2,
+      height: maxY - minY + GROUP_PAD * 2,
+    })
+  }
+  return result
+})
+
 interface PathItem {
   key: string
   d: string
@@ -244,6 +287,18 @@ const portDots = computed<DotItem[]>(() => {
         :class="['layout-root', { 'layout-root--jump': skipRootTransition || skipAllTransitions }]"
         :style="{ transform: rootTransform }"
       >
+        <!-- Group bounding boxes -->
+        <rect
+          v-for="gr in groupRects"
+          :key="gr.key"
+          :x="gr.x"
+          :y="gr.y"
+          :width="gr.width"
+          :height="gr.height"
+          rx="6"
+          :class="['group-bbox', { 'group-bbox--jump': skipAllTransitions }]"
+        />
+
         <!-- Boxes: animate position via CSS transform on the group -->
         <g
           v-for="box in layouts"
@@ -313,6 +368,23 @@ const portDots = computed<DotItem[]>(() => {
 }
 
 .box-group--jump {
+  transition: none;
+}
+
+.group-bbox {
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+  opacity: 0.5;
+  transition:
+    x 200ms ease,
+    y 200ms ease,
+    width 200ms ease,
+    height 200ms ease;
+}
+
+.group-bbox--jump {
   transition: none;
 }
 

@@ -154,7 +154,7 @@ async function cli() {
         getFitness,
         (layouts: BoxLayout[]) => {
           if (c.writeSvg) {
-            const svg = toSvg(layouts, lines, cfg)
+            const svg = toSvg(layouts, lines, cfg, rnbo.patcher.boxgroups)
             const svgPath = `${outputPath}.svg`
             void Deno.writeTextFile(svgPath, svg).then(() => {
               if (c.logInfo) console.log(`SVG visualization of the layout written to: ${svgPath}`)
@@ -182,7 +182,7 @@ async function cli() {
       }
 
       if (c.writeSvg) {
-        const svg = toSvg(layouts, lines, cfg)
+        const svg = toSvg(layouts, lines, cfg, rnbo.patcher.boxgroups)
         const svgPath = `${outputPath}.svg`
         await Deno.writeTextFile(svgPath, svg)
         if (c.logInfo) console.log(`SVG visualization of the layout written to: ${svgPath}`)

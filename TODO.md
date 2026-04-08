@@ -34,7 +34,7 @@
 
 - [x] normalize to [0,0]
 - [x] normalizeExport to [0,0]
-- [X] ignore orphans
+- [x] ignore orphans
 
 ## DONE
 
