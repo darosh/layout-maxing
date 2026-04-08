@@ -80,7 +80,7 @@ export const configMeta: ConfigMeta = {
   gridX: [30, 1, 100, 1, 'Horizontal grid snap size in pixels'],
   gridY: [60, 1, 100, 1, 'Vertical grid snap size in pixels'],
   minDistX: [15, 0, 100, 1, 'Minimum horizontal distance between boxes'],
-  minDistY: [15, 0, 100, 1, 'Minimum vertical distance between boxes'],
+  minDistY: [10, 0, 100, 1, 'Minimum vertical distance between boxes'],
   boxZone: [5, 0, 50, 1, 'Extra padding zone around each box for line collision'],
   letOffest: [9.5, 0, 50, 0.5, 'Inlet/outlet offset from the box edge'],
   curveControl: [15, 0, 100, 1, 'Bezier curve control point distance for edge routing'],

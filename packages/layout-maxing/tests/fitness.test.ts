@@ -23,7 +23,7 @@ test('grouped boxes do not contribute to minDist violations', () => {
   const lines = patcher.lines
 
   // Without groupMap: the 4 tightly-packed group boxes produce exactly 3 pair violations (C(4,2)=6 pairs, 3 within-group)
-  const withoutGroup = fitness(layouts, lines)
+  const withoutGroup = fitness(layouts, lines, { minDistY: 15 })
   expect(withoutGroup.minDist, 'should detect minDist violations without groupMap').toBe(3)
 
   // With groupIdx stamped on layouts: grouped pairs are excluded
@@ -37,6 +37,6 @@ test('grouped boxes do not contribute to minDist violations', () => {
     })
   })
 
-  const withGroup = fitness(layouts, lines)
+  const withGroup = fitness(layouts, lines, { minDistY: 15 })
   expect(withGroup.minDist, 'grouped boxes should not be counted as minDist violations').toBe(0)
 })
