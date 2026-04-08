@@ -7,6 +7,7 @@
 - [ ] mirror
 - [ ] structural cross-over
 - [ ] row/col shift
+- [x] swap in row/col
 
 ### Fitness
 

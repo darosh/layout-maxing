@@ -17,6 +17,8 @@ import {
   mutateByQuadrant,
   mutateSwapSibling,
   mutateSwapRandom,
+  mutateSwapInRow,
+  mutateSwapInCol,
 } from './mutation.ts'
 import { getViewPort } from './geometry.ts'
 
@@ -297,6 +299,8 @@ async function runGenetic(
               cfg.mutWeightParents,
               cfg.mutWeightSwapSibling,
               cfg.mutWeightSwapRandom,
+              cfg.mutWeightSwapInRow,
+              cfg.mutWeightSwapInCol,
             ],
             rand,
           )
@@ -312,8 +316,12 @@ async function runGenetic(
             child = mutateWithParents(mutationTarget, child, { x, y }, cfg.maxParents)
           } else if (mutIdx === 4) {
             child = mutateSwapSibling(mutationTarget, child, rand)
-          } else {
+          } else if (mutIdx === 5) {
             child = mutateSwapRandom(mutationTarget, child, rand)
+          } else if (mutIdx === 6) {
+            child = mutateSwapInRow(mutationTarget, child, rand, cfg)
+          } else {
+            child = mutateSwapInCol(mutationTarget, child, rand, cfg)
           }
         }
       }

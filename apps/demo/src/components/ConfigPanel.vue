@@ -599,6 +599,30 @@ function copyCli() {
               v-tip.right="configMeta.mutWeightSwapRandom[4]"
               @keydown="handleShiftKey($event, 'mutWeightSwapRandom')"
             />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightSwapInRow') }"
+              @click="isNonDefault('mutWeightSwapInRow') && resetProp('mutWeightSwapInRow')"
+              >mutWeightSwapInRow</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightSwapInRow"
+              v-bind="numProps('mutWeightSwapInRow')"
+              size="small"
+              v-tip.right="configMeta.mutWeightSwapInRow[4]"
+              @keydown="handleShiftKey($event, 'mutWeightSwapInRow')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightSwapInCol') }"
+              @click="isNonDefault('mutWeightSwapInCol') && resetProp('mutWeightSwapInCol')"
+              >mutWeightSwapInCol</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightSwapInCol"
+              v-bind="numProps('mutWeightSwapInCol')"
+              size="small"
+              v-tip.right="configMeta.mutWeightSwapInCol[4]"
+              @keydown="handleShiftKey($event, 'mutWeightSwapInCol')"
+            />
           </div>
         </AccordionContent>
       </AccordionPanel>

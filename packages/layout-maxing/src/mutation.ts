@@ -139,6 +139,58 @@ export function mutateSwapSibling(target: BoxLayout, layouts: BoxLayout[], rand)
   return layouts
 }
 
+export function getRow(box: BoxLayout, layouts: BoxLayout[]): BoxLayout[] {
+  return layouts.filter((l) => l.y === box.y).sort((a, b) => a.x - b.x)
+}
+
+export function getCol(box: BoxLayout, layouts: BoxLayout[]): BoxLayout[] {
+  return layouts.filter((l) => l.x === box.x).sort((a, b) => a.y - b.y)
+}
+
+export function mutateSwapInRow(
+  target: BoxLayout,
+  layouts: BoxLayout[],
+  rand: () => number,
+  cfg: Required<Config>,
+): BoxLayout[] {
+  const row = getRow(target, layouts)
+  const idx = row.findIndex((b) => b.index === target.index)
+  const neighbors: BoxLayout[] = []
+  if (idx > 0) neighbors.push(row[idx - 1])
+  if (idx < row.length - 1) neighbors.push(row[idx + 1])
+  if (neighbors.length === 0) return layouts
+
+  const other = neighbors[Math.floor(rand() * neighbors.length) % neighbors.length]
+  const [left, right] = target.x < other.x ? [target, other] : [other, target]
+  const leftX = left.x
+  const rightX = right.x
+  right.x = leftX
+  left.x = Math.round((rightX + right.width - left.width) / cfg.gridX) * cfg.gridX
+  return layouts
+}
+
+export function mutateSwapInCol(
+  target: BoxLayout,
+  layouts: BoxLayout[],
+  rand: () => number,
+  cfg: Required<Config>,
+): BoxLayout[] {
+  const col = getCol(target, layouts)
+  const idx = col.findIndex((b) => b.index === target.index)
+  const neighbors: BoxLayout[] = []
+  if (idx > 0) neighbors.push(col[idx - 1])
+  if (idx < col.length - 1) neighbors.push(col[idx + 1])
+  if (neighbors.length === 0) return layouts
+
+  const other = neighbors[Math.floor(rand() * neighbors.length) % neighbors.length]
+  const [top, bottom] = target.y < other.y ? [target, other] : [other, target]
+  const topY = top.y
+  const bottomY = bottom.y
+  bottom.y = topY
+  top.y = Math.round((bottomY + bottom.height - top.height) / cfg.gridY) * cfg.gridY
+  return layouts
+}
+
 export function crossover(
   parent1: BoxLayout[],
   parent2: BoxLayout[],
