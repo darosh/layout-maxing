@@ -280,6 +280,18 @@ function copyCli() {
               @keydown="handleShiftKey($event, 'areaPenalty')"
             />
             <label
+              :class="{ 'non-default': isNonDefault('totalDistPenalty') }"
+              @click="isNonDefault('totalDistPenalty') && resetProp('totalDistPenalty')"
+              >totalDistPenalty</label
+            >
+            <InputNumber
+              v-model="cfg.totalDistPenalty"
+              v-bind="numProps('totalDistPenalty')"
+              size="small"
+              v-tip.right="configMeta.totalDistPenalty[4]"
+              @keydown="handleShiftKey($event, 'totalDistPenalty')"
+            />
+            <label
               :class="{ 'non-default': isNonDefault('arPenalty') }"
               @click="isNonDefault('arPenalty') && resetProp('arPenalty')"
               >arPenalty</label
