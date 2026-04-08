@@ -27,14 +27,7 @@ const vTip = {
 }
 
 const store = useOptimizerStore()
-const {
-  config: cfg,
-  progressInterval,
-  svgInterval,
-  topN,
-  allTimeTop,
-  isConfigDefault,
-} = storeToRefs(store)
+const { config: cfg, progressInterval, topN, isConfigDefault } = storeToRefs(store)
 
 function numProps(key: keyof Config) {
   const [, min, max, step] = configMeta[key]
@@ -700,14 +693,6 @@ function copyCli() {
               size="small"
               v-tip.right="'Post stats every N evaluations'"
             />
-            <label>svgInterval</label>
-            <InputNumber
-              v-model="svgInterval"
-              :min="200"
-              :max="10000"
-              size="small"
-              v-tip.right="'Post SVG update every N milliseconds'"
-            />
             <label>topN</label>
             <InputNumber
               v-model="topN"
@@ -715,13 +700,6 @@ function copyCli() {
               :max="100"
               size="small"
               v-tip.right="'Number of top candidates to track and preview'"
-            />
-          </div>
-          <div class="toggles-grid">
-            <label>allTimeTop</label>
-            <ToggleSwitch
-              v-model="allTimeTop"
-              v-tip.right="'Show best across all time (on) or current population only (off)'"
             />
           </div>
         </AccordionContent>

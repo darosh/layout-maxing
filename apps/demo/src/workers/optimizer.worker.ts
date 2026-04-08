@@ -15,19 +15,16 @@ type ProgressMsg = {
   genLastScore: number | null
   bestFitness: Fitness | null
   stopIn: number
+  svg: string | null
+  top: TopEntry[] | null
+  currentGenTop: TopEntry[] | null
+  layouts: BoxLayout[] | null
 }
 type OriginalMsg = {
   type: 'original'
   svg: string
   fitness: Fitness
   positions: Position[]
-  layouts: BoxLayout[]
-}
-type SvgMsg = {
-  type: 'svg'
-  svg: string
-  top: TopEntry[]
-  currentGenTop: TopEntry[]
   layouts: BoxLayout[]
 }
 type DoneMsg = {
@@ -40,7 +37,7 @@ type DoneMsg = {
 }
 type ErrorMsg = { type: 'error'; message: string }
 
-type WorkerMsg = OriginalMsg | ProgressMsg | SvgMsg | DoneMsg | ErrorMsg
+type WorkerMsg = OriginalMsg | ProgressMsg | DoneMsg | ErrorMsg
 
 let stopped = false
 let paused = false
@@ -116,14 +113,14 @@ self.onmessage = async (e: MessageEvent) => {
     rnbo,
     cfg,
     progressInterval = 200,
-    svgInterval = 1000,
+    svgInterval: _svgInterval = 1000,
     topN = 10,
     initialPositions,
   } = e.data as {
     rnbo: RNBO
     cfg: Config
     progressInterval?: number
-    svgInterval?: number
+    svgInterval?: number // unused, kept for API compat
     topN?: number
     initialPositions?: { id: string; x: number; y: number }[]
   }
@@ -151,7 +148,6 @@ self.onmessage = async (e: MessageEvent) => {
   let bestScore: number | null = null
   let bestFitness: Fitness | null = null
   let bestLayouts: BoxLayout[] | null = null
-  let lastSvgTime = 0
   let lastProgressTime = 0
   let stopIn = c.stop
   const startTime = Date.now()
@@ -236,7 +232,7 @@ self.onmessage = async (e: MessageEvent) => {
         if (currentPop.length > c.popSize) currentPop.shift()
         const now = Date.now()
 
-        // Progress stats (count-based, every progressInterval evals)
+        // Progress + SVG update, every progressInterval ms
         if (now - lastProgressTime >= progressInterval) {
           lastProgressTime = now
           const generation = Math.floor(evalCount / c.popSize)
@@ -245,6 +241,7 @@ self.onmessage = async (e: MessageEvent) => {
           const gen1stScore = sortedGen[0]?.score ?? null
           const gen2ndScore = sortedGen[1]?.score ?? null
           const genLastScore = sortedGen[sortedGen.length - 1]?.score ?? null
+          const svgNow = bestLayouts ? toSvg(bestLayouts, lines, cfg) : null
           post({
             type: 'progress',
             evalCount,
@@ -256,37 +253,16 @@ self.onmessage = async (e: MessageEvent) => {
             genLastScore,
             bestFitness,
             stopIn,
-          })
-        }
-
-        // SVG update (time-based, every svgInterval ms)
-        if (now - lastSvgTime >= svgInterval && bestLayouts) {
-          lastSvgTime = now
-          const svg = toSvg(bestLayouts, lines, cfg)
-          post({
-            type: 'svg',
-            svg,
+            svg: svgNow,
             top: buildTopEntries(),
             currentGenTop: buildCurrentGenEntries(),
-            layouts: bestLayouts,
+            layouts: bestLayouts ? [...bestLayouts] : null,
           })
         }
 
         return result
       },
-      (layouts: BoxLayout[]) => {
-        // onIntermediate: called when approaching stop threshold — always emit SVG here
-        const snapped = cloneForSvg(layouts)
-        const svg = toSvg(snapped, lines, cfg)
-        lastSvgTime = Date.now()
-        post({
-          type: 'svg',
-          svg,
-          top: buildTopEntries(),
-          currentGenTop: buildCurrentGenEntries(),
-          layouts: snapped,
-        })
-      },
+      undefined,
       cfg,
       (stop: number) => {
         stopIn = stop
@@ -310,6 +286,10 @@ self.onmessage = async (e: MessageEvent) => {
       genLastScore: sortedFinal[sortedFinal.length - 1]?.score ?? null,
       bestFitness,
       stopIn,
+      svg: bestLayouts ? toSvg(bestLayouts, lines, cfg) : null,
+      top: buildTopEntries(),
+      currentGenTop: buildCurrentGenEntries(),
+      layouts: bestLayouts ? [...bestLayouts] : null,
     })
     applyBestLayout(rnbo, bestIndividual, c)
     const finalLayouts = cloneForSvg(createInitialLayouts(rnbo.patcher))

@@ -54,7 +54,34 @@ onBeforeUnmount(() => {
 const stableVP = ref<{ w: number; h: number } | null>(null)
 // Disable transitions for one frame whenever viewBox jumps so rootTransform
 // and viewBox update atomically.
-const skipRootTransition = ref(false)
+const skipRootTransition = ref(true)
+
+// Suppress all layout transitions on run start (boxes flying from old positions)
+const skipAllTransitions = ref(true)
+
+watch(
+  () => store.runId,
+  () => {
+    skipAllTransitions.value = true
+  },
+)
+
+watch(
+  () => store.displayedLayouts,
+  () => {
+    if (!skipAllTransitions.value) {
+      return
+    }
+
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          skipAllTransitions.value = false
+        })
+      })
+    })
+  },
+)
 
 const ASPECT_EPS = 0.01
 
@@ -62,7 +89,9 @@ function jump(next: { w: number; h: number }) {
   skipRootTransition.value = true
   stableVP.value = next
   nextTick(() => {
-    skipRootTransition.value = false
+    requestAnimationFrame(() => {
+      skipRootTransition.value = false
+    })
   })
 }
 
@@ -212,7 +241,7 @@ const portDots = computed<DotItem[]>(() => {
 
     <svg v-else :viewBox="viewBox" xmlns="http://www.w3.org/2000/svg" class="svg-canvas">
       <g
-        :class="['layout-root', { 'layout-root--jump': skipRootTransition }]"
+        :class="['layout-root', { 'layout-root--jump': skipRootTransition || skipAllTransitions }]"
         :style="{ transform: rootTransform }"
       >
         <!-- Boxes: animate position via CSS transform on the group -->
@@ -220,20 +249,25 @@ const portDots = computed<DotItem[]>(() => {
           v-for="box in layouts"
           :key="box.id"
           :style="{ transform: `translate(${box.x}px, ${box.y}px)` }"
-          class="box-group"
+          :class="['box-group', { 'box-group--jump': skipAllTransitions }]"
         >
           <rect :width="box.width" :height="box.height" rx="4" class="box" />
         </g>
 
         <!-- Lines: d attribute is CSS-animatable in modern browsers -->
-        <path v-for="item in pathData" :key="item.key" :d="item.d" class="line" />
+        <path
+          v-for="item in pathData"
+          :key="item.key"
+          :d="item.d"
+          :class="['line', { 'line--jump': skipAllTransitions }]"
+        />
 
         <!-- Port dots -->
         <g
           v-for="dot in portDots"
           :key="dot.key"
           :style="{ transform: `translate(${dot.cx}px, ${dot.cy}px)` }"
-          class="port-group"
+          :class="['port-group', { 'port-group--jump': skipAllTransitions }]"
         >
           <circle r="3" class="port" />
         </g>
@@ -291,6 +325,10 @@ const portDots = computed<DotItem[]>(() => {
   transition: var(--t-transform);
 }
 
+.box-group--jump {
+  transition: none;
+}
+
 .box {
   fill: #ccc;
   fill-opacity: 0.15;
@@ -307,8 +345,16 @@ const portDots = computed<DotItem[]>(() => {
   transition: var(--t-d);
 }
 
+.line--jump {
+  transition: none;
+}
+
 .port-group {
   transition: var(--t-transform);
+}
+
+.port-group--jump {
+  transition: none;
 }
 
 .port {

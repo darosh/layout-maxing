@@ -16,9 +16,7 @@ export interface TopEntry {
 }
 
 export type Selection =
-  | { kind: 'live' }
   | { kind: 'original' }
-  | { kind: 'best' }
   | { kind: 'allTime'; index: number }
   | { kind: 'current'; index: number }
 
@@ -47,7 +45,6 @@ export const useOptimizerStore = defineStore('optimizer', () => {
 
   // UI-only run settings (not part of Config)
   const progressInterval = ref<number>(savedRun?.progressInterval ?? 200)
-  const svgInterval = ref<number>(savedRun?.svgInterval ?? 1000)
   const topN = ref<number>(savedRun?.topN ?? 15)
   const allTimeTop = ref<boolean>(savedRun?.allTimeTop ?? true)
   // Persist config changes
@@ -60,12 +57,11 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   )
 
   // Persist run settings changes
-  watch([progressInterval, svgInterval, topN, allTimeTop], () => {
+  watch([progressInterval, topN, allTimeTop], () => {
     localStorage.setItem(
       RUN_KEY,
       JSON.stringify({
         progressInterval: progressInterval.value,
-        svgInterval: svgInterval.value,
         topN: topN.value,
         allTimeTop: allTimeTop.value,
       }),
@@ -90,7 +86,6 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     bestFitness: null as Fitness | null,
     stopIn: defaultConfig.stop,
   })
-  const svg = ref('')
   const top = ref<TopEntry[]>([])
   const currentGenTop = ref<TopEntry[]>([])
   const resultRnbo = ref<RNBO | null>(null)
@@ -102,11 +97,11 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const originalPositions = ref<{ id: string; x: number; y: number }[]>([])
   const originalLayouts = ref<BoxLayout[]>([])
 
-  // Current live layouts (updated with each svg message)
-  const layouts = ref<BoxLayout[]>([])
-
   // Selected entry
-  const selection = ref<Selection>({ kind: 'live' })
+  const selection = ref<Selection>({ kind: 'allTime', index: 0 })
+
+  // Increments on every run start — lets renderers suppress transitions for the first frame
+  const runId = ref(0)
 
   let worker: Worker | null = null
 
@@ -131,22 +126,46 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   })
 
   function resolveEntry(sel: Selection): TopEntry | null {
-    if (sel.kind === 'best') return top.value[0] ?? null
     if (sel.kind === 'allTime') return top.value[sel.index] ?? null
     if (sel.kind === 'current') return currentGenTop.value[sel.index] ?? null
     return null
   }
 
+  // Switch between all-time/current-gen mode, preserving index, clamping to last
+  function switchMode(toAllTime: boolean) {
+    allTimeTop.value = toAllTime
+    const sel = selection.value
+    if (sel.kind !== 'allTime' && sel.kind !== 'current') return
+    if (sel.index === 0) return
+
+    const idx = sel.index
+
+    if (toAllTime) {
+      const max = topN.value
+      selection.value = { kind: 'allTime', index: Math.min(idx, max) }
+    } else {
+      const max = Math.max(0, currentGenTop.value.length - 1)
+      selection.value = { kind: 'current', index: Math.min(idx, max) }
+    }
+  }
+
+  watch(topN, (val) => {
+    const sel = selection.value
+    if (sel.kind === 'allTime' && sel.index >= val) {
+      selection.value = { kind: 'allTime', index: Math.max(0, val - 1) }
+    } else if (sel.kind === 'current' && sel.index >= val) {
+      selection.value = { kind: 'current', index: Math.max(0, val - 1) }
+    }
+  })
+
   const displayedSvg = computed(() => {
     const sel = selection.value
-    if (sel.kind === 'live') return svg.value
     if (sel.kind === 'original') return originalSvg.value
     return resolveEntry(sel)?.svg ?? ''
   })
 
   const displayedLayouts = computed<BoxLayout[]>(() => {
     const sel = selection.value
-    if (sel.kind === 'live') return layouts.value
     if (sel.kind === 'original') return originalLayouts.value
     const entry = resolveEntry(sel)
     if (!entry) return []
@@ -162,7 +181,6 @@ export const useOptimizerStore = defineStore('optimizer', () => {
 
   const displayedFitness = computed<Fitness | null>(() => {
     const sel = selection.value
-    if (sel.kind === 'live') return progress.value.bestFitness
     if (sel.kind === 'original') return originalFitness.value
     return resolveEntry(sel)?.fitness ?? null
   })
@@ -172,16 +190,12 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   )
 
   function loadFile(content: string | RNBO, name: string, source: 'file' | 'clipboard' = 'file') {
-    console.log(content)
     const wasRunning = status.value === 'running' || status.value === 'paused'
     if (wasRunning) stopOptimization()
     try {
       rnbo.value = typeof content === 'string' ? (JSON.parse(content) as RNBO) : content
       fileName.value = name
       inputSource.value = source
-      svg.value = ''
-      top.value = []
-      currentGenTop.value = []
       resultRnbo.value = null
       status.value = 'idle'
       error.value = null
@@ -196,12 +210,6 @@ export const useOptimizerStore = defineStore('optimizer', () => {
         bestFitness: null,
         stopIn: defaultConfig.stop,
       }
-      selection.value = { kind: 'best' }
-      originalSvg.value = ''
-      originalFitness.value = null
-      originalPositions.value = []
-      originalLayouts.value = []
-      layouts.value = []
     } catch {
       error.value = 'Invalid JSON file'
       return
@@ -226,9 +234,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
 
     status.value = 'running'
     error.value = null
-    top.value = []
-    currentGenTop.value = []
     resultRnbo.value = null
+    runId.value++
     progress.value = {
       evalCount: 0,
       generation: 0,
@@ -240,11 +247,6 @@ export const useOptimizerStore = defineStore('optimizer', () => {
       bestFitness: null,
       stopIn: config.value.stop ?? defaultConfig.stop,
     }
-    selection.value = { kind: 'best' }
-    originalSvg.value = ''
-    originalFitness.value = null
-    originalPositions.value = []
-
     worker = new Worker(new URL('../workers/optimizer.worker.ts', import.meta.url), {
       type: 'module',
     })
@@ -270,19 +272,17 @@ export const useOptimizerStore = defineStore('optimizer', () => {
             bestFitness: msg.bestFitness ?? null,
             stopIn: msg.stopIn ?? progress.value.stopIn,
           }
-          break
-        case 'svg':
-          svg.value = msg.svg
           if (msg.top?.length) top.value = msg.top
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
-          if (msg.layouts?.length) layouts.value = msg.layouts
+          break
+        case 'svg':
+          if (msg.top?.length) top.value = msg.top
+          if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
           break
         case 'done':
           status.value = 'done'
-          if (msg.svg) svg.value = msg.svg
           if (msg.top?.length) top.value = msg.top
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
-          if (msg.layouts?.length) layouts.value = msg.layouts
           resultRnbo.value = msg.rnbo ?? null
           worker?.terminate()
           worker = null
@@ -307,7 +307,6 @@ export const useOptimizerStore = defineStore('optimizer', () => {
       rnbo: toRaw(rnbo.value),
       cfg: toRaw(config.value),
       progressInterval: progressInterval.value,
-      svgInterval: svgInterval.value,
       topN: topN.value,
       initialPositions,
     })
@@ -369,12 +368,6 @@ export const useOptimizerStore = defineStore('optimizer', () => {
 
   function getExportRnbo(): RNBO | null {
     const sel = selection.value
-    if (sel.kind === 'live') {
-      if (resultRnbo.value) return resultRnbo.value
-      const entry = top.value[0]
-      if (!entry) return null
-      return applyPositions(entry.positions)
-    }
     if (sel.kind === 'original') return toRaw(rnbo.value)
     const entry = resolveEntry(sel)
     if (!entry) return null
@@ -397,13 +390,13 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     inputSource,
     config,
     progressInterval,
-    svgInterval,
+    runId,
     topN,
     allTimeTop,
+    switchMode,
     isConfigDefault,
     status,
     progress,
-    svg,
     top,
     currentGenTop,
     resultRnbo,

@@ -4,6 +4,7 @@ import { useOptimizerStore } from '@/stores/optimizer'
 import type { Selection } from '@/stores/optimizer'
 import { formatFullScore, formatScore } from '@/utils/formatScore.ts'
 import FlyingTooltip from './FlyingTooltip.vue'
+import Button from 'primevue/button'
 
 const store = useOptimizerStore()
 
@@ -21,7 +22,11 @@ function isActive(sel: Selection): boolean {
   return true
 }
 
-const displaySet = computed(() => (store.allTimeTop ? store.top.slice(1) : store.currentGenTop))
+// 2nd…Nth entries in the currently active mode
+const displaySet = computed(() =>
+  store.allTimeTop ? store.top.slice(1) : store.currentGenTop.slice(1),
+)
+
 let o: string
 
 const barRef = ref<HTMLElement | null>(null)
@@ -31,7 +36,6 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
 <template>
   <FlyingTooltip ref="tooltip" />
   <div v-if="store.originalSvg || store.top.length" ref="barRef" class="top-results-bar">
-    <button class="thumb-btn" @click="store.selection = { kind: 'live' }">Live</button>
     <!-- Original layout -->
     <button
       v-if="store.originalSvg"
@@ -55,23 +59,60 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
       </span>
     </button>
 
-    <!-- All-time best (always visible) -->
+    <!-- All-time best (index 0) -->
     <button
       v-if="store.top.length"
       class="thumb-btn"
-      :class="{ active: isActive({ kind: 'best' }) }"
+      :class="{ active: isActive({ kind: 'allTime', index: 0 }) }"
       @mouseenter="
         tooltip?.show($event, `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)
       "
       @mouseleave="tooltip?.hide()"
-      @click="store.selection = { kind: 'best' }"
+      @click="store.selection = { kind: 'allTime', index: 0 }"
     >
       <div class="thumb-svg" v-html="store.top[0]!.svg" />
       <span class="thumb-label">Best</span>
       <span class="thumb-score">{{ formatScore(store.top[0]!.score) }}</span>
     </button>
 
-    <!-- Selected set: all-time (#1, #2…) or current gen (1st, 2nd…) -->
+    <!-- Current gen best (index 0) -->
+    <button
+      v-if="store.currentGenTop.length"
+      class="thumb-btn"
+      :class="{ active: isActive({ kind: 'current', index: 0 }) }"
+      @mouseenter="
+        tooltip?.show(
+          $event,
+          `Current gen best\nScore: ${formatFullScore(store.currentGenTop[0]!.score)}`,
+        )
+      "
+      @mouseleave="tooltip?.hide()"
+      @click="store.selection = { kind: 'current', index: 0 }"
+    >
+      <div class="thumb-svg" v-html="store.currentGenTop[0]!.svg" />
+      <span class="thumb-label">Current</span>
+      <span class="thumb-score">{{ formatScore(store.currentGenTop[0]!.score) }}</span>
+    </button>
+
+    <!-- Mode toggle -->
+    <div v-if="store.top.length" class="mode-toggle">
+      <Button
+        label="Best"
+        size="small"
+        :severity="store.allTimeTop ? 'info' : 'secondary'"
+        variant="outlined"
+        @click="store.switchMode(true)"
+      />
+      <Button
+        label="Current"
+        size="small"
+        :severity="!store.allTimeTop ? 'info' : 'secondary'"
+        variant="outlined"
+        @click="store.switchMode(false)"
+      />
+    </div>
+
+    <!-- 2…N entries -->
     <template v-if="store.allTimeTop">
       <button
         v-for="(entry, i) in displaySet"
@@ -92,16 +133,16 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         v-for="(entry, i) in displaySet"
         :key="i"
         class="thumb-btn"
-        :class="{ active: isActive({ kind: 'current', index: i }) }"
+        :class="{ active: isActive({ kind: 'current', index: i + 1 }) }"
         @mouseenter="
-          tooltip?.show($event, `Current ${ordinal(i + 1)}\nScore: ${formatFullScore(entry.score)}`)
+          tooltip?.show($event, `Current ${ordinal(i + 2)}\nScore: ${formatFullScore(entry.score)}`)
         "
         @mouseleave="tooltip?.hide()"
-        @click="store.selection = { kind: 'current', index: i }"
+        @click="store.selection = { kind: 'current', index: i + 1 }"
       >
         <div class="thumb-svg" v-html="entry.svg" />
         <span class="thumb-label"
-          >{{ void (o = ordinal(i + 1)) }}{{ o.slice(0, o.length - 2)
+          >{{ void (o = ordinal(i + 2)) }}{{ o.slice(0, o.length - 2)
           }}<span class="thumb-label-ordinal">{{ o.slice(o.length - 2) }}</span>
         </span>
         <span class="thumb-score">{{ formatScore(entry.score) }}</span>
@@ -116,7 +157,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 1rem 0.75rem 0.75rem 0.75rem;
+  padding: 0.75rem 0.75rem 0.75rem 0.75rem;
   border-top: 1px solid var(--p-surface-800);
   background: var(--p-surface-950);
   flex-shrink: 0;
@@ -141,7 +182,6 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
 }
 
 .thumb-btn:focus {
-  /*outline: 1px solid var(--p-surface-500);*/
   outline: none;
 }
 
@@ -174,18 +214,17 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
 .thumb-score {
   position: absolute;
   left: 0.5rem;
-  bottom: 0;
+  bottom: 0.25rem;
   font-size: 0.85rem;
   font-family: monospace;
   color: var(--p-surface-200);
   opacity: 0.7;
   text-align: center;
-  padding: 1px 4px;
 }
 
 .thumb-label {
   position: absolute;
-  left: 0.7rem;
+  left: 0.5rem;
   top: 0.25rem;
   font-size: 0.7rem;
   font-family: monospace;
@@ -201,5 +240,18 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
   line-height: 1.4;
   display: inline-flex;
   margin-left: 0.3em;
+}
+
+.mode-toggle {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 120px;
+  height: 80px;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 1.5rem;
+  --p-button-sm-font-size: 0.75rem;
+  --p-button-sm-padding-y: 0.25rem;
 }
 </style>

@@ -22,12 +22,18 @@ function ordinal(n: number): string {
 
 const selectionLabel = computed(() => {
   const sel = store.selection
-  if (sel.kind === 'live') return null
   if (sel.kind === 'original') return INPUT_LABEL
-  if (sel.kind === 'best') return BEST_LABEL
   if (sel.kind === 'allTime') return `#${sel.index + 1}`
   if (sel.kind === 'current') return ordinal(sel.index + 1)
   return null
+})
+
+const selectionKey = computed(() => {
+  const sel = store.selection
+  if (sel.kind === 'original') return 'original'
+  if (sel.kind === 'allTime') return `allTime-${sel.index}`
+  if (sel.kind === 'current') return `current-${sel.index}`
+  return 'unknown'
 })
 
 const fullScore = computed(() => {
@@ -45,7 +51,7 @@ const fullScore = computed(() => {
 
     <template v-else>
       <!-- SVG canvas: key change triggers the brief fade-in CSS animation -->
-      <div class="svg-canvas" :key="store.displayedSvg" v-html="store.displayedSvg" />
+      <div class="svg-canvas" :key="selectionKey" v-html="store.displayedSvg" />
 
       <!-- Bottom-left: score + selection label -->
       <div class="overlay overlay-bl">
