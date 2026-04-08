@@ -68,5 +68,17 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1000,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: 'examples',
+              test: /examples\.ts/,
+            },
+          ],
+        },
+      },
+    },
   },
 })
