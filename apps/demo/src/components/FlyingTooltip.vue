@@ -87,7 +87,7 @@ defineExpose({ show, hide })
   position: fixed;
   transform: translate(-50%, calc(-100% - 6px));
   background: var(--p-surface-800);
-  color: var(--p-surface-50);
+  color: var(--p-surface-300);
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   box-shadow:
