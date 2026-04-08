@@ -163,6 +163,16 @@ async function runGenetic(
 ): Promise<BoxLayout[]> {
   // Create population
   let population = await createPopulation(startingLayouts, lines, rand, cfg, groupPlan, getFitness)
+
+  // If all boxes were stripped (e.g. ignoreOrphans + no lines), return empty
+  if (population[0].layouts.length === 0) {
+    if (logInfo) {
+      logInfo('No boxes!')
+    }
+
+    return []
+  }
+
   const initialFitness = getFitness
     ? await getFitness(population[0].layouts, lines, cfg)
     : fitness(population[0].layouts, lines, cfg)

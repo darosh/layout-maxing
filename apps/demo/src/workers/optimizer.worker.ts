@@ -6,6 +6,8 @@ import {
   applyBestLayout,
   fillDepths,
   stripOrphans,
+  preserveGroupMembers,
+  stampGroupIdx,
 } from 'layout-maxing'
 import type { RNBO, Config, BoxLayout, Line, Fitness } from 'layout-maxing'
 
@@ -207,8 +209,10 @@ self.onmessage = async (e: MessageEvent) => {
   // so orphans never reach SVG / positions / export.
   function buildLayoutsForView(): BoxLayout[] {
     let ls = createInitialLayouts(rnbo.patcher)
+    if (c.keepGroups) stampGroupIdx(ls, rnbo.patcher.boxgroups)
     if (c.ignoreOrphans) {
       fillDepths(ls, lines)
+      if (c.keepGroups) preserveGroupMembers(ls, rnbo.patcher.boxgroups)
       ls = stripOrphans(ls)
       fillDepths(ls, lines)
     }

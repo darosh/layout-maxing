@@ -8,10 +8,11 @@ const GROUP_PAD = 5
 
 export function toSvg(
   layouts: BoxLayout[],
-  lines: Line[],
+  lines: Line[] | undefined,
   cfg?: Config,
   boxgroups?: Array<{ boxes: BoxId[] }>,
 ): string {
+  lines ??= []
   const c = { ...defaultConfig, ...cfg }
   const boxMap = new Map<BoxId, BoxLayout>()
   for (const b of layouts) {

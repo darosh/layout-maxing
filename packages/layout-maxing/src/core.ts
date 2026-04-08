@@ -10,6 +10,8 @@ import {
   simpleFlow,
   normalizeLayouts,
   stripOrphans,
+  preserveGroupMembers,
+  stampGroupIdx,
   buildGroupPlan,
   alignGroups,
 } from './layout.ts'
@@ -50,7 +52,7 @@ export function applyBestLayout(rnbo: RNBO, best: BoxLayout[], cfg: Required<Con
     // width/height unchanged
   }
   if (cfg.removeLineSegments) {
-    for (const line of rnbo.patcher.lines) {
+    for (const line of rnbo.patcher.lines ?? []) {
       delete line.patchline.midpoints
     }
   }
@@ -89,10 +91,12 @@ export async function main(
   const rand = c.deterministic ? createDeterministicRandom(c.seed) : Math.random
 
   const patcher = rnbo.patcher
-  const lines = patcher.lines
+  const lines = patcher.lines ?? []
 
   // Build initial layouts
   let baseLayouts = createInitialLayouts(patcher)
+  // Stamp groupIdx early so input fitness correctly skips same-group pairs
+  if (c.keepGroups) stampGroupIdx(baseLayouts, patcher.boxgroups)
   const inputFitness = getFitness
     ? await getFitness(baseLayouts, lines, c)
     : fitness(baseLayouts, lines, c)
@@ -104,6 +108,7 @@ export async function main(
   fillDepths(baseLayouts, lines)
 
   if (c.ignoreOrphans) {
+    if (c.keepGroups) preserveGroupMembers(baseLayouts, patcher.boxgroups)
     baseLayouts = stripOrphans(baseLayouts)
     // Re-run depth/parent/children resolution: stripOrphans re-numbers
     // .index, so the cached parents/children arrays from the first
@@ -141,6 +146,10 @@ export async function main(
   for (const sl of startingLayouts) {
     if (c.keepGroups) alignGroups(sl, groupPlan)
     if (c.normalize) normalizeLayouts(sl)
+  }
+
+  if (lines.length === 0 && logInfo) {
+    logInfo('No lines!')
   }
 
   return runGenetic(

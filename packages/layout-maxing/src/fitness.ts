@@ -22,6 +22,7 @@ export interface Fitness {
   misalignedSS: number
   misalignedFirst: number
   area: number
+  minDist: number
   view: number
 }
 
@@ -52,10 +53,18 @@ export const fitnessMeta: FitnessMeta = {
     'Number of first-outlet to first-inlet lines with x-misalignment penalty applied',
   ],
   area: ['Area', 'ARE', 'Number of box-box intersection areas'],
+  minDist: ['Min Dist', 'DST', 'Number of box pairs violating minDistX or minDistY spacing'],
   view: ['View', 'VIE', 'Viewport size'],
 }
 
-export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitness {
+export function fitness(
+  layouts: BoxLayout[],
+  lines: Line[] | undefined,
+  cfg?: Config,
+  /** @deprecated groupIdx on BoxLayout is preferred; this param is ignored */
+  _groupMap?: Map<string, number>,
+): Fitness {
+  lines ??= []
   const c = { ...defaultConfig, ...cfg }
   const boxMap = new Map<BoxId, BoxLayout>()
   for (const b of layouts) boxMap.set(b.id, b)
@@ -161,22 +170,34 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
   }
 
   let area = 0
+  let minDist = 0
 
   for (let i = 0; i < layouts.length; i++) {
     for (let j = i + 1; j < layouts.length; j++) {
-      area += getIntersectionArea(layouts[i], layouts[j], c.minDistX / 2) ? 1 : 0
+      const a = layouts[i]
+      const b = layouts[j]
+
+      const sameGroup = a.groupIdx !== undefined && a.groupIdx === b.groupIdx
+
+      if (!sameGroup && getIntersectionArea(a, b, c.minDistX / 2)) area++
+
+      if (sameGroup) continue
+
+      const xGap = Math.max(0, Math.max(a.x, b.x) - Math.min(a.x + a.width, b.x + b.width))
+      const yGap = Math.max(0, Math.max(a.y, b.y) - Math.min(a.y + a.height, b.y + b.height))
+      if (xGap < c.minDistX && yGap < c.minDistY) minDist++
     }
   }
 
   const vp = getViewPort(layouts)
   const view = vp[2] * vp[3]
   let ar = Math.max(vp[2] / vp[3], vp[3] / vp[2])
-  ar = ar > cfg.arMax ? ar : 0
+  ar = ar > c.arMax ? ar : 0
 
   // Apply crossing penalty
   return {
     score:
-      totalLength *
+      (totalLength || 1) *
       view ** (1 / layouts.length) *
       c.totalCollisionPenalty ** collisions *
       c.totalSSCPenalty ** singleSelfCollisions *
@@ -184,6 +205,7 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
       c.totalCrossPenalty ** crossings *
       c.totalOverPenalty ** overlaps *
       c.areaPenalty ** area *
+      c.totalDistPenalty ** minDist *
       c.arPenalty ** ar,
     crossings,
     overlaps,
@@ -192,6 +214,7 @@ export function fitness(layouts: BoxLayout[], lines: Line[], cfg?: Config): Fitn
     misalignedSS,
     misalignedFirst,
     area,
+    minDist,
     view,
     length: totalRawLength,
   }

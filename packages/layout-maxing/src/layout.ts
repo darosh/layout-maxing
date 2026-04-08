@@ -24,6 +24,7 @@ export type BoxLayout = {
   depth?: number
   children?: number[]
   parents?: number[]
+  groupIdx?: number
 }
 
 interface Box {
@@ -58,6 +59,38 @@ export function normalizeLayouts(layouts: BoxLayout[]): void {
   for (const l of layouts) {
     l.x -= minX
     l.y -= minY
+  }
+}
+
+// Stamp groupIdx on layouts from raw boxgroups so fitness can skip same-group
+// pairs. Safe to call before fillDepths/stripOrphans.
+export function stampGroupIdx(
+  layouts: BoxLayout[],
+  boxgroups: Array<{ boxes: BoxId[] }> | undefined,
+): void {
+  if (!boxgroups?.length) return
+  const byId = new Map(layouts.map((l) => [l.id, l]))
+  boxgroups.forEach((g, i) => {
+    for (const id of g.boxes) {
+      const l = byId.get(id)
+      if (l) l.groupIdx = i
+    }
+  })
+}
+
+// If a group has any connected member (depth ≥ 0), mark all its members as
+// connected so stripOrphans won't remove them.
+export function preserveGroupMembers(
+  layouts: BoxLayout[],
+  boxgroups: Array<{ boxes: BoxId[] }> | undefined,
+): void {
+  if (!boxgroups?.length) return
+  const byId = new Map(layouts.map((l) => [l.id, l]))
+  for (const g of boxgroups) {
+    for (const id of g.boxes) {
+      const l = byId.get(id)
+      if (l) l.depth = Math.max(l.depth ?? -1, 0)
+    }
   }
 }
 
@@ -116,7 +149,8 @@ export function alignGroups(layouts: BoxLayout[], plan: GroupPlan): void {
   }
 }
 
-export function fillDepths(layouts: BoxLayout[], lines: Line[]): void {
+export function fillDepths(layouts: BoxLayout[], lines: Line[] | undefined): void {
+  lines ??= []
   // Create quick lookup: id → BoxLayout
   const boxMap = new Map<BoxId, BoxLayout>()
   for (const box of layouts) {
