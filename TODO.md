@@ -15,10 +15,19 @@
 ### UI
 
 - [ ] presets?
+- [ ] smaller examples
+- [x] ~~placeholder preview animation~~
+- [x] svg best/current title
+- [ ] copy/paste btn should flash on hot key
+- [ ] add seed
+- [ ] add enter run option+enter re-run hotkeys
+- [ ] reactive tooltip, max width
 
 ### Structure
 
 - [ ] group support
+- [ ] mutation history
+- [ ] sub-patchers?
 
 ### Run settings
 

@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useOptimizerStore } from '@/stores/optimizer'
 import { formatFullScore, formatScore as fmt } from '../utils/formatScore'
-import { BEST_LABEL, INPUT_LABEL } from '@/utils/consts.ts'
+import { BEST_LABEL, CURRENT_LABEL, INPUT_LABEL } from '@/utils/consts.ts'
 import FlyingTooltip from './FlyingTooltip.vue'
 import { fitnessMeta } from 'layout-maxing'
 
@@ -45,12 +45,16 @@ const fullScore = computed(() => {
     <div class="overlay overlay-tl">
       <span v-if="selectionLabel" class="selection-label">
         <template v-if="store.selection.kind === 'current'">
+          <template v-if="store.selection?.index === 0">{{ CURRENT_LABEL }}</template>
           {{ selectionLabel.slice(0, selectionLabel.length - 2)
           }}<span class="selection-label-ordinal">{{
             selectionLabel.slice(selectionLabel.length - 2)
           }}</span>
         </template>
-        <template v-else>{{ selectionLabel }}</template>
+        <template v-else>
+          <template v-if="store.selection?.index === 0">{{ BEST_LABEL }}</template>
+          {{ selectionLabel }}</template
+        >
       </span>
     </div>
 
