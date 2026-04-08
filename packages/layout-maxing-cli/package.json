@@ -36,6 +36,7 @@
     "test:cli:layout": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat --logProgressInterval 100",
     "test:cli:layout:short": "deno run -A ./src/index.ts layout ./tests/fixtures/test.maxpat ./tests/output/test.maxpat --generations 10",
     "test:cli:calibrate": "deno run -A ./src/index.ts calibrate ./tests/fixtures/the-synth.maxpat --depth 1000",
+    "test:cli:group": "deno run -A ./src/index.ts layout-clipboard ./tests/fixtures/single-group.json ./tests/fixtures/single-group-updated.json",
     "check": "vp check",
     "prepublishOnly": "vp run build"
   },

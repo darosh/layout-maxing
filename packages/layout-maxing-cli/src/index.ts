@@ -132,7 +132,7 @@ async function cli() {
     const command = Deno.args[0]
     const { positional, cfg } = parseArgs(Deno.args.slice(1))
 
-    if (command === 'layout') {
+    if (command === 'layout' || command === 'layout-clipboard') {
       const { CPUS, getFitness, terminateWorkers } = getWorkers()
 
       const c = { ...defaultConfig, ...cfg }
@@ -142,7 +142,8 @@ async function cli() {
       const filePath = positional[0]
       const outPath = positional[1]
       const jsonText = await Deno.readTextFile(filePath)
-      const rnbo: RNBO = JSON.parse(jsonText)
+      const rnbo: RNBO =
+        command === 'layout-clipboard' ? { patcher: JSON.parse(jsonText) } : JSON.parse(jsonText)
       const lines = rnbo.patcher.lines
       const outputPath =
         outPath ?? format({ ...parse(filePath), name: `${parse(filePath).name}_updated` })
