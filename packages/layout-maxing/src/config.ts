@@ -118,8 +118,8 @@ export const configMeta: ConfigMeta = {
   popSize: [15, 10, 1000, 1, 'Number of individuals in the population'],
   generations: [100000, 100, 1000000, 1, 'Maximum total generations to run'],
   mutationRate: [0.95, 0, 1, 0.001, 'Probability that a child is mutated after crossover'],
-  maxChildren: [9, 1, 20, 1, 'Maximum number of children produced per generation step'],
-  maxParents: [9, 1, 20, 1, 'Maximum number of parents selected per generation step'],
+  maxChildren: [9, 1, 20, 1, 'Maximum number of children mutated'],
+  maxParents: [9, 1, 20, 1, 'Maximum number of parents mutated'],
   crossoverRate: [0.75, 0, 1, 0.01, 'Probability of performing crossover between two parents'],
   crossoverMix: [
     0.25,

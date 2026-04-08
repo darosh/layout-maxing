@@ -379,6 +379,146 @@ function copyCli() {
         </AccordionContent>
       </AccordionPanel>
 
+      <AccordionPanel value="mws">
+        <AccordionHeader>Mutations</AccordionHeader>
+        <AccordionContent>
+          <div class="fields-grid">
+            <label
+              :class="{ 'non-default': isNonDefault('mutate') }"
+              @click="isNonDefault('mutate') && resetProp('mutate')"
+              >mutate</label
+            >
+            <InputNumber
+              v-model="cfg.mutate"
+              v-bind="numProps('mutate')"
+              size="small"
+              v-tip.right="configMeta.mutate[4]"
+              @keydown="handleShiftKey($event, 'mutate')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightQuadrant') }"
+              @click="isNonDefault('mutWeightQuadrant') && resetProp('mutWeightQuadrant')"
+              >mutWeightQuadrant</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightQuadrant"
+              v-bind="numProps('mutWeightQuadrant')"
+              size="small"
+              v-tip.right="configMeta.mutWeightQuadrant[4]"
+              @keydown="handleShiftKey($event, 'mutWeightQuadrant')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightSingle') }"
+              @click="isNonDefault('mutWeightSingle') && resetProp('mutWeightSingle')"
+              >mutWeightSingle</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightSingle"
+              v-bind="numProps('mutWeightSingle')"
+              size="small"
+              v-tip.right="configMeta.mutWeightSingle[4]"
+              @keydown="handleShiftKey($event, 'mutWeightSingle')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightChildren') }"
+              @click="isNonDefault('mutWeightChildren') && resetProp('mutWeightChildren')"
+              >mutWeightChildren</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightChildren"
+              v-bind="numProps('mutWeightChildren')"
+              size="small"
+              v-tip.right="configMeta.mutWeightChildren[4]"
+              @keydown="handleShiftKey($event, 'mutWeightChildren')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('maxChildren') }"
+              @click="isNonDefault('maxChildren') && resetProp('maxChildren')"
+              >maxChildren</label
+            >
+            <InputNumber
+              v-model="cfg.maxChildren"
+              v-bind="numProps('maxChildren')"
+              size="small"
+              v-tip.right="configMeta.maxChildren[4]"
+              @keydown="handleShiftKey($event, 'maxChildren')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightParents') }"
+              @click="isNonDefault('mutWeightParents') && resetProp('mutWeightParents')"
+              >mutWeightParents</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightParents"
+              v-bind="numProps('mutWeightParents')"
+              size="small"
+              v-tip.right="configMeta.mutWeightParents[4]"
+              @keydown="handleShiftKey($event, 'mutWeightParents')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('maxParents') }"
+              @click="isNonDefault('maxParents') && resetProp('maxParents')"
+              >maxParents</label
+            >
+            <InputNumber
+              v-model="cfg.maxParents"
+              v-bind="numProps('maxParents')"
+              size="small"
+              v-tip.right="configMeta.maxParents[4]"
+              @keydown="handleShiftKey($event, 'maxParents')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightSwapSibling') }"
+              @click="isNonDefault('mutWeightSwapSibling') && resetProp('mutWeightSwapSibling')"
+              >mutWeightSwapSibling</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightSwapSibling"
+              v-bind="numProps('mutWeightSwapSibling')"
+              size="small"
+              v-tip.right="configMeta.mutWeightSwapSibling[4]"
+              @keydown="handleShiftKey($event, 'mutWeightSwapSibling')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightSwapRandom') }"
+              @click="isNonDefault('mutWeightSwapRandom') && resetProp('mutWeightSwapRandom')"
+              >mutWeightSwapRandom</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightSwapRandom"
+              v-bind="numProps('mutWeightSwapRandom')"
+              size="small"
+              v-tip.right="configMeta.mutWeightSwapRandom[4]"
+              @keydown="handleShiftKey($event, 'mutWeightSwapRandom')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightSwapInRow') }"
+              @click="isNonDefault('mutWeightSwapInRow') && resetProp('mutWeightSwapInRow')"
+              >mutWeightSwapInRow</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightSwapInRow"
+              v-bind="numProps('mutWeightSwapInRow')"
+              size="small"
+              v-tip.right="configMeta.mutWeightSwapInRow[4]"
+              @keydown="handleShiftKey($event, 'mutWeightSwapInRow')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightSwapInCol') }"
+              @click="isNonDefault('mutWeightSwapInCol') && resetProp('mutWeightSwapInCol')"
+              >mutWeightSwapInCol</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightSwapInCol"
+              v-bind="numProps('mutWeightSwapInCol')"
+              size="small"
+              v-tip.right="configMeta.mutWeightSwapInCol[4]"
+              @keydown="handleShiftKey($event, 'mutWeightSwapInCol')"
+            />
+          </div>
+        </AccordionContent>
+      </AccordionPanel>
+
       <AccordionPanel value="ga">
         <AccordionHeader>Genetic Algorithm</AccordionHeader>
         <AccordionContent>
@@ -490,138 +630,6 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.tournamentSize[4]"
               @keydown="handleShiftKey($event, 'tournamentSize')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutate') }"
-              @click="isNonDefault('mutate') && resetProp('mutate')"
-              >mutate</label
-            >
-            <InputNumber
-              v-model="cfg.mutate"
-              v-bind="numProps('mutate')"
-              size="small"
-              v-tip.right="configMeta.mutate[4]"
-              @keydown="handleShiftKey($event, 'mutate')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('maxChildren') }"
-              @click="isNonDefault('maxChildren') && resetProp('maxChildren')"
-              >maxChildren</label
-            >
-            <InputNumber
-              v-model="cfg.maxChildren"
-              v-bind="numProps('maxChildren')"
-              size="small"
-              v-tip.right="configMeta.maxChildren[4]"
-              @keydown="handleShiftKey($event, 'maxChildren')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('maxParents') }"
-              @click="isNonDefault('maxParents') && resetProp('maxParents')"
-              >maxParents</label
-            >
-            <InputNumber
-              v-model="cfg.maxParents"
-              v-bind="numProps('maxParents')"
-              size="small"
-              v-tip.right="configMeta.maxParents[4]"
-              @keydown="handleShiftKey($event, 'maxParents')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightQuadrant') }"
-              @click="isNonDefault('mutWeightQuadrant') && resetProp('mutWeightQuadrant')"
-              >mutWeightQuadrant</label
-            >
-            <InputNumber
-              v-model="cfg.mutWeightQuadrant"
-              v-bind="numProps('mutWeightQuadrant')"
-              size="small"
-              v-tip.right="configMeta.mutWeightQuadrant[4]"
-              @keydown="handleShiftKey($event, 'mutWeightQuadrant')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSingle') }"
-              @click="isNonDefault('mutWeightSingle') && resetProp('mutWeightSingle')"
-              >mutWeightSingle</label
-            >
-            <InputNumber
-              v-model="cfg.mutWeightSingle"
-              v-bind="numProps('mutWeightSingle')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSingle[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSingle')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightChildren') }"
-              @click="isNonDefault('mutWeightChildren') && resetProp('mutWeightChildren')"
-              >mutWeightChildren</label
-            >
-            <InputNumber
-              v-model="cfg.mutWeightChildren"
-              v-bind="numProps('mutWeightChildren')"
-              size="small"
-              v-tip.right="configMeta.mutWeightChildren[4]"
-              @keydown="handleShiftKey($event, 'mutWeightChildren')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightParents') }"
-              @click="isNonDefault('mutWeightParents') && resetProp('mutWeightParents')"
-              >mutWeightParents</label
-            >
-            <InputNumber
-              v-model="cfg.mutWeightParents"
-              v-bind="numProps('mutWeightParents')"
-              size="small"
-              v-tip.right="configMeta.mutWeightParents[4]"
-              @keydown="handleShiftKey($event, 'mutWeightParents')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSwapSibling') }"
-              @click="isNonDefault('mutWeightSwapSibling') && resetProp('mutWeightSwapSibling')"
-              >mutWeightSwapSibling</label
-            >
-            <InputNumber
-              v-model="cfg.mutWeightSwapSibling"
-              v-bind="numProps('mutWeightSwapSibling')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSwapSibling[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSwapSibling')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSwapRandom') }"
-              @click="isNonDefault('mutWeightSwapRandom') && resetProp('mutWeightSwapRandom')"
-              >mutWeightSwapRandom</label
-            >
-            <InputNumber
-              v-model="cfg.mutWeightSwapRandom"
-              v-bind="numProps('mutWeightSwapRandom')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSwapRandom[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSwapRandom')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSwapInRow') }"
-              @click="isNonDefault('mutWeightSwapInRow') && resetProp('mutWeightSwapInRow')"
-              >mutWeightSwapInRow</label
-            >
-            <InputNumber
-              v-model="cfg.mutWeightSwapInRow"
-              v-bind="numProps('mutWeightSwapInRow')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSwapInRow[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSwapInRow')"
-            />
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSwapInCol') }"
-              @click="isNonDefault('mutWeightSwapInCol') && resetProp('mutWeightSwapInCol')"
-              >mutWeightSwapInCol</label
-            >
-            <InputNumber
-              v-model="cfg.mutWeightSwapInCol"
-              v-bind="numProps('mutWeightSwapInCol')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSwapInCol[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSwapInCol')"
             />
           </div>
         </AccordionContent>
