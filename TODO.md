@@ -11,6 +11,7 @@
 
 ### Fitness
 
+- [ ] minDist penalty
 - [ ] overlap for SSCs?
 
 ### UI
