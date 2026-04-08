@@ -10,7 +10,7 @@
 
 ### Fitness
 
-- [ ] overlap for SSCs
+- [ ] overlap for SSCs?
 
 ### UI
 
@@ -26,7 +26,7 @@
 ### Lib + Structure
 
 - [ ] mutation history
-- [ ] sub-patchers?
+- [x] ~~sub-patchers?~~
 - [x] group support
 - [x] add seed
 
