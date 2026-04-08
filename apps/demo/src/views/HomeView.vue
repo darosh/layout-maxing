@@ -43,9 +43,33 @@ function downloadRnbo() {
   URL.revokeObjectURL(url)
 }
 
+const isMac = navigator.platform.toUpperCase().includes('MAC')
+const pasteKey = isMac ? '⌘V' : 'Ctrl+V'
+const copyKey = isMac ? '⌘C' : 'Ctrl+C'
+
+async function pasteFromClipboard() {
+  const text = await navigator.clipboard.readText()
+  store.loadFile(`{"patcher":${text}}`, 'clipboard.json', 'clipboard')
+}
+
 const optionDown = ref(false)
+
+function isTyping(e: KeyboardEvent) {
+  const t = e.target as HTMLElement
+  return t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || (t as HTMLElement).isContentEditable
+}
+
 function onKeyDown(e: KeyboardEvent) {
   optionDown.value = e.altKey
+  const mod = isMac ? e.metaKey : e.ctrlKey
+  if (!mod || isTyping(e)) return
+  if (e.key === 'v') {
+    e.preventDefault()
+    pasteFromClipboard()
+  } else if (e.key === 'c' && store.canExport) {
+    e.preventDefault()
+    copyRnbo()
+  }
 }
 function onKeyUp(e: KeyboardEvent) {
   optionDown.value = e.altKey
@@ -167,7 +191,7 @@ const btnPause = computed(() => store.status === 'running')
             justify-content: center;
           "
         >
-          <SvgPlaceholder v-if="!hasEverRendered" />
+          <SvgPlaceholder v-if="!hasEverRendered" :paste-key="pasteKey" :copy-key="copyKey" />
           <PatchInfo v-else />
         </div>
       </section>

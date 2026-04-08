@@ -234,7 +234,12 @@ const portDots = computed<DotItem[]>(() => {
 
 <template>
   <div ref="rootEl" class="svg-animated-renderer">
-    <svg v-if="layouts.length" :viewBox="viewBox" xmlns="http://www.w3.org/2000/svg" class="svg-canvas">
+    <svg
+      v-if="layouts.length"
+      :viewBox="viewBox"
+      xmlns="http://www.w3.org/2000/svg"
+      class="svg-canvas"
+    >
       <g
         :class="['layout-root', { 'layout-root--jump': skipRootTransition || skipAllTransitions }]"
         :style="{ transform: rootTransform }"
