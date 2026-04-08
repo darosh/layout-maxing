@@ -1,31 +1,42 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { reactive, ref, watchEffect, nextTick } from 'vue'
+
+const props = defineProps<{ maxWidth?: number }>()
 
 const tooltipEl = ref<HTMLElement | null>(null)
-const tooltipText = ref('')
-const tooltipLeft = ref(0)
-const tooltipTop = ref(0)
-const tooltipVisible = ref(false)
-const tooltipMoving = ref(false)
-const tooltipPosition = ref<'top' | 'right'>('top')
+
+const state = reactive({
+  text: '',
+  left: 0,
+  top: 0,
+  visible: false,
+  moving: false,
+  position: 'top' as 'top' | 'right',
+})
+
+const textGetter = ref<(() => string) | null>(null)
+watchEffect(() => {
+  if (textGetter.value) state.text = textGetter.value()
+})
 
 let hideTimer: ReturnType<typeof setTimeout> | null = null
 
-async function show(e: Event, text: string, position: 'top' | 'right' = 'top') {
+async function show(e: Event, text: string | (() => string), position: 'top' | 'right' = 'top') {
   if (hideTimer) {
     clearTimeout(hideTimer)
     hideTimer = null
   }
   const el = e.currentTarget as HTMLElement
   const rect = el.getBoundingClientRect()
-  tooltipMoving.value = tooltipVisible.value
-  tooltipPosition.value = position
-  tooltipText.value = text
-  tooltipVisible.value = true
+  state.moving = state.visible
+  state.position = position
+  textGetter.value = typeof text === 'function' ? text : null
+  state.text = typeof text === 'function' ? text() : text
+  state.visible = true
 
   if (position === 'right') {
-    tooltipLeft.value = rect.right
-    tooltipTop.value = rect.top + rect.height / 2
+    state.left = rect.right
+    state.top = rect.top + rect.height / 2
 
     await nextTick()
     if (tooltipEl.value) {
@@ -33,11 +44,15 @@ async function show(e: Event, text: string, position: 'top' | 'right' = 'top') {
       const margin = 8
       const minTop = margin + tip.height / 2
       const maxTop = window.innerHeight - margin - tip.height / 2
-      tooltipTop.value = Math.min(Math.max(tooltipTop.value, minTop), maxTop)
+      state.top = Math.min(Math.max(state.top, minTop), maxTop)
     }
   } else {
-    tooltipLeft.value = rect.left + rect.width / 2
-    tooltipTop.value = rect.top
+    const targetLeft = rect.left + rect.width / 2
+    // When first showing (no animation), pre-position at viewport center so the browser
+    // renders the tooltip at its natural width before we measure and clamp.
+    // When moving (transition active), skip the pre-position to avoid a slide-from-center glitch.
+    state.left = state.moving ? targetLeft : window.innerWidth / 2
+    state.top = rect.top
 
     await nextTick()
     if (tooltipEl.value) {
@@ -45,7 +60,7 @@ async function show(e: Event, text: string, position: 'top' | 'right' = 'top') {
       const margin = 8
       const minLeft = margin + tip.width / 2
       const maxLeft = window.innerWidth - margin - tip.width / 2
-      tooltipLeft.value = Math.min(Math.max(tooltipLeft.value, minLeft), maxLeft)
+      state.left = Math.min(Math.max(targetLeft, minLeft), maxLeft)
     }
   }
 }
@@ -56,8 +71,9 @@ function hide() {
     hideTimer = null
   }
   hideTimer = setTimeout(() => {
-    tooltipVisible.value = false
-    tooltipMoving.value = false
+    state.visible = false
+    state.moving = false
+    textGetter.value = null
     hideTimer = null
   }, 200)
 }
@@ -71,12 +87,17 @@ defineExpose({ show, hide })
       ref="tooltipEl"
       class="flying-tooltip"
       :class="{
-        visible: tooltipVisible,
-        moving: tooltipMoving,
-        'position-right': tooltipPosition === 'right',
+        visible: state.visible,
+        moving: state.moving,
+        'position-right': state.position === 'right',
       }"
-      :style="{ left: tooltipLeft + 'px', top: tooltipTop + 'px' }"
-      v-html="tooltipText.replace(/\n/g, '<br>')"
+      :style="{
+        left: state.left + 'px',
+        top: state.top + 'px',
+        width: props.maxWidth ? props.maxWidth + 'px' : undefined,
+        whiteSpace: props.maxWidth ? 'normal' : undefined,
+      }"
+      v-html="state.text.replace(/\n/g, '<br>')"
     />
   </Teleport>
 </template>

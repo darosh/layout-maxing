@@ -34,7 +34,7 @@ const fullScore = computed(() => {
 </script>
 
 <template>
-  <FlyingTooltip ref="tooltip" />
+  <FlyingTooltip ref="tooltip" :max-width="240" />
   <div class="svg-renderer">
     <!-- Bottom-left: score + selection label -->
     <div class="overlay overlay-bl">

@@ -14,20 +14,21 @@
 
 ### UI
 
+- [ ] check exact hotkeys
 - [ ] presets?
 - [ ] smaller examples
-- [ ] add seed
-- [ ] reactive tooltip, max width
+- [x] reactive tooltip, max width
 - [x] ~~placeholder preview animation~~
 - [x] svg best/current title
 - [x] copy/paste btn should flash on hot key
 - [x] add r run option+r re-run hotkeys
 
-### Structure
+### Lib + Structure
 
 - [ ] group support
 - [ ] mutation history
 - [ ] sub-patchers?
+- [ ] add seed
 
 ### Run settings
 

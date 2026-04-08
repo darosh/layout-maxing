@@ -42,8 +42,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'original' }) }"
       @mouseenter="
-        tooltip?.show(
-          $event,
+        tooltip?.show($event, () =>
           store.originalFitness
             ? `Original input\nScore: ${formatFullScore(store.originalFitness.score)}`
             : 'Original input',
@@ -65,7 +64,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'allTime', index: 0 }) }"
       @mouseenter="
-        tooltip?.show($event, `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)
+        tooltip?.show($event, () => `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)
       "
       @mouseleave="tooltip?.hide()"
       @click="store.selection = { kind: 'allTime', index: 0 }"
@@ -83,7 +82,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
       @mouseenter="
         tooltip?.show(
           $event,
-          `Current gen best\nScore: ${formatFullScore(store.currentGenTop[0]!.score)}`,
+          () => `Current gen best\nScore: ${formatFullScore(store.currentGenTop[0]!.score)}`,
         )
       "
       @mouseleave="tooltip?.hide()"
@@ -119,7 +118,9 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         :key="i"
         class="thumb-btn"
         :class="{ active: isActive({ kind: 'allTime', index: i + 1 }) }"
-        @mouseenter="tooltip?.show($event, `Top #${i + 2}\nScore: ${formatFullScore(entry.score)}`)"
+        @mouseenter="
+          tooltip?.show($event, () => `Top #${i + 2}\nScore: ${formatFullScore(entry.score)}`)
+        "
         @mouseleave="tooltip?.hide()"
         @click="store.selection = { kind: 'allTime', index: i + 1 }"
       >
@@ -135,7 +136,10 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         class="thumb-btn"
         :class="{ active: isActive({ kind: 'current', index: i + 1 }) }"
         @mouseenter="
-          tooltip?.show($event, `Current ${ordinal(i + 2)}\nScore: ${formatFullScore(entry.score)}`)
+          tooltip?.show(
+            $event,
+            () => `Current ${ordinal(i + 2)}\nScore: ${formatFullScore(entry.score)}`,
+          )
         "
         @mouseleave="tooltip?.hide()"
         @click="store.selection = { kind: 'current', index: i + 1 }"
