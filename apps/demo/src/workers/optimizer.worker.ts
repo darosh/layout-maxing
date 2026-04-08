@@ -1,4 +1,12 @@
-import { main, toSvg, defaultConfig, createInitialLayouts, applyBestLayout } from 'layout-maxing'
+import {
+  main,
+  toSvg,
+  defaultConfig,
+  createInitialLayouts,
+  applyBestLayout,
+  fillDepths,
+  stripOrphans,
+} from 'layout-maxing'
 import type { RNBO, Config, BoxLayout, Line, Fitness } from 'layout-maxing'
 
 type Position = { id: string; x: number; y: number }
@@ -195,9 +203,21 @@ self.onmessage = async (e: MessageEvent) => {
 
   if (c.logInfo) console.log(`[optimizer] starting — ${pool.count} fitness workers`)
 
+  // Build initial layouts the same way main() does, honoring ignoreOrphans
+  // so orphans never reach SVG / positions / export.
+  function buildLayoutsForView(): BoxLayout[] {
+    let ls = createInitialLayouts(rnbo.patcher)
+    if (c.ignoreOrphans) {
+      fillDepths(ls, lines)
+      ls = stripOrphans(ls)
+      fillDepths(ls, lines)
+    }
+    return cloneForSvg(ls)
+  }
+
   // Evaluate and emit the original (pre-optimization) layout
   try {
-    const origLayouts = cloneForSvg(createInitialLayouts(rnbo.patcher))
+    const origLayouts = buildLayoutsForView()
     const origFitness = await pool.getFitness(origLayouts, lines, cfg)
     post({
       type: 'original',
@@ -206,8 +226,9 @@ self.onmessage = async (e: MessageEvent) => {
       positions: origLayouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
       layouts: origLayouts,
     })
-  } catch {
+  } catch (err) {
     // Non-fatal — original evaluation may fail if rnbo has no boxes
+    console.error('[optimizer] original evaluation failed:', err)
   }
 
   try {
@@ -292,7 +313,7 @@ self.onmessage = async (e: MessageEvent) => {
       layouts: bestLayouts ? [...bestLayouts] : null,
     })
     applyBestLayout(rnbo, bestIndividual, c)
-    const finalLayouts = cloneForSvg(createInitialLayouts(rnbo.patcher))
+    const finalLayouts = buildLayoutsForView()
     const svg = toSvg(finalLayouts, lines, cfg)
     if (c.logInfo)
       console.log(
@@ -323,8 +344,12 @@ self.onmessage = async (e: MessageEvent) => {
         layouts: layouts ?? [],
       })
     } else {
-      console.error(err)
-      post({ type: 'error', message: err instanceof Error ? err.message : String(err) })
+      console.error('[optimizer] fatal:', err)
+      post({
+        type: 'error',
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      })
     }
   }
 }

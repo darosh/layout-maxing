@@ -25,15 +25,16 @@
 
 ### Lib + Structure
 
-- [ ] group support
 - [ ] mutation history
 - [ ] sub-patchers?
-- [ ] add seed
+- [x] group support
+- [x] add seed
 
 ### Run settings
 
-- [ ] shift to [0,0]
-- [ ] ignore solo
+- [x] normalize to [0,0]
+- [x] normalizeExport to [0,0]
+- [X] ignore orphans
 
 ## DONE
 

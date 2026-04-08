@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, toRaw, watch } from 'vue'
-import { defaultConfig } from 'layout-maxing'
+import { defaultConfig, applyBestLayout } from 'layout-maxing'
 import type { RNBO, Config, Fitness, BoxLayout, Line } from 'layout-maxing'
 
 const CONFIG_KEY = 'layout-maxing-config'
@@ -288,6 +288,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
           worker = null
           break
         case 'error':
+          console.error('[optimizer] worker error:', msg.message, msg.stack ?? '')
           status.value = 'error'
           error.value = msg.message
           worker?.terminate()
@@ -297,6 +298,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     }
 
     worker.onerror = (e) => {
+      console.error('[optimizer] worker.onerror:', e.message, e)
       status.value = 'error'
       error.value = e.message
       worker?.terminate()
@@ -350,19 +352,11 @@ export const useOptimizerStore = defineStore('optimizer', () => {
 
   function applyPositions(positions: { id: string; x: number; y: number }[]): RNBO {
     const clone = JSON.parse(JSON.stringify(toRaw(rnbo.value))) as RNBO
-    const map = new Map(positions.map((p) => [p.id, p]))
-    for (const b of clone.patcher.boxes) {
-      const pos = map.get(b.box.id)
-      if (pos) {
-        b.box.patching_rect[0] = Math.round(pos.x)
-        b.box.patching_rect[1] = Math.round(pos.y)
-      }
-    }
-    if (config.value.removeLineSegments) {
-      for (const line of clone.patcher.lines) {
-        delete line.patchline.midpoints
-      }
-    }
+    // applyBestLayout only reads id/x/y on each layout entry, so passing
+    // these minimal records is safe.
+    const layouts = positions.map((p) => ({ ...p })) as unknown as BoxLayout[]
+    const c = { ...defaultConfig, ...toRaw(config.value) } as Required<Config>
+    applyBestLayout(clone, layouts, c)
     return clone
   }
 

@@ -391,6 +391,22 @@ function copyCli() {
             <ToggleSwitch v-model="cfg.deterministic" v-tip.right="configMeta.deterministic[4]" />
           </div>
           <div class="fields-grid">
+            <div class="wide-row">
+              <label
+                :class="{ 'non-default': isNonDefault('seed') }"
+                @click="isNonDefault('seed') && resetProp('seed')"
+                >seed</label
+              >
+              <InputNumber
+                style="width: 120px"
+                v-model="cfg.seed"
+                v-bind="numProps('seed')"
+                :disabled="!cfg.deterministic"
+                size="small"
+                v-tip.right="configMeta.seed[4]"
+                @keydown="handleShiftKey($event, 'seed')"
+              />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('popSize') }"
               @click="isNonDefault('popSize') && resetProp('popSize')"
@@ -676,6 +692,33 @@ function copyCli() {
               v-model="cfg.removeLineSegments"
               v-tip.right="configMeta.removeLineSegments[4]"
             />
+            <label
+              :class="{ 'non-default': isNonDefault('normalize') }"
+              @click="isNonDefault('normalize') && resetProp('normalize')"
+              >normalize</label
+            >
+            <ToggleSwitch v-model="cfg.normalize" v-tip.right="configMeta.normalize[4]" />
+            <label
+              :class="{ 'non-default': isNonDefault('normalizeExport') }"
+              @click="isNonDefault('normalizeExport') && resetProp('normalizeExport')"
+              >normalizeExport</label
+            >
+            <ToggleSwitch
+              v-model="cfg.normalizeExport"
+              v-tip.right="configMeta.normalizeExport[4]"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('ignoreOrphans') }"
+              @click="isNonDefault('ignoreOrphans') && resetProp('ignoreOrphans')"
+              >ignoreOrphans</label
+            >
+            <ToggleSwitch v-model="cfg.ignoreOrphans" v-tip.right="configMeta.ignoreOrphans[4]" />
+            <label
+              :class="{ 'non-default': isNonDefault('keepGroups') }"
+              @click="isNonDefault('keepGroups') && resetProp('keepGroups')"
+              >keepGroups</label
+            >
+            <ToggleSwitch v-model="cfg.keepGroups" v-tip.right="configMeta.keepGroups[4]" />
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -752,6 +795,16 @@ function copyCli() {
   font-size: 0.8rem;
   margin-top: 0.4rem;
   margin-bottom: 0.4rem;
+}
+
+.wide-row {
+  display: grid;
+  grid-template-columns: auto 120px;
+  grid-column: 1 / -1; /* span full width of parent grid */
+  gap: 0.4rem 0.75rem;
+  align-items: center;
+  justify-items: right;
+  font-size: 0.8rem;
 }
 
 .fields-grid label {
