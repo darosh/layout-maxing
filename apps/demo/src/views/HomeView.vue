@@ -8,12 +8,21 @@ import ProgressPanel from '@/components/ProgressPanel.vue'
 import SvgRenderer from '@/components/SvgRenderer.vue'
 import TopResultsBar from '@/components/TopResultsBar.vue'
 import { useOptimizerStore } from '@/stores/optimizer'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import SvgAnimatedRenderer from '@/components/SvgAnimatedRenderer.vue'
 import PatchInfo from '@/components/PatchInfo.vue'
+import SvgPlaceholder from '@/components/SvgPlaceholder.vue'
 
 const animateSvg = true
 const store = useOptimizerStore()
+
+const hasEverRendered = ref(false)
+watch(
+  () => store.displayedLayouts.length,
+  (len) => {
+    if (len > 0) hasEverRendered.value = true
+  },
+)
 const version = __APP_VERSION__
 const helpVisible = ref(false)
 
@@ -153,9 +162,13 @@ const btnPause = computed(() => store.status === 'running')
             flex: 1;
             width: calc(100% - 320px);
             height: calc(100vh - 80px - 1.5rem);
+            display: flex;
+            align-items: center;
+            justify-content: center;
           "
         >
-          <PatchInfo />
+          <SvgPlaceholder v-if="!hasEverRendered" />
+          <PatchInfo v-else />
         </div>
       </section>
     </main>

@@ -234,12 +234,7 @@ const portDots = computed<DotItem[]>(() => {
 
 <template>
   <div ref="rootEl" class="svg-animated-renderer">
-    <div v-if="!layouts.length" class="placeholder">
-      <i class="pi pi-objects-column placeholder-icon" />
-      <span>Preview will appear here during optimization</span>
-    </div>
-
-    <svg v-else :viewBox="viewBox" xmlns="http://www.w3.org/2000/svg" class="svg-canvas">
+    <svg v-if="layouts.length" :viewBox="viewBox" xmlns="http://www.w3.org/2000/svg" class="svg-canvas">
       <g
         :class="['layout-root', { 'layout-root--jump': skipRootTransition || skipAllTransitions }]"
         :style="{ transform: rootTransform }"
@@ -290,19 +285,6 @@ const portDots = computed<DotItem[]>(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--p-surface-600);
-  font-size: 0.875rem;
-}
-
-.placeholder-icon {
-  font-size: 2.5rem;
 }
 
 .svg-canvas {
