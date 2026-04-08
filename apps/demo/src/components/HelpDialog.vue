@@ -6,7 +6,8 @@ import { computed } from 'vue'
 const props = defineProps<{ visible: boolean; isMac?: boolean }>()
 defineEmits<{ 'update:visible': [value: boolean] }>()
 
-const modKey = computed(() => (props.isMac ? '⌘' : 'Ctrl+'))
+const modKey = computed(() => (props.isMac ? '⌘ ' : 'Ctrl +'))
+const altKey = computed(() => (props.isMac ? '⌥ ' : 'Alt +'))
 
 const entries = Object.entries(configMeta) as [
   string,
@@ -32,31 +33,61 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
     @update:visible="$emit('update:visible', $event)"
   >
     <h4>Hot keys</h4>
-    <ul class="list">
-      <li><kbd>R</kbd> — run optimization</li>
-      <li><kbd>⌥R</kbd> — re-run (uses best result as initial positions)</li>
-      <li>
-        <kbd>{{ modKey }}C</kbd> — copy layout to clipboard
-      </li>
-      <li>
-        <kbd>{{ modKey }}V</kbd> — paste layout from clipboard
-      </li>
-      <li>
-        <kbd>⌥</kbd> (hold)
-        <ul>
-          <li>switches <code>Optimize</code> to <code>Re-run</code> button</li>
-          <li>switches <code>Download</code> to <code>Copy</code> button</li>
-        </ul>
-      </li>
-      <li>
-        Configuration editing
-        <ul>
-          <li><kbd>Shift + Enter</kbd> resets to default value</li>
-          <li><kbd>Shift + Down</kbd> sets minimum value</li>
-          <li><kbd>Shift + Up</kbd> sets maximum value</li>
-        </ul>
-      </li>
-    </ul>
+    <table class="help-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="help-key"><kbd>R</kbd></td>
+          <td class="help-desc">Run optimization</td>
+        </tr>
+        <tr>
+          <td class="help-key">
+            <kbd>{{ altKey }}R</kbd>
+          </td>
+          <td class="help-desc">
+            Re-run (uses best result as initial positions, when <code>useInput</code>> is on)
+          </td>
+        </tr>
+        <tr>
+          <td class="help-key">
+            <kbd>{{ modKey }}C</kbd>
+          </td>
+          <td class="help-desc">Copy layout to clipboard</td>
+        </tr>
+        <tr>
+          <td class="help-key">
+            <kbd>{{ modKey }}V</kbd>
+          </td>
+          <td class="help-desc">Paste layout from clipboard</td>
+        </tr>
+        <tr>
+          <td class="help-key">
+            <kbd>{{ altKey }}</kbd> hold
+          </td>
+          <td class="help-desc">
+            Switches <code>Run</code> → <code>Re-run</code> button; <code>Download</code> →
+            <code>Copy</code> button
+          </td>
+        </tr>
+        <tr>
+          <td class="help-key"><kbd>Shift + Enter</kbd></td>
+          <td class="help-desc">Reset config field to default value</td>
+        </tr>
+        <tr>
+          <td class="help-key"><kbd>Shift + ↓</kbd></td>
+          <td class="help-desc">Set config field to minimum value</td>
+        </tr>
+        <tr>
+          <td class="help-key"><kbd>Shift + ↑</kbd></td>
+          <td class="help-desc">Set config field to maximum value</td>
+        </tr>
+      </tbody>
+    </table>
     <h4>Configuration</h4>
     <table class="help-table">
       <thead>

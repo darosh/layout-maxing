@@ -124,7 +124,7 @@ const btnPause = computed(() => store.status === 'running')
           <FileDropZone :paste-active="pasteKeyDown" />
           <div class="action-row">
             <Button
-              :label="btnStart ? (optionDown ? 'Re-run' : 'Optimize') : 'Stop'"
+              :label="btnStart ? (optionDown ? 'Re-run' : 'Run') : 'Stop'"
               size="small"
               :variant="btnStart ? (!store.canStart ? 'outlined' : undefined) : 'outlined'"
               :severity="
