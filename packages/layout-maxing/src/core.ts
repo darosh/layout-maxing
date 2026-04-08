@@ -3,10 +3,15 @@ import {
   type BoxLayout,
   type Line,
   type Patcher,
+  type GroupPlan,
   createInitialLayouts,
   fillDepths,
   dagreFlow,
   simpleFlow,
+  normalizeLayouts,
+  stripOrphans,
+  buildGroupPlan,
+  alignGroups,
 } from './layout.ts'
 import { cloneLayouts } from './mutation.ts'
 import { type Fitness, fitness } from './fitness.ts'
@@ -19,7 +24,7 @@ export interface RNBO {
 }
 
 // Deterministic random (Mulberry32 - fixed seed guarantees identical runs)
-function createDeterministicRandom(seed: number = 123456789): () => number {
+function createDeterministicRandom(seed: number): () => number {
   let state = seed
   return () => {
     let t = (state += 0x6d2b79f5)
@@ -30,15 +35,19 @@ function createDeterministicRandom(seed: number = 123456789): () => number {
 }
 
 export function applyBestLayout(rnbo: RNBO, best: BoxLayout[], cfg: Required<Config>) {
-  const map = new Map(best.map((l) => [l.id, l]))
+  let working = best
+  if (cfg.normalizeExport) {
+    working = best.map((l) => ({ ...l }))
+    normalizeLayouts(working)
+  }
+  const map = new Map(working.map((l) => [l.id, l]))
   for (const b of rnbo.patcher.boxes) {
     const data = b.box
     const layout = map.get(data.id as BoxId)
-    if (layout) {
-      data.patching_rect[0] = Math.round(layout.x)
-      data.patching_rect[1] = Math.round(layout.y)
-      // width/height unchanged
-    }
+    if (!layout) continue // orphan stripped upstream, or unknown — skip
+    data.patching_rect[0] = Math.round(layout.x)
+    data.patching_rect[1] = Math.round(layout.y)
+    // width/height unchanged
   }
   if (cfg.removeLineSegments) {
     for (const line of rnbo.patcher.lines) {
@@ -77,13 +86,13 @@ export async function main(
   }
 
   const c = { ...defaultConfig, ...cfg }
-  const rand = c.deterministic ? createDeterministicRandom() : Math.random
+  const rand = c.deterministic ? createDeterministicRandom(c.seed) : Math.random
 
   const patcher = rnbo.patcher
   const lines = patcher.lines
 
   // Build initial layouts
-  const baseLayouts = createInitialLayouts(patcher)
+  let baseLayouts = createInitialLayouts(patcher)
   const inputFitness = getFitness
     ? await getFitness(baseLayouts, lines, c)
     : fitness(baseLayouts, lines, c)
@@ -93,6 +102,16 @@ export async function main(
       `Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`,
     )
   fillDepths(baseLayouts, lines)
+
+  if (c.ignoreOrphans) {
+    baseLayouts = stripOrphans(baseLayouts)
+    // Re-run depth/parent/children resolution: stripOrphans re-numbers
+    // .index, so the cached parents/children arrays from the first
+    // fillDepths pass would now point to the wrong boxes.
+    fillDepths(baseLayouts, lines)
+  }
+
+  const groupPlan: GroupPlan = c.keepGroups ? buildGroupPlan(baseLayouts, patcher.boxgroups) : []
 
   let startingLayouts: BoxLayout[][] = []
 
@@ -117,11 +136,19 @@ export async function main(
     startingLayouts.push(clone)
   }
 
+  // Normalize + group-align starting layouts so they satisfy the same
+  // invariants the GA enforces each generation.
+  for (const sl of startingLayouts) {
+    if (c.keepGroups) alignGroups(sl, groupPlan)
+    if (c.normalize) normalizeLayouts(sl)
+  }
+
   return runGenetic(
     startingLayouts,
     lines,
     rand,
     c,
+    groupPlan,
     getFitness,
     onIntermediate,
     onGenerationEnd,

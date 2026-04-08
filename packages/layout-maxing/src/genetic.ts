@@ -1,5 +1,12 @@
 import { type Config } from './config.ts'
-import { type BoxLayout, type Line, fixOverlaps } from './layout.ts'
+import {
+  type BoxLayout,
+  type Line,
+  type GroupPlan,
+  fixOverlaps,
+  normalizeLayouts,
+  alignGroups,
+} from './layout.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import {
   cloneLayouts,
@@ -95,6 +102,7 @@ export async function createPopulation(
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
+  groupPlan: GroupPlan,
   getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
 ) {
   const individuals: Layouts[] = []
@@ -113,6 +121,9 @@ export async function createPopulation(
     // }
 
     ind = fixOverlaps(ind, cfg)
+
+    if (cfg.keepGroups) alignGroups(ind, groupPlan)
+    if (cfg.normalize) normalizeLayouts(ind)
 
     individuals.push({ layouts: ind, fitness: undefined as any })
   }
@@ -139,6 +150,7 @@ async function runGenetic(
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
+  groupPlan: GroupPlan,
   getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: BoxLayout[]) => void,
   onGenerationEnd?: (stop: number) => void,
@@ -146,7 +158,7 @@ async function runGenetic(
   logInfo?: (...args) => void,
 ): Promise<BoxLayout[]> {
   // Create population
-  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
+  let population = await createPopulation(startingLayouts, lines, rand, cfg, groupPlan, getFitness)
   const initialFitness = getFitness
     ? await getFitness(population[0].layouts, lines, cfg)
     : fitness(population[0].layouts, lines, cfg)
@@ -305,6 +317,9 @@ async function runGenetic(
           }
         }
       }
+
+      if (cfg.keepGroups) alignGroups(child, groupPlan)
+      if (cfg.normalize) normalizeLayouts(child)
 
       newPopulation.push({ layouts: child })
     }

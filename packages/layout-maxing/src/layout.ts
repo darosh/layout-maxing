@@ -43,6 +43,77 @@ export interface Patcher {
   appversion: Record<string, string | number>
   boxes: Box[]
   lines: Line[]
+  boxgroups?: Array<{ boxes: BoxId[] }>
+}
+
+// Shift so min x=0 and min y=0 (top-left aligned to origin)
+export function normalizeLayouts(layouts: BoxLayout[]): void {
+  if (layouts.length === 0) return
+  let minX = Infinity
+  let minY = Infinity
+  for (const l of layouts) {
+    if (l.x < minX) minX = l.x
+    if (l.y < minY) minY = l.y
+  }
+  for (const l of layouts) {
+    l.x -= minX
+    l.y -= minY
+  }
+}
+
+// Returns a filtered array (orphans removed) + re-indexes.
+// Requires fillDepths() to have been called so depth === -1 marks orphans.
+export function stripOrphans(layouts: BoxLayout[]): BoxLayout[] {
+  const kept = layouts.filter((l) => l.depth !== -1)
+  kept.forEach((l, i) => (l.index = i))
+  return kept
+}
+
+export type GroupPlan = Array<{
+  leaderId: BoxId
+  members: Array<{ id: BoxId; dx: number; dy: number }>
+}>
+
+// Capture relative offsets of each group member to its leader (first box).
+// Uses stable BoxId so callers don't have to worry about array reordering
+// (e.g. fixOverlaps sorts the array and breaks positional indexing).
+export function buildGroupPlan(
+  layouts: BoxLayout[],
+  boxgroups: Array<{ boxes: BoxId[] }> | undefined,
+): GroupPlan {
+  if (!boxgroups?.length) return []
+  const byId = new Map(layouts.map((l) => [l.id, l]))
+  const plan: GroupPlan = []
+  for (const g of boxgroups) {
+    const present = g.boxes.map((id) => byId.get(id)).filter(Boolean) as BoxLayout[]
+    if (present.length < 2) continue
+    const leader = present[0]
+    plan.push({
+      leaderId: leader.id,
+      members: present.slice(1).map((m) => ({
+        id: m.id,
+        dx: m.x - leader.x,
+        dy: m.y - leader.y,
+      })),
+    })
+  }
+  return plan
+}
+
+// Snap each group member's position to leader + captured offset.
+export function alignGroups(layouts: BoxLayout[], plan: GroupPlan): void {
+  if (plan.length === 0) return
+  const byId = new Map(layouts.map((l) => [l.id, l]))
+  for (const g of plan) {
+    const leader = byId.get(g.leaderId)
+    if (!leader) continue
+    for (const m of g.members) {
+      const member = byId.get(m.id)
+      if (!member) continue
+      member.x = leader.x + m.dx
+      member.y = leader.y + m.dy
+    }
+  }
 }
 
 export function fillDepths(layouts: BoxLayout[], lines: Line[]): void {

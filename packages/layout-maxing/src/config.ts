@@ -43,6 +43,11 @@ export interface Config {
   showStraightLines?: boolean
   removeLineSegments?: boolean
   deterministic?: boolean
+  seed?: number
+  normalize?: boolean
+  normalizeExport?: boolean
+  ignoreOrphans?: boolean
+  keepGroups?: boolean
   useDagre?: boolean
   useInput?: boolean
   useSimpleFlow?: boolean
@@ -134,6 +139,23 @@ export const configMeta: ConfigMeta = {
   showStraightLines: [false, false, true, null, 'Render straight lines instead of curves'],
   removeLineSegments: [true, false, true, null, 'Remove patchline midpoints after applying layout'],
   deterministic: [true, false, true, null, 'Use a fixed random seed for reproducible results'],
+  seed: [
+    123456789,
+    0,
+    2147483647,
+    1,
+    'Seed for deterministic random (ignored unless deterministic=true)',
+  ],
+  normalize: [false, false, true, null, 'Normalize layouts to origin [0,0] after each generation'],
+  normalizeExport: [
+    true,
+    false,
+    true,
+    null,
+    'Normalize layouts to origin when applying positions back to patch',
+  ],
+  ignoreOrphans: [true, false, true, null, 'Skip boxes with no incoming or outgoing lines'],
+  keepGroups: [true, false, true, null, 'Preserve relative positions within patcher.boxgroups'],
   useDagre: [true, false, true, null, 'Use Dagre for initial layout before GA optimization'],
   useInput: [false, false, true, null, 'Use the input file layout as the GA starting point'],
   useSimpleFlow: [
