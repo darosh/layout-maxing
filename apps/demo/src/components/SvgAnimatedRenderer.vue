@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useOptimizerStore } from '@/stores/optimizer'
-import { getOutletPos, getInletPos, getViewPort } from 'layout-maxing'
+import {
+  getOutletPos,
+  getInletPos,
+  getViewPort,
+  normalizeLayouts,
+  cloneLayouts,
+  type BoxLayout,
+} from 'layout-maxing'
 import { defaultConfig } from 'layout-maxing'
 
 const store = useOptimizerStore()
 
 const cfg = computed(() => ({ ...defaultConfig, ...store.config }))
 
-const layouts = computed(() => store.displayedLayouts)
+const layouts = ref<BoxLayout[]>([])
 const lines = computed(() => store.lines)
 
 const viewport = computed(() => {
@@ -69,6 +76,10 @@ watch(
 watch(
   () => store.displayedLayouts,
   () => {
+    const clone = cloneLayouts(store.displayedLayouts)
+    normalizeLayouts(clone)
+    layouts.value = clone
+
     if (!skipAllTransitions.value) {
       return
     }
@@ -76,7 +87,9 @@ watch(
     nextTick(() => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          skipAllTransitions.value = false
+          requestAnimationFrame(() => {
+            skipAllTransitions.value = false
+          })
         })
       })
     })
@@ -90,7 +103,9 @@ function jump(next: { w: number; h: number }) {
   stableVP.value = next
   nextTick(() => {
     requestAnimationFrame(() => {
-      skipRootTransition.value = false
+      requestAnimationFrame(() => {
+        skipRootTransition.value = false
+      })
     })
   })
 }
@@ -334,7 +349,9 @@ const portDots = computed<DotItem[]>(() => {
 <style scoped>
 .svg-animated-renderer {
   --t-transform: transform 200ms ease;
+  --t-transform-root: transform 200ms ease;
   --t-d: d 200ms ease;
+  --t-transform-bbox: x 200ms ease, y 200ms ease, width 200ms ease, height 200ms ease;
 
   width: 100%;
   height: 100%;
@@ -355,7 +372,7 @@ const portDots = computed<DotItem[]>(() => {
 }
 
 .layout-root {
-  transition: var(--t-transform);
+  transition: var(--t-transform-root);
   transform-origin: 0 0;
 }
 
@@ -377,11 +394,7 @@ const portDots = computed<DotItem[]>(() => {
   stroke-width: 1.5;
   stroke-dasharray: 6 4;
   opacity: 0.5;
-  transition:
-    x 200ms ease,
-    y 200ms ease,
-    width 200ms ease,
-    height 200ms ease;
+  transition: var(--t-transform-bbox);
 }
 
 .group-bbox--jump {
