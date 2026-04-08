@@ -2,6 +2,7 @@ import E1 from '../../../../packages/layout-maxing-cli/tests/fixtures/two-boxes-
 import E2 from '../../../../packages/layout-maxing-cli/tests/fixtures/test.maxpat'
 import E3 from '../../../../packages/layout-maxing-cli/tests/fixtures/the-synth.rnbopat'
 // import E4 from '../../../../packages/layout-maxing-cli/tests/fixtures/the-synth.maxpat'
+import E5 from '../../../../packages/layout-maxing-cli/tests/fixtures/reverb-example.json'
 import type { RNBO } from 'layout-maxing'
 
-export const EXAMPLES: RNBO[] = <RNBO[]>(<unknown[]>[{ patcher: E1 }, E2, E3])
+export const EXAMPLES: RNBO[] = <RNBO[]>(<unknown[]>[{ patcher: E1 }, E2, E3, { patcher: E5 }])
