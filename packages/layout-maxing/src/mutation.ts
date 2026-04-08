@@ -191,6 +191,28 @@ export function mutateSwapInCol(
   return layouts
 }
 
+export function mutateShiftRow(
+  target: BoxLayout,
+  layouts: BoxLayout[],
+  delta: { x: number },
+): BoxLayout[] {
+  for (const box of getRow(target, layouts)) {
+    box.x += delta.x
+  }
+  return layouts
+}
+
+export function mutateShiftCol(
+  target: BoxLayout,
+  layouts: BoxLayout[],
+  delta: { y: number },
+): BoxLayout[] {
+  for (const box of getCol(target, layouts)) {
+    box.y += delta.y
+  }
+  return layouts
+}
+
 export function crossover(
   parent1: BoxLayout[],
   parent2: BoxLayout[],

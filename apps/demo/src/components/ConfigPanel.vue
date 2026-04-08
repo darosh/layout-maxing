@@ -515,6 +515,30 @@ function copyCli() {
               v-tip.right="configMeta.mutWeightSwapInCol[4]"
               @keydown="handleShiftKey($event, 'mutWeightSwapInCol')"
             />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightShiftRow') }"
+              @click="isNonDefault('mutWeightShiftRow') && resetProp('mutWeightShiftRow')"
+              >mutWeightShiftRow</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightShiftRow"
+              v-bind="numProps('mutWeightShiftRow')"
+              size="small"
+              v-tip.right="configMeta.mutWeightShiftRow[4]"
+              @keydown="handleShiftKey($event, 'mutWeightShiftRow')"
+            />
+            <label
+              :class="{ 'non-default': isNonDefault('mutWeightShiftCol') }"
+              @click="isNonDefault('mutWeightShiftCol') && resetProp('mutWeightShiftCol')"
+              >mutWeightShiftCol</label
+            >
+            <InputNumber
+              v-model="cfg.mutWeightShiftCol"
+              v-bind="numProps('mutWeightShiftCol')"
+              size="small"
+              v-tip.right="configMeta.mutWeightShiftCol[4]"
+              @keydown="handleShiftKey($event, 'mutWeightShiftCol')"
+            />
           </div>
         </AccordionContent>
       </AccordionPanel>

@@ -19,6 +19,8 @@ import {
   mutateSwapRandom,
   mutateSwapInRow,
   mutateSwapInCol,
+  mutateShiftRow,
+  mutateShiftCol,
 } from './mutation.ts'
 import { getViewPort } from './geometry.ts'
 
@@ -284,13 +286,8 @@ async function runGenetic(
         child = cloneLayouts(p1.layouts)
 
         if (rand() < cfg.mutationRate) {
-          const mxy = rand()
-          const [_x, _y, w, h] = getViewPort(child)
-          const mutateX = w * cfg.mutate
-          const mutateY = h * cfg.mutate
-          const x = mxy < 0.6 ? Math.round(((rand() - 0.5) * mutateX) / cfg.gridX) * cfg.gridX : 0
-          const y = mxy > 0.4 ? Math.round(((rand() - 0.5) * mutateY) / cfg.gridY) * cfg.gridY : 0
           const mutationTarget = child[Math.floor(rand() * child.length)]
+
           const mutIdx = roulette(
             [
               cfg.mutWeightQuadrant,
@@ -301,9 +298,24 @@ async function runGenetic(
               cfg.mutWeightSwapRandom,
               cfg.mutWeightSwapInRow,
               cfg.mutWeightSwapInCol,
+              cfg.mutWeightShiftRow,
+              cfg.mutWeightShiftCol,
             ],
             rand,
           )
+
+          const mxy = rand()
+          const [_x, _y, w, h] = getViewPort(child)
+          const mutateX = w * cfg.mutate
+          const mutateY = h * cfg.mutate
+          const x =
+            mxy < 0.6 || mutIdx === 8
+              ? Math.round(((rand() - 0.5) * mutateX) / cfg.gridX) * cfg.gridX
+              : 0
+          const y =
+            mxy > 0.4 || mutIdx === 9
+              ? Math.round(((rand() - 0.5) * mutateY) / cfg.gridY) * cfg.gridY
+              : 0
 
           if (mutIdx === 0) {
             const quadrant = Math.floor(rand() * 4)
@@ -320,8 +332,12 @@ async function runGenetic(
             child = mutateSwapRandom(mutationTarget, child, rand)
           } else if (mutIdx === 6) {
             child = mutateSwapInRow(mutationTarget, child, rand, cfg)
-          } else {
+          } else if (mutIdx === 7) {
             child = mutateSwapInCol(mutationTarget, child, rand, cfg)
+          } else if (mutIdx === 8) {
+            child = mutateShiftRow(mutationTarget, child, { x })
+          } else {
+            child = mutateShiftCol(mutationTarget, child, { y })
           }
         }
       }

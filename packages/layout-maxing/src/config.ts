@@ -41,6 +41,8 @@ export interface Config {
   mutWeightSwapRandom?: number
   mutWeightSwapInRow?: number
   mutWeightSwapInCol?: number
+  mutWeightShiftRow?: number
+  mutWeightShiftCol?: number
   // Control flags
   showStraightLines?: boolean
   removeLineSegments?: boolean
@@ -137,8 +139,10 @@ export const configMeta: ConfigMeta = {
   mutWeightParents: [0, 0, 100, 1, 'Roulette weight for parents-group mutation'],
   mutWeightSwapSibling: [20, 0, 100, 1, 'Roulette weight for sibling-swap mutation'],
   mutWeightSwapRandom: [20, 0, 100, 1, 'Roulette weight for random-pair swap mutation'],
-  mutWeightSwapInRow: [10, 0, 100, 1, 'Roulette weight for row-neighbor swap mutation'],
+  mutWeightSwapInRow: [15, 0, 100, 1, 'Roulette weight for row-neighbor swap mutation'],
   mutWeightSwapInCol: [10, 0, 100, 1, 'Roulette weight for col-neighbor swap mutation'],
+  mutWeightShiftRow: [5, 0, 100, 1, 'Roulette weight for shifting all boxes in a row by x delta'],
+  mutWeightShiftCol: [5, 0, 100, 1, 'Roulette weight for shifting all boxes in a col by y delta'],
   // Control flags
   showStraightLines: [false, false, true, null, 'Render straight lines instead of curves'],
   removeLineSegments: [true, false, true, null, 'Remove patchline midpoints after applying layout'],
