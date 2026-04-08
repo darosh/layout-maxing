@@ -73,7 +73,8 @@ async function pasteFromClipboard() {
       </p>
       <p v-else class="drop-text">Drop a Max file here</p>
       <p v-if="store.rnbo" class="file-meta">
-        {{ store.rnbo.patcher.boxes.length }} boxes, {{ store.rnbo.patcher.lines.length }} lines
+        {{ store.rnbo.patcher.boxes.length }} boxes,
+        {{ store.rnbo.patcher.lines?.length ?? 0 }} lines
       </p>
       <div class="drop-actions">
         <template v-if="showExamples">
