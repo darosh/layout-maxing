@@ -51,7 +51,7 @@ const fullScore = computed(() => {
             selectionLabel.slice(selectionLabel.length - 2)
           }}</span>
         </template>
-        <template v-else>
+        <template v-else-if="store.selection.kind === 'allTime'">
           <template v-if="store.selection?.index === 0">{{ BEST_LABEL }}</template>
           {{ selectionLabel }}</template
         >

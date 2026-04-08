@@ -1,9 +1,12 @@
 <script setup lang="ts" xmlns="http://www.w3.org/1999/html">
 import Dialog from 'primevue/dialog'
 import { configMeta } from 'layout-maxing'
+import { computed } from 'vue'
 
-defineProps<{ visible: boolean }>()
+const props = defineProps<{ visible: boolean; isMac?: boolean }>()
 defineEmits<{ 'update:visible': [value: boolean] }>()
+
+const modKey = computed(() => (props.isMac ? '⌘' : 'Ctrl+'))
 
 const entries = Object.entries(configMeta) as [
   string,
@@ -30,14 +33,19 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
   >
     <h4>Hot keys</h4>
     <ul class="list">
+      <li><kbd>R</kbd> — run optimization</li>
+      <li><kbd>⌥R</kbd> — re-run (uses best result as initial positions)</li>
       <li>
-        <kbd>Option</kbd>
+        <kbd>{{ modKey }}C</kbd> — copy layout to clipboard
+      </li>
+      <li>
+        <kbd>{{ modKey }}V</kbd> — paste layout from clipboard
+      </li>
+      <li>
+        <kbd>⌥</kbd> (hold)
         <ul>
-          <li>
-            switching <code>Optimization</code> to <code>Re-run</code> (reusing recent output as
-            input, <code>useInput</code> should be turned on)
-          </li>
-          <li>switching <code>Download</code> to <code>Copy</code></li>
+          <li>switches <code>Optimize</code> to <code>Re-run</code> button</li>
+          <li>switches <code>Download</code> to <code>Copy</code> button</li>
         </ul>
       </li>
       <li>

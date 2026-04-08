@@ -63,6 +63,21 @@ function isTyping(e: KeyboardEvent) {
 
 function onKeyDown(e: KeyboardEvent) {
   optionDown.value = e.altKey
+  if (!isTyping(e) && e.code === 'KeyR') {
+    e.preventDefault()
+    if (!e.repeat) {
+      if (btnStart.value) {
+        if (e.altKey) {
+          store.startReOptimization()
+        } else {
+          store.startOptimization()
+        }
+      } else {
+        store.stopOptimization()
+      }
+    }
+    return
+  }
   const mod = isMac ? e.metaKey : e.ctrlKey
   if (!mod || isTyping(e)) return
   if (e.key === 'v') {
@@ -215,7 +230,7 @@ const btnPause = computed(() => store.status === 'running')
         </div>
       </section>
     </main>
-    <HelpDialog v-model:visible="helpVisible" />
+    <HelpDialog v-model:visible="helpVisible" :is-mac="isMac" />
   </div>
 </template>
 

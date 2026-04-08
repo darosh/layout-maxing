@@ -16,12 +16,12 @@
 
 - [ ] presets?
 - [ ] smaller examples
+- [ ] add seed
+- [ ] reactive tooltip, max width
 - [x] ~~placeholder preview animation~~
 - [x] svg best/current title
 - [x] copy/paste btn should flash on hot key
-- [ ] add seed
-- [ ] add enter run option+enter re-run hotkeys
-- [ ] reactive tooltip, max width
+- [x] add r run option+r re-run hotkeys
 
 ### Structure
 

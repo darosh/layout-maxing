@@ -13,7 +13,7 @@
     "dev": "vp run demo#dev",
     "build": "vp run -r build",
     "build-only:ghp": " vp run demo#bump && vp run demo#build-only:ghp",
-    "lint": "vp lint --fix"
+    "lint": "vp lint --fix --format=stylish"
   },
   "devDependencies": {
     "typescript": "~6.0.0",

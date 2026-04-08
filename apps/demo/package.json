@@ -14,8 +14,8 @@
     "build-only": "vp build",
     "type-check": "vue-tsc --build",
     "lint": "run-s lint:*",
-    "lint:oxlint": "vp lint . --fix",
-    "lint:eslint": "eslint . --fix --cache",
+    "lint:oxlint": "vp lint . --fix --format=stylish",
+    "lint:eslint": "eslint . --fix --cache --format=stylish",
     "format": "vp fmt src/",
     "bump": "npm version patch"
   },
