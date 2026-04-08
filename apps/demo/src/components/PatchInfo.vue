@@ -22,9 +22,7 @@ function ordinal(n: number): string {
 
 const selectionLabel = computed(() => {
   const sel = store.selection
-  if (sel.kind === 'live') return null
   if (sel.kind === 'original') return INPUT_LABEL
-  if (sel.kind === 'best') return BEST_LABEL
   if (sel.kind === 'allTime') return `#${sel.index + 1}`
   if (sel.kind === 'current') return ordinal(sel.index + 1)
   return null
@@ -38,73 +36,72 @@ const fullScore = computed(() => {
 <template>
   <FlyingTooltip ref="tooltip" />
   <div class="svg-renderer">
-      <!-- Bottom-left: score + selection label -->
-      <div class="overlay overlay-bl">
-        <span class="score-value">{{ fmt(store.displayedFitness?.score) }}</span>
-        <span class="score-value selection-label">{{ fullScore }}</span>
-      </div>
+    <!-- Bottom-left: score + selection label -->
+    <div class="overlay overlay-bl">
+      <span class="score-value">{{ fmt(store.displayedFitness?.score) }}</span>
+      <span class="score-value selection-label">{{ fullScore }}</span>
+    </div>
 
-      <div class="overlay overlay-tl">
-        <span v-if="selectionLabel" class="selection-label">
-          <template v-if="store.selection.kind === 'current'">
-            {{ selectionLabel.slice(0, selectionLabel.length - 2)
-            }}<span class="selection-label-ordinal">{{
-              selectionLabel.slice(selectionLabel.length - 2)
-            }}</span>
-          </template>
-          <template v-else>{{ selectionLabel }}</template>
-        </span>
-      </div>
+    <div class="overlay overlay-tl">
+      <span v-if="selectionLabel" class="selection-label">
+        <template v-if="store.selection.kind === 'current'">
+          {{ selectionLabel.slice(0, selectionLabel.length - 2)
+          }}<span class="selection-label-ordinal">{{
+            selectionLabel.slice(selectionLabel.length - 2)
+          }}</span>
+        </template>
+        <template v-else>{{ selectionLabel }}</template>
+      </span>
+    </div>
 
-      <!-- Bottom-right: detail metrics -->
-      <div class="overlay overlay-br">
-        <!--        <span class="metric metric-interactive"><span class="metric-label">len</span>{{ fmt(store.displayedFitness?.length) }}</span>-->
-        <span
-          class="metric metric-interactive"
-          @mouseenter="tooltip?.show($event, fitnessTooltip('collisions'))"
-          @mouseleave="tooltip?.hide()"
-          ><span class="metric-label">col</span>{{ fmt(store.displayedFitness?.collisions) }}</span
-        >
-        <span
-          class="metric metric-interactive"
-          @mouseenter="tooltip?.show($event, fitnessTooltip('singleSelfCollisions'))"
-          @mouseleave="tooltip?.hide()"
-          ><span class="metric-label">ssc</span
-          >{{ fmt(store.displayedFitness?.singleSelfCollisions) }}</span
-        >
-        <span
-          class="metric metric-interactive"
-          @mouseenter="tooltip?.show($event, fitnessTooltip('misalignedSS'))"
-          @mouseleave="tooltip?.hide()"
-          ><span class="metric-label">mss</span
-          >{{ fmt(store.displayedFitness?.misalignedSS) }}</span
-        >
-        <span
-          class="metric metric-interactive"
-          @mouseenter="tooltip?.show($event, fitnessTooltip('overlaps'))"
-          @mouseleave="tooltip?.hide()"
-          ><span class="metric-label">ove</span>{{ fmt(store.displayedFitness?.overlaps) }}</span
-        >
-        <span
-          class="metric metric-interactive"
-          @mouseenter="tooltip?.show($event, fitnessTooltip('crossings'))"
-          @mouseleave="tooltip?.hide()"
-          ><span class="metric-label">cro</span>{{ fmt(store.displayedFitness?.crossings) }}</span
-        >
-        <span
-          class="metric metric-interactive"
-          @mouseenter="tooltip?.show($event, fitnessTooltip('area'))"
-          @mouseleave="tooltip?.hide()"
-          ><span class="metric-label">are</span>{{ fmt(store.displayedFitness?.area) }}</span
-        >
-        <span
-          class="metric metric-interactive"
-          @mouseenter="tooltip?.show($event, fitnessTooltip('misalignedFirst'))"
-          @mouseleave="tooltip?.hide()"
-          ><span class="metric-label">mst</span
-          >{{ fmt(store.displayedFitness?.misalignedFirst) }}</span
-        >
-      </div>
+    <!-- Bottom-right: detail metrics -->
+    <div class="overlay overlay-br">
+      <!--        <span class="metric metric-interactive"><span class="metric-label">len</span>{{ fmt(store.displayedFitness?.length) }}</span>-->
+      <span
+        class="metric metric-interactive"
+        @mouseenter="tooltip?.show($event, fitnessTooltip('collisions'))"
+        @mouseleave="tooltip?.hide()"
+        ><span class="metric-label">col</span>{{ fmt(store.displayedFitness?.collisions) }}</span
+      >
+      <span
+        class="metric metric-interactive"
+        @mouseenter="tooltip?.show($event, fitnessTooltip('singleSelfCollisions'))"
+        @mouseleave="tooltip?.hide()"
+        ><span class="metric-label">ssc</span
+        >{{ fmt(store.displayedFitness?.singleSelfCollisions) }}</span
+      >
+      <span
+        class="metric metric-interactive"
+        @mouseenter="tooltip?.show($event, fitnessTooltip('misalignedSS'))"
+        @mouseleave="tooltip?.hide()"
+        ><span class="metric-label">mss</span>{{ fmt(store.displayedFitness?.misalignedSS) }}</span
+      >
+      <span
+        class="metric metric-interactive"
+        @mouseenter="tooltip?.show($event, fitnessTooltip('overlaps'))"
+        @mouseleave="tooltip?.hide()"
+        ><span class="metric-label">ove</span>{{ fmt(store.displayedFitness?.overlaps) }}</span
+      >
+      <span
+        class="metric metric-interactive"
+        @mouseenter="tooltip?.show($event, fitnessTooltip('crossings'))"
+        @mouseleave="tooltip?.hide()"
+        ><span class="metric-label">cro</span>{{ fmt(store.displayedFitness?.crossings) }}</span
+      >
+      <span
+        class="metric metric-interactive"
+        @mouseenter="tooltip?.show($event, fitnessTooltip('area'))"
+        @mouseleave="tooltip?.hide()"
+        ><span class="metric-label">are</span>{{ fmt(store.displayedFitness?.area) }}</span
+      >
+      <span
+        class="metric metric-interactive"
+        @mouseenter="tooltip?.show($event, fitnessTooltip('misalignedFirst'))"
+        @mouseleave="tooltip?.hide()"
+        ><span class="metric-label">mst</span
+        >{{ fmt(store.displayedFitness?.misalignedFirst) }}</span
+      >
+    </div>
   </div>
 </template>
 
@@ -121,58 +118,31 @@ const fullScore = computed(() => {
   justify-content: center;
 }
 
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  color: var(--p-surface-600);
-  font-size: 0.875rem;
-}
-
-.placeholder-icon {
-  font-size: 2.5rem;
-}
-
-.svg-canvas {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.svg-canvas :deep(svg) {
-  width: 100%;
-  height: 100%;
-}
-
 /* Overlays */
 .overlay {
   position: absolute;
   z-index: 2;
-  pointer-events: none;
+  user-select: none;
   display: flex;
   align-items: baseline;
-  gap: 0.35rem;
-  padding: 0.3rem 0.5rem;
-  border-radius: 4px;
 }
 
 .overlay-bl {
-  bottom: 0.5rem;
-  left: 0.5rem;
+  bottom: 1.25rem;
+  left: 1.25rem;
   gap: 1rem;
 }
 
 .overlay-tl {
-  top: 0.5rem;
-  left: 0.5rem;
+  top: 1.25rem;
+  left: 1.25rem;
   gap: 0.6rem;
 }
 
 .overlay-br {
-  bottom: 0.5rem;
-  right: 0.5rem;
-  gap: 0.6rem;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  gap: 0.75rem;
 }
 
 .score-value {

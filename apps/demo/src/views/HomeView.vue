@@ -147,7 +147,14 @@ const btnPause = computed(() => store.status === 'running')
           <SvgRenderer v-else />
         </div>
         <TopResultsBar />
-        <div style="position: absolute; flex: 1; width: calc(100% - 320px - .5rem); height: calc(100vh - 80px - 2rem);">
+        <div
+          style="
+            position: absolute;
+            flex: 1;
+            width: calc(100% - 320px);
+            height: calc(100vh - 80px - 1.5rem);
+          "
+        >
           <PatchInfo />
         </div>
       </section>
