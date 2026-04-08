@@ -342,6 +342,8 @@ async function runGenetic(
         }
       }
 
+      child = fixOverlaps(child, cfg)
+
       if (cfg.keepGroups) alignGroups(child, groupPlan)
       if (cfg.normalize) normalizeLayouts(child)
 
