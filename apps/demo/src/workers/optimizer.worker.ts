@@ -43,7 +43,7 @@ type DoneMsg = {
   rnbo: RNBO
   layouts: BoxLayout[]
 }
-type ErrorMsg = { type: 'error'; message: string }
+type ErrorMsg = { type: 'error'; message: string; stack?: string }
 
 type WorkerMsg = OriginalMsg | ProgressMsg | DoneMsg | ErrorMsg
 
