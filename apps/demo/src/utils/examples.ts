@@ -1,8 +1,11 @@
-import E1 from '../../../../packages/layout-maxing-cli/tests/fixtures/two-boxes-clipboard.json' with { type: 'json' }
-import E2 from '../../../../packages/layout-maxing-cli/tests/fixtures/test.maxpat'
-import E3 from '../../../../packages/layout-maxing-cli/tests/fixtures/the-synth.rnbopat'
+// import E1 from '../../../../packages/layout-maxing-cli/tests/fixtures/two-boxes-clipboard.json'
+import E2 from '../../../../packages/layout-maxing-cli/tests/fixtures/test.json'
+import E3 from '../../../../packages/layout-maxing-cli/tests/fixtures/the-synth.json'
 // import E4 from '../../../../packages/layout-maxing-cli/tests/fixtures/the-synth.maxpat'
 import E5 from '../../../../packages/layout-maxing-cli/tests/fixtures/reverb-example.json'
+import E6 from '../../../../packages/layout-maxing-cli/tests/fixtures/reverb-grouped-example.json'
 import type { RNBO } from 'layout-maxing'
 
-export const EXAMPLES: RNBO[] = <RNBO[]>(<unknown[]>[{ patcher: E1 }, E2, E3, { patcher: E5 }])
+export const EXAMPLES: RNBO[] = <RNBO[]>(
+  (<unknown[]>[{ patcher: E2 }, { patcher: E3 }, { patcher: E5 }, { patcher: E6 }])
+)

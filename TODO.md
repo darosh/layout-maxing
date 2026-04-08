@@ -15,7 +15,7 @@
 ### UI
 
 - [ ] presets?
-- [ ] smaller examples
+- [x] smaller examples
 - [x] check exact hotkeys
 - [x] reactive tooltip, max width
 - [x] ~~placeholder preview animation~~
