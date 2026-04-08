@@ -192,7 +192,6 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
 .thumb-btn:hover,
 .thumb-btn:focus {
   opacity: 0.85;
-  transform: translateY(-2px);
 }
 
 .thumb-btn:active {
