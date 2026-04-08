@@ -1,13 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import Button from 'primevue/button'
 import { useOptimizerStore } from '@/stores/optimizer'
 import { EXAMPLES } from '@/utils/examples.ts'
+
+const props = defineProps<{ pasteActive?: boolean }>()
 
 const store = useOptimizerStore()
 const isDragging = ref(false)
 const showExamples = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+watch(
+  () => props.pasteActive,
+  (active) => {
+    if (active) showExamples.value = false
+  },
+)
 
 function onDragOver(e: DragEvent) {
   e.preventDefault()
@@ -82,6 +91,7 @@ async function pasteFromClipboard() {
           <Button variant="outlined" label="Select file" size="small" @click="openPicker" />
           <Button
             label="Paste"
+            :class="{ 'info-active': props.pasteActive }"
             size="small"
             variant="outlined"
             severity="info"
@@ -193,5 +203,9 @@ async function pasteFromClipboard() {
   gap: 0.5rem;
   font-size: 0.875rem;
   color: var(--p-red-400);
+}
+
+.info-active {
+  background: var(--p-button-outlined-info-active-background);
 }
 </style>

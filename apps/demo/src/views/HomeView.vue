@@ -53,6 +53,8 @@ async function pasteFromClipboard() {
 }
 
 const optionDown = ref(false)
+const pasteKeyDown = ref(false)
+const copyKeyDown = ref(false)
 
 function isTyping(e: KeyboardEvent) {
   const t = e.target as HTMLElement
@@ -65,14 +67,24 @@ function onKeyDown(e: KeyboardEvent) {
   if (!mod || isTyping(e)) return
   if (e.key === 'v') {
     e.preventDefault()
-    pasteFromClipboard()
+    if (!e.repeat) {
+      pasteKeyDown.value = true
+      pasteFromClipboard().finally(() => setTimeout(() => (pasteKeyDown.value = false), 300))
+    }
   } else if (e.key === 'c' && store.canExport) {
     e.preventDefault()
-    copyRnbo()
+    if (!e.repeat) {
+      copyKeyDown.value = true
+      setTimeout(() => (copyKeyDown.value = false), 300)
+      copyRnbo()
+    }
   }
 }
 function onKeyUp(e: KeyboardEvent) {
   optionDown.value = e.altKey
+
+  if (e.key === 'v' || e.key === 'Meta' || e.key === 'Control') pasteKeyDown.value = false
+  if (e.key === 'c' || e.key === 'Meta' || e.key === 'Control') copyKeyDown.value = false
 }
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
@@ -94,7 +106,7 @@ const btnPause = computed(() => store.status === 'running')
     <main class="app-body">
       <aside class="sidebar">
         <div class="sidebar-scroll">
-          <FileDropZone />
+          <FileDropZone :paste-active="pasteKeyDown" />
           <div class="action-row">
             <Button
               :label="btnStart ? (optionDown ? 'Re-run' : 'Optimize') : 'Stop'"
@@ -122,18 +134,25 @@ const btnPause = computed(() => store.status === 'running')
             />
             <Button v-else style="visibility: hidden" variant="outlined" size="small" disabled />
             <Button
-              :label="store.inputSource === 'clipboard' || optionDown ? 'Copy' : 'Download'"
+              :label="
+                store.inputSource === 'clipboard' || optionDown || copyKeyDown ? 'Copy' : 'Download'
+              "
               variant="outlined"
+              :class="{ 'info-active': copyKeyDown }"
               size="small"
               :severity="
                 !store.canExport
                   ? 'secondary'
-                  : store.inputSource === 'clipboard' || optionDown
+                  : store.inputSource === 'clipboard' || optionDown || copyKeyDown
                     ? 'info'
                     : undefined
               "
               :disabled="!store.canExport"
-              @click="store.inputSource === 'clipboard' || optionDown ? copyRnbo() : downloadRnbo()"
+              @click="
+                store.inputSource === 'clipboard' || optionDown || copyKeyDown
+                  ? copyRnbo()
+                  : downloadRnbo()
+              "
             />
           </div>
           <div class="section-divider"></div>
@@ -353,5 +372,9 @@ const btnPause = computed(() => store.status === 'running')
 
 .canvas > * {
   flex: 1;
+}
+
+.info-active {
+  background: var(--p-button-outlined-info-active-background);
 }
 </style>
