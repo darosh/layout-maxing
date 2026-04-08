@@ -63,7 +63,8 @@ function isTyping(e: KeyboardEvent) {
 
 function onKeyDown(e: KeyboardEvent) {
   optionDown.value = e.altKey
-  if (!isTyping(e) && e.code === 'KeyR') {
+  const mod = isMac ? e.metaKey : e.ctrlKey
+  if (!isTyping(e) && e.code === 'KeyR' && !mod && !e.shiftKey) {
     e.preventDefault()
     if (!e.repeat) {
       if (btnStart.value) {
@@ -78,8 +79,7 @@ function onKeyDown(e: KeyboardEvent) {
     }
     return
   }
-  const mod = isMac ? e.metaKey : e.ctrlKey
-  if (!mod || isTyping(e)) return
+  if (!mod || e.altKey || e.shiftKey || isTyping(e)) return
   if (e.key === 'v') {
     e.preventDefault()
     if (!e.repeat) {
@@ -98,8 +98,9 @@ function onKeyDown(e: KeyboardEvent) {
 function onKeyUp(e: KeyboardEvent) {
   optionDown.value = e.altKey
 
-  if (e.key === 'v' || e.key === 'Meta' || e.key === 'Control') pasteKeyDown.value = false
-  if (e.key === 'c' || e.key === 'Meta' || e.key === 'Control') copyKeyDown.value = false
+  const modKey = isMac ? 'Meta' : 'Control'
+  if (e.key === 'v' || e.key === modKey) pasteKeyDown.value = false
+  if (e.key === 'c' || e.key === modKey) copyKeyDown.value = false
 }
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)

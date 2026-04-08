@@ -14,9 +14,9 @@
 
 ### UI
 
-- [ ] check exact hotkeys
 - [ ] presets?
 - [ ] smaller examples
+- [x] check exact hotkeys
 - [x] reactive tooltip, max width
 - [x] ~~placeholder preview animation~~
 - [x] svg best/current title
