@@ -3382,7 +3382,7 @@
         "packageJson": {
           "dependencies": [
             "npm:@playwright/test@^1.58.2",
-            "npm:@primevue/themes@^4.3.3",
+            "npm:@primeuix/themes@^2.0.3",
             "npm:@tsconfig/node24@^24.0.4",
             "npm:@types/jsdom@^28.0.1",
             "npm:@types/node@^24.12.0",
