@@ -10,7 +10,8 @@
   "type": "module",
   "scripts": {
     "ready": "vp fmt && vp lint --format=stylish && vp run -r test && vp run -r build",
-    "dev": "vp run demo#dev",
+    "dev:app": "vp run demo#dev",
+    "dev:all": "vp run -r dev",
     "build": "vp run -r build",
     "build-only:ghp": " vp run demo#bump && vp run demo#build-only:ghp",
     "lint": "vp lint --fix --format=stylish"
