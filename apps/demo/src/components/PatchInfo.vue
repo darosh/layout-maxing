@@ -71,14 +71,13 @@ const fullScore = computed(() => {
     </div>
 
     <div
-      v-if="store.showStats"
+      v-if="store.showStats && store.snapshots?.length >= 2"
       style="
         position: absolute;
         right: 0;
         top: 1.5rem;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
         align-items: flex-end;
       "
     >
@@ -91,7 +90,6 @@ const fullScore = computed(() => {
           display: flex;
           flex-direction: column;
           align-items: end;
-          gap: 0.5rem;
         "
       >
         <div class="stat-bg">

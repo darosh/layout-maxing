@@ -203,7 +203,7 @@ td.td-name:hover {
 }
 
 td.good {
-  color: var(--p-green-500);
+  color: var(--p-primary-400);
 }
 
 td.neutral {
