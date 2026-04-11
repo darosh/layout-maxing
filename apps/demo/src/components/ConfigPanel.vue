@@ -59,6 +59,69 @@ function isNonDefault(key: keyof Config): boolean {
   return cfg.value[key] !== defaultConfig[key]
 }
 
+const groupKeys = {
+  grid: ['gridX', 'gridY', 'minDistX', 'minDistY', 'boxZone', 'letOffest', 'curveControl'],
+  penalties: [
+    'crossPenalty',
+    'overPenalty',
+    'reversePenalty',
+    'areaPenalty',
+    'totalDistPenalty',
+    'arPenalty',
+    'arMax',
+    'totalCrossPenalty',
+    'totalOverPenalty',
+    'totalCollisionPenalty',
+    'totalSSCPenalty',
+    'misalignedSSPenalty',
+    'misalignedFirstPenalty',
+  ],
+  mws: [
+    'mutate',
+    'mutWeightQuadrant',
+    'mutWeightSingle',
+    'mutWeightChildren',
+    'maxChildren',
+    'mutWeightParents',
+    'maxParents',
+    'mutWeightSwapSibling',
+    'mutWeightSwapRandom',
+    'mutWeightSwapInRow',
+    'mutWeightSwapInCol',
+    'mutWeightShiftRow',
+    'mutWeightShiftCol',
+  ],
+  ga: [
+    'deterministic',
+    'seed',
+    'popSize',
+    'generations',
+    'stop',
+    'mutationRate',
+    'crossoverRate',
+    'crossoverMix',
+    'tournamentSize',
+  ],
+  initial: ['useDagre', 'useSimpleFlow', 'useInput'],
+  run: [
+    'logProgressInterval',
+    'logProgress',
+    'logInfo',
+    'writeSvg',
+    'showStraightLines',
+    'writeJson',
+    'removeLineSegments',
+    'normalize',
+    'normalizeExport',
+    'ignoreOrphans',
+    'keepGroups',
+  ],
+} as const satisfies Record<string, (keyof Config)[]>
+
+function isGroupNonDefault(keys: readonly (keyof Config)[]): boolean {
+  return keys.some((k) => isNonDefault(k))
+}
+
 function resetProp(key: keyof Config) {
   ;(cfg.value as Record<keyof Config, unknown>)[key] = defaultConfig[key]
 }
@@ -136,7 +199,9 @@ function copyCli() {
 
     <Accordion :value="[]" multiple class="accordion">
       <AccordionPanel value="grid">
-        <AccordionHeader>Geometry</AccordionHeader>
+        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.grid) }"
+          >Geometry</AccordionHeader
+        >
         <AccordionContent>
           <div class="fields-grid">
             <label
@@ -228,7 +293,9 @@ function copyCli() {
       </AccordionPanel>
 
       <AccordionPanel value="penalties">
-        <AccordionHeader>Fitness Penalties</AccordionHeader>
+        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.penalties) }"
+          >Fitness Penalties</AccordionHeader
+        >
         <AccordionContent>
           <div class="fields-grid">
             <label
@@ -392,7 +459,9 @@ function copyCli() {
       </AccordionPanel>
 
       <AccordionPanel value="mws">
-        <AccordionHeader>Mutations</AccordionHeader>
+        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.mws) }"
+          >Mutations</AccordionHeader
+        >
         <AccordionContent>
           <div class="fields-grid">
             <label
@@ -556,7 +625,9 @@ function copyCli() {
       </AccordionPanel>
 
       <AccordionPanel value="ga">
-        <AccordionHeader>Genetic Algorithm</AccordionHeader>
+        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.ga) }"
+          >Genetic Algorithm</AccordionHeader
+        >
         <AccordionContent>
           <div class="toggles-grid">
             <label
@@ -672,7 +743,9 @@ function copyCli() {
       </AccordionPanel>
 
       <AccordionPanel value="initial">
-        <AccordionHeader>Initial Population</AccordionHeader>
+        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.initial) }"
+          >Initial Population</AccordionHeader
+        >
         <AccordionContent>
           <div class="toggles-grid">
             <label
@@ -699,7 +772,9 @@ function copyCli() {
 
       <!-- Run settings (part of Config) -->
       <AccordionPanel value="run">
-        <AccordionHeader>Run Settings</AccordionHeader>
+        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.run) }"
+          >Run Settings</AccordionHeader
+        >
         <AccordionContent>
           <div class="fields-grid">
             <label
@@ -884,6 +959,36 @@ function copyCli() {
 .toggles-grid label.non-default {
   color: var(--p-primary-400);
   cursor: pointer;
+}
+
+:deep(.p-accordionheader.non-default) {
+  color: var(--p-primary-600);
+}
+
+:deep(.p-accordionpanel:not(.p-disabled).p-accordionpanel-active > .p-accordionheader.non-default) {
+  color: var(--p-primary-400);
+}
+
+:deep(
+  .p-accordionpanel:not(.p-accordionpanel-active):not(.p-disabled)
+    > .p-accordionheader.non-default:hover
+) {
+  color: var(--p-primary-300);
+}
+
+:deep(
+  .p-accordionpanel:not(.p-disabled).p-accordionpanel-active > .p-accordionheader.non-default:hover
+) {
+  color: var(--p-primary-300);
+}
+
+:deep(.p-accordionheader.non-default)::before {
+  content: '*';
+  margin-right: 0.25rem;
+}
+
+:deep(.p-accordionheader.non-default > svg) {
+  margin-left: auto;
 }
 
 .fields-grid label.non-default::before,
