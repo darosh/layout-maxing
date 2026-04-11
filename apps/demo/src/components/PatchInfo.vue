@@ -61,9 +61,23 @@ const fullScore = computed(() => {
       </span>
     </div>
 
-    <div style="position: absolute; right: 0.25rem; top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end">
+    <div
+      style="
+        position: absolute;
+        right: 0.25rem;
+        top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+      "
+    >
       <GenerationChart :snapshots="store.snapshots" />
-      <MutationStats :snapshots="store.snapshots" :run-monitor="store.runMonitor" :selected-entry="store.displayedEntry" />
+      <MutationStats
+        :snapshots="store.snapshots"
+        :run-monitor="store.runMonitor"
+        :selected-entry="store.displayedEntry"
+      />
     </div>
 
     <!-- Bottom-right: detail metrics -->

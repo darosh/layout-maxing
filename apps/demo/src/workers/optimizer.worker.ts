@@ -9,7 +9,15 @@ import {
   preserveGroupMembers,
   stampGroupIdx,
 } from 'layout-maxing'
-import type { RNBO, Config, BoxLayout, Line, Fitness, GenerationSnapshot, RunMonitor } from 'layout-maxing'
+import type {
+  RNBO,
+  Config,
+  BoxLayout,
+  Line,
+  Fitness,
+  GenerationSnapshot,
+  RunMonitor,
+} from 'layout-maxing'
 
 type Position = { id: string; x: number; y: number }
 type TopEntry = { score: number; svg: string; fitness: Fitness; positions: Position[] }
@@ -329,7 +337,9 @@ self.onmessage = async (e: MessageEvent) => {
       },
       c.logProgress ? console.log : undefined,
       c.logInfo ? console.log : undefined,
-      (monitor: RunMonitor) => { finalRunMonitor = monitor },
+      (monitor: RunMonitor) => {
+        finalRunMonitor = monitor
+      },
     )
 
     pool.terminate()

@@ -112,7 +112,6 @@ function colTooltip(key: string): string {
 <template>
   <FlyingTooltip ref="tooltip" :max-width="220" />
   <div v-if="snapshots.length >= 1 && rows.length" class="mut-stats">
-
     <!-- Overall stats table -->
     <table>
       <thead>
@@ -122,36 +121,42 @@ function colTooltip(key: string): string {
             class="th-interactive"
             @mouseenter="tooltip?.show($event, colTooltip('att'))"
             @mouseleave="tooltip?.hide()"
-          >att</th>
+          >
+            att
+          </th>
           <th
             class="th-interactive"
             @mouseenter="tooltip?.show($event, colTooltip('imp'))"
             @mouseleave="tooltip?.hide()"
-          >imp%</th>
+          >
+            imp%
+          </th>
           <th
             class="th-interactive"
             @mouseenter="tooltip?.show($event, colTooltip('davg'))"
             @mouseleave="tooltip?.hide()"
-          >Δavg</th>
+          >
+            Δavg
+          </th>
           <th
             v-if="hasBestData"
             class="th-interactive th-best"
             @mouseenter="tooltip?.show($event, colTooltip('best'))"
             @mouseleave="tooltip?.hide()"
-          >best</th>
+          >
+            best
+          </th>
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="row in rows"
-          :key="row.name"
-          :class="{ 'dead-weight': row.deadWeight }"
-        >
+        <tr v-for="row in rows" :key="row.name" :class="{ 'dead-weight': row.deadWeight }">
           <td
             class="td-name th-interactive"
             @mouseenter="tooltip?.show($event, mutTooltip(row))"
             @mouseleave="tooltip?.hide()"
-          >{{ row.shortName }}</td>
+          >
+            {{ row.shortName }}
+          </td>
           <td>{{ row.attempts }}</td>
           <td>{{ row.impPct }}</td>
           <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">{{ row.avgDelta.toFixed(1) }}</td>
@@ -186,7 +191,9 @@ function colTooltip(key: string): string {
               class="td-name th-interactive"
               @mouseenter="tooltip?.show($event, mutTooltip(row))"
               @mouseleave="tooltip?.hide()"
-            >{{ row.shortName }}</td>
+            >
+              {{ row.shortName }}
+            </td>
             <td>{{ row.count }}</td>
             <td class="td-pct">{{ row.pct }}</td>
           </tr>

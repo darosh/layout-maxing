@@ -431,7 +431,10 @@ async function runGenetic(
       if (childMutation !== 'crossover' && childMutation !== 'none' && childMutatedBoxId) {
         const box = child.find((b) => b.id === childMutatedBoxId)
         if (box) {
-          box._mutations = { ...box._mutations, [childMutation]: (box._mutations?.[childMutation] ?? 0) + 1 }
+          box._mutations = {
+            ...box._mutations,
+            [childMutation]: (box._mutations?.[childMutation] ?? 0) + 1,
+          }
         }
       }
 

@@ -1,7 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, computed, toRaw, watch } from 'vue'
 import { defaultConfig, applyBestLayout } from 'layout-maxing'
-import type { RNBO, Config, Fitness, BoxLayout, Line, GenerationSnapshot, RunMonitor } from 'layout-maxing'
+import type {
+  RNBO,
+  Config,
+  Fitness,
+  BoxLayout,
+  Line,
+  GenerationSnapshot,
+  RunMonitor,
+} from 'layout-maxing'
 
 const CONFIG_KEY = 'layout-maxing-config'
 const RUN_KEY = 'layout-maxing-run'
