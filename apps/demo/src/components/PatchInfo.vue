@@ -74,29 +74,35 @@ const fullScore = computed(() => {
       v-if="store.showStats"
       style="
         position: absolute;
-        right: 0.25rem;
+        right: 0;
         top: 1.5rem;
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.5rem;
         align-items: flex-end;
       "
     >
-      <GenerationChart :snapshots="store.snapshots" />
+      <div class="stat-bg">
+        <GenerationChart :snapshots="store.snapshots" />
+      </div>
       <div
         style="
-          margin-right: 1rem;
+          margin-right: 0.75rem;
           display: flex;
           flex-direction: column;
           align-items: end;
-          gap: 1rem;
+          gap: 0.5rem;
         "
       >
-        <MutationStats :snapshots="store.snapshots" :run-monitor="store.runMonitor" />
-        <SelectionStats
-          :selected-entry="store.displayedEntry"
-          :mutation-order="Object.keys(mutationMeta)"
-        />
+        <div class="stat-bg">
+          <MutationStats :snapshots="store.snapshots" :run-monitor="store.runMonitor" />
+        </div>
+        <div class="stat-bg">
+          <SelectionStats
+            :selected-entry="store.displayedEntry"
+            :mutation-order="Object.keys(mutationMeta)"
+          />
+        </div>
       </div>
     </div>
 
@@ -251,5 +257,11 @@ const fullScore = computed(() => {
 .metric-interactive {
   pointer-events: auto;
   cursor: default;
+}
+
+.stat-bg {
+  background: rgba(12, 12, 12, 0.97);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.25rem;
 }
 </style>
