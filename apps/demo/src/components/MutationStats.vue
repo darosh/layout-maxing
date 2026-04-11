@@ -66,7 +66,7 @@ const rows = computed((): MutRow[] => {
         label: meta?.[0] ?? name,
         description: meta?.[2] ?? '',
         attempts: t.attempts,
-        impPct: t.attempts > 0 ? Math.round((t.improvements / t.attempts) * 100) : 0,
+        impPct: t.attempts > 0 ? (t.improvements / t.attempts) * 100 : 0,
         avgDelta: t.attempts > 0 ? t.totalDelta / t.attempts : 0,
         bestCount,
         deadWeight: props.runMonitor !== null && bestCount === 0,
@@ -90,7 +90,7 @@ const selRows = computed((): SelRow[] => {
         label: meta?.[0] ?? name,
         description: meta?.[2] ?? '',
         count,
-        pct: Math.round((count / total) * 100),
+        pct: (count / total) * 100,
       }
     })
     .sort((a, b) => b.count - a.count)
@@ -157,28 +157,22 @@ function colTooltip(key: string): string {
           >
             {{ row.shortName }}
           </td>
-          <td>{{ row.attempts }}</td>
-          <td>{{ row.impPct }}</td>
-          <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">{{ row.avgDelta.toFixed(1) }}</td>
+          <td>{{ row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
+          <td>{{ row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</td>
+          <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">{{ row.avgDelta.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
           <td v-if="hasBestData" class="td-best">
-            <span v-if="row.bestCount > 0" class="best-count">{{ row.bestCount }}</span>
+            <span v-if="row.bestCount > 0" class="best-count">{{ row.bestCount.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</span>
             <span v-else class="empty">—</span>
           </td>
         </tr>
       </tbody>
     </table>
-    <div v-if="hasBestData" class="legend">
-      <span class="legend-dead-example">SNGL</span> = dead weight
-    </div>
 
     <!-- Selected item breakdown -->
     <template v-if="selRows.length">
       <div class="section-divider"></div>
       <table>
         <thead>
-          <tr>
-            <th class="th-name" colspan="3">selected</th>
-          </tr>
           <tr>
             <th class="th-name"></th>
             <th>boxes</th>
@@ -194,8 +188,8 @@ function colTooltip(key: string): string {
             >
               {{ row.shortName }}
             </td>
-            <td>{{ row.count }}</td>
-            <td class="td-pct">{{ row.pct }}</td>
+            <td>{{ row.count.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
+            <td class="td-pct">{{ row.pct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</td>
           </tr>
         </tbody>
       </table>

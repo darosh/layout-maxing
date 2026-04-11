@@ -81,11 +81,13 @@ const fullScore = computed(() => {
       "
     >
       <GenerationChart :snapshots="store.snapshots" />
+      <div style="margin-right: 1rem;">
       <MutationStats
         :snapshots="store.snapshots"
         :run-monitor="store.runMonitor"
         :selected-entry="store.displayedEntry"
       />
+      </div>
     </div>
 
     <!-- Bottom-right: detail metrics -->
