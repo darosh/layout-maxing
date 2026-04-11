@@ -1,5 +1,5 @@
 import { type Config } from './config.ts'
-import { type BoxLayout, type Line } from './layout.ts'
+import { type Box, type Line } from './layout.ts'
 
 type BoxId = string
 
@@ -94,7 +94,7 @@ function linesIntersect(
   return t >= 0 && t <= 1 && u >= 0 && u <= 1
 }
 
-export function boxLineCollision(box: BoxLayout, line: StartEnd, zone: number): boolean {
+export function boxLineCollision(box: Box, line: StartEnd, zone: number): boolean {
   const left = box.x - zone
   const right = box.x + box.width + zone
   const top = box.y
@@ -117,7 +117,7 @@ export function boxLineCollision(box: BoxLayout, line: StartEnd, zone: number): 
   return count > 1
 }
 
-export function getIntersectionArea(a: BoxLayout, b: BoxLayout, x: number): number {
+export function getIntersectionArea(a: Box, b: Box, x: number): number {
   const xOverlap = Math.max(
     0,
     Math.min(a.x + a.width + x, b.x + b.width + x) - Math.max(a.x - x, b.x - x),
@@ -161,11 +161,7 @@ export function bezierLength(
   return length
 }
 
-export function getOutletPos(
-  box: BoxLayout,
-  outletIdx: number,
-  cfg: Required<Config>,
-): [number, number] {
+export function getOutletPos(box: Box, outletIdx: number, cfg: Required<Config>): [number, number] {
   if (box.numOutlets <= 1) {
     return [box.x + cfg.letOffest, box.y + box.height]
   }
@@ -175,11 +171,7 @@ export function getOutletPos(
   return [portX, box.y + box.height]
 }
 
-export function getInletPos(
-  box: BoxLayout,
-  inletIdx: number,
-  cfg: Required<Config>,
-): [number, number] {
+export function getInletPos(box: Box, inletIdx: number, cfg: Required<Config>): [number, number] {
   if (box.numInlets <= 1) {
     return [box.x + cfg.letOffest, box.y]
   }
@@ -191,7 +183,7 @@ export function getInletPos(
 
 export function getStraightLinePoints(
   line: Line,
-  boxMap: Map<BoxId, BoxLayout>,
+  boxMap: Map<BoxId, Box>,
   cfg: Required<Config>,
 ): StartEnd {
   const p = line.patchline
@@ -207,7 +199,7 @@ export function getStraightLinePoints(
   return { sx, sy, ex, ey }
 }
 
-export function getViewPort(layouts: BoxLayout[], padding: number = 0): number[] {
+export function getViewPort(layouts: Box[], padding: number = 0): number[] {
   if (layouts.length === 0) {
     return [0, 0, 800, 600] // fallback
   }

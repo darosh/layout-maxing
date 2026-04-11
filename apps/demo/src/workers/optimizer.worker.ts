@@ -12,7 +12,7 @@ import {
 import type {
   RNBO,
   Config,
-  BoxLayout,
+  Box,
   Line,
   Fitness,
   GenerationSnapshot,
@@ -36,7 +36,7 @@ type ProgressMsg = {
   svg: string | null
   top: TopEntry[] | null
   currentGenTop: TopEntry[] | null
-  layouts: BoxLayout[] | null
+  layouts: Box[] | null
   snapshots: GenerationSnapshot[] | null
 }
 type OriginalMsg = {
@@ -44,7 +44,7 @@ type OriginalMsg = {
   svg: string
   fitness: Fitness
   positions: Position[]
-  layouts: BoxLayout[]
+  layouts: Box[]
 }
 type DoneMsg = {
   type: 'done'
@@ -52,7 +52,7 @@ type DoneMsg = {
   top: TopEntry[]
   currentGenTop: TopEntry[]
   rnbo: RNBO
-  layouts: BoxLayout[]
+  layouts: Box[]
   runMonitor?: RunMonitor
 }
 type ErrorMsg = { type: 'error'; message: string; stack?: string }
@@ -96,7 +96,7 @@ function createFitnessWorkerPool() {
     return info
   })
 
-  const queue: { input: [BoxLayout[], Line[], Config]; resolve: (f: Fitness) => void }[] = []
+  const queue: { input: [Box[], Line[], Config]; resolve: (f: Fitness) => void }[] = []
 
   function runNext() {
     if (!queue.length) return
@@ -107,7 +107,7 @@ function createFitnessWorkerPool() {
     free.worker.postMessage([next.input[0], next.input[1], next.input[2]])
   }
 
-  function getFitness(layouts: BoxLayout[], lines: Line[], cfg: Config): Promise<Fitness> {
+  function getFitness(layouts: Box[], lines: Line[], cfg: Config): Promise<Fitness> {
     return new Promise((resolve) => {
       queue.push({ input: [layouts, lines, cfg], resolve })
       runNext()
@@ -121,8 +121,8 @@ function createFitnessWorkerPool() {
   return { getFitness, terminate, count }
 }
 
-function cloneForSvg(layouts: BoxLayout[]): BoxLayout[] {
-  return layouts.map(({ children: _c, parents: _p, ...rest }) => rest as BoxLayout)
+function cloneForSvg(layouts: Box[]): Box[] {
+  return layouts.map(({ children: _c, parents: _p, ...rest }) => rest as Box)
 }
 
 self.onmessage = async (e: MessageEvent) => {
@@ -167,7 +167,7 @@ self.onmessage = async (e: MessageEvent) => {
   let evalCount = 0
   let bestScore: number | null = null
   let bestFitness: Fitness | null = null
-  let bestLayouts: BoxLayout[] | null = null
+  let bestLayouts: Box[] | null = null
   let lastProgressTime = 0
   let finalRunMonitor: RunMonitor | undefined
   let stopIn = c.stop
@@ -177,11 +177,11 @@ self.onmessage = async (e: MessageEvent) => {
   let currentGen = 0
 
   // Top-N candidates by score (ascending)
-  const top: { score: number; layouts: BoxLayout[]; fitness: Fitness }[] = []
+  const top: { score: number; layouts: Box[]; fitness: Fitness }[] = []
   // Sliding window of current population (last popSize evaluations)
-  const currentPop: { score: number; layouts: BoxLayout[]; fitness: Fitness }[] = []
+  const currentPop: { score: number; layouts: Box[]; fitness: Fitness }[] = []
 
-  function updateTop(score: number, layouts: BoxLayout[], fitness: Fitness) {
+  function updateTop(score: number, layouts: Box[], fitness: Fitness) {
     const worst = top.length >= topN ? top[top.length - 1]!.score : Infinity
     if (score < worst || top.length < topN) {
       // Avoid near-duplicate scores (within 0.01%)
@@ -194,7 +194,7 @@ self.onmessage = async (e: MessageEvent) => {
     }
   }
 
-  function aggregateMutations(layouts: BoxLayout[]): Record<string, number> {
+  function aggregateMutations(layouts: Box[]): Record<string, number> {
     const totals: Record<string, number> = {}
     for (const box of layouts) {
       if (!box._mutations) continue
@@ -234,7 +234,7 @@ self.onmessage = async (e: MessageEvent) => {
 
   // Build initial layouts the same way main() does, honoring ignoreOrphans
   // so orphans never reach SVG / positions / export.
-  function buildLayoutsForView(): BoxLayout[] {
+  function buildLayoutsForView(): Box[] {
     let ls = createInitialLayouts(rnbo.patcher)
     if (c.keepGroups) stampGroupIdx(ls, rnbo.patcher.boxgroups)
     if (c.ignoreOrphans) {
@@ -265,7 +265,7 @@ self.onmessage = async (e: MessageEvent) => {
   try {
     const bestIndividual = await main(
       rnbo,
-      async (layouts: BoxLayout[], batchLines: Line[], batchCfg: Config) => {
+      async (layouts: Box[], batchLines: Line[], batchCfg: Config) => {
         await waitUntilResumed()
         if (stopped) throw new Error('stopped')
         const result = await pool.getFitness(layouts, batchLines, batchCfg)
@@ -384,7 +384,7 @@ self.onmessage = async (e: MessageEvent) => {
     if (err instanceof Error && err.message === 'stopped') {
       if (c.logInfo) console.log(`[optimizer] stopped at ${evalCount} evals`)
       // main() threw before applyBestLayout — apply manually
-      const layouts = bestLayouts as BoxLayout[] | null
+      const layouts = bestLayouts as Box[] | null
       if (layouts) applyBestLayout(rnbo, layouts, c)
       const svg = layouts ? toSvg(layouts, lines, cfg, rnbo.patcher.boxgroups) : ''
       post({

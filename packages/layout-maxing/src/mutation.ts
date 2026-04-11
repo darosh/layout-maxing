@@ -1,11 +1,11 @@
 import { type Config } from './config.ts'
-import { type BoxLayout } from './layout.ts'
+import { type Box } from './layout.ts'
 
-export function cloneLayouts(layouts: BoxLayout[]): BoxLayout[] {
+export function cloneLayouts(layouts: Box[]): Box[] {
   return layouts.map((l) => ({ ...l }))
 }
 
-export function hasSiblings(box: BoxLayout, layouts: BoxLayout[]): boolean {
+export function hasSiblings(box: Box, layouts: Box[]): boolean {
   if (!box.parents || box.parents.length === 0) return false
 
   const byIndex = new Map(layouts.map((l) => [l.index, l]))
@@ -16,8 +16,8 @@ export function hasSiblings(box: BoxLayout, layouts: BoxLayout[]): boolean {
 }
 
 export function getRandomSibling(
-  box: BoxLayout,
-  layouts: BoxLayout[],
+  box: Box,
+  layouts: Box[],
   rand: () => number = Math.random,
 ): number | undefined {
   if (!box.parents || box.parents.length === 0) return undefined
@@ -37,26 +37,22 @@ export function getRandomSibling(
   return siblings[Math.floor(rand() * siblings.length)]
 }
 
-export function mutateSingle(
-  target: BoxLayout,
-  layouts: BoxLayout[],
-  delta: { x: number; y: number },
-): BoxLayout[] {
+export function mutateSingle(target: Box, layouts: Box[], delta: { x: number; y: number }): Box[] {
   target.x += delta.x
   target.y += delta.y
   return layouts
 }
 
 export function mutateWithChildren(
-  target: BoxLayout,
-  layouts: BoxLayout[],
+  target: Box,
+  layouts: Box[],
   delta: { x: number; y: number },
   maxDepth: number,
-): BoxLayout[] {
+): Box[] {
   const byIndex = new Map(layouts.map((l) => [l.index, l]))
   const visited = new Set<number>()
 
-  function apply(box: BoxLayout, depth: number) {
+  function apply(box: Box, depth: number) {
     if (depth <= 0 || visited.has(box.index)) return
     visited.add(box.index)
     box.x += delta.x
@@ -71,15 +67,15 @@ export function mutateWithChildren(
 }
 
 export function mutateWithParents(
-  target: BoxLayout,
-  layouts: BoxLayout[],
+  target: Box,
+  layouts: Box[],
   delta: { x: number; y: number },
   maxDepth: number,
-): BoxLayout[] {
+): Box[] {
   const byIndex = new Map(layouts.map((l) => [l.index, l]))
   const visited = new Set<number>()
 
-  function apply(box: BoxLayout, depth: number) {
+  function apply(box: Box, depth: number) {
     if (depth <= 0 || visited.has(box.index)) return
     visited.add(box.index)
     box.x += delta.x
@@ -94,11 +90,11 @@ export function mutateWithParents(
 }
 
 export function mutateByQuadrant(
-  target: BoxLayout,
-  layouts: BoxLayout[],
+  target: Box,
+  layouts: Box[],
   delta: { x: number; y: number },
   quadrant: number,
-): BoxLayout[] {
+): Box[] {
   const left = quadrant === 0 || quadrant === 2
   const top = quadrant === 0 || quadrant === 1
 
@@ -114,7 +110,7 @@ export function mutateByQuadrant(
   return layouts
 }
 
-export function swap(box: BoxLayout, src: BoxLayout) {
+export function swap(box: Box, src: Box) {
   const x = box.x
   const y = box.y
   box.x = src.x
@@ -123,14 +119,14 @@ export function swap(box: BoxLayout, src: BoxLayout) {
   src.y = y
 }
 
-export function mutateSwapRandom(target: BoxLayout, layouts: BoxLayout[], rand) {
+export function mutateSwapRandom(target: Box, layouts: Box[], rand) {
   const ind = Math.floor(rand() * layouts.length) % layouts.length
   const src = layouts[ind]
   swap(target, src)
   return layouts
 }
 
-export function mutateSwapSibling(target: BoxLayout, layouts: BoxLayout[], rand) {
+export function mutateSwapSibling(target: Box, layouts: Box[], rand) {
   if (!hasSiblings(target, layouts)) return layouts
 
   const is = getRandomSibling(target, layouts, rand)!
@@ -139,23 +135,23 @@ export function mutateSwapSibling(target: BoxLayout, layouts: BoxLayout[], rand)
   return layouts
 }
 
-export function getRow(box: BoxLayout, layouts: BoxLayout[]): BoxLayout[] {
+export function getRow(box: Box, layouts: Box[]): Box[] {
   return layouts.filter((l) => l.y === box.y).sort((a, b) => a.x - b.x)
 }
 
-export function getCol(box: BoxLayout, layouts: BoxLayout[]): BoxLayout[] {
+export function getCol(box: Box, layouts: Box[]): Box[] {
   return layouts.filter((l) => l.x === box.x).sort((a, b) => a.y - b.y)
 }
 
 export function mutateSwapInRow(
-  target: BoxLayout,
-  layouts: BoxLayout[],
+  target: Box,
+  layouts: Box[],
   rand: () => number,
   cfg: Required<Config>,
-): BoxLayout[] {
+): Box[] {
   const row = getRow(target, layouts)
   const idx = row.findIndex((b) => b.index === target.index)
-  const neighbors: BoxLayout[] = []
+  const neighbors: Box[] = []
   if (idx > 0) neighbors.push(row[idx - 1])
   if (idx < row.length - 1) neighbors.push(row[idx + 1])
   if (neighbors.length === 0) return layouts
@@ -170,14 +166,14 @@ export function mutateSwapInRow(
 }
 
 export function mutateSwapInCol(
-  target: BoxLayout,
-  layouts: BoxLayout[],
+  target: Box,
+  layouts: Box[],
   rand: () => number,
   cfg: Required<Config>,
-): BoxLayout[] {
+): Box[] {
   const col = getCol(target, layouts)
   const idx = col.findIndex((b) => b.index === target.index)
-  const neighbors: BoxLayout[] = []
+  const neighbors: Box[] = []
   if (idx > 0) neighbors.push(col[idx - 1])
   if (idx < col.length - 1) neighbors.push(col[idx + 1])
   if (neighbors.length === 0) return layouts
@@ -191,22 +187,14 @@ export function mutateSwapInCol(
   return layouts
 }
 
-export function mutateShiftRow(
-  target: BoxLayout,
-  layouts: BoxLayout[],
-  delta: { x: number },
-): BoxLayout[] {
+export function mutateShiftRow(target: Box, layouts: Box[], delta: { x: number }): Box[] {
   for (const box of getRow(target, layouts)) {
     box.x += delta.x
   }
   return layouts
 }
 
-export function mutateShiftCol(
-  target: BoxLayout,
-  layouts: BoxLayout[],
-  delta: { y: number },
-): BoxLayout[] {
+export function mutateShiftCol(target: Box, layouts: Box[], delta: { y: number }): Box[] {
   for (const box of getCol(target, layouts)) {
     box.y += delta.y
   }
@@ -214,11 +202,11 @@ export function mutateShiftCol(
 }
 
 export function crossover(
-  parent1: BoxLayout[],
-  parent2: BoxLayout[],
+  parent1: Box[],
+  parent2: Box[],
   rand: () => number,
   cfg: Required<Config>,
-): BoxLayout[] {
+): Box[] {
   const child = cloneLayouts(parent1)
   for (let i = 0; i < child.length; i++) {
     if (rand() < cfg.crossoverMix) {

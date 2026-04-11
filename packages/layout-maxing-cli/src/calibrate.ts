@@ -1,5 +1,5 @@
 import {
-  type BoxLayout,
+  type Box,
   type Config,
   type Line,
   type Fitness,
@@ -84,7 +84,7 @@ function similarityToDefault(
 }
 
 export async function runCalibrate(
-  layouts: BoxLayout[],
+  layouts: Box[],
   lines: Line[],
   depth: number,
   getFitness: (...input: unknown[]) => Promise<Fitness>,

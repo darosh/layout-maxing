@@ -5,7 +5,7 @@ import type {
   RNBO,
   Config,
   Fitness,
-  BoxLayout,
+  Box,
   Line,
   GenerationSnapshot,
   RunMonitor,
@@ -106,7 +106,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const originalSvg = ref('')
   const originalFitness = ref<Fitness | null>(null)
   const originalPositions = ref<{ id: string; x: number; y: number }[]>([])
-  const originalLayouts = ref<BoxLayout[]>([])
+  const originalLayouts = ref<Box[]>([])
 
   // Selected entry
   const selection = ref<Selection>({ kind: 'allTime', index: 0 })
@@ -175,7 +175,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     return resolveEntry(sel)?.svg ?? ''
   })
 
-  const displayedLayouts = computed<BoxLayout[]>(() => {
+  const displayedLayouts = computed<Box[]>(() => {
     const sel = selection.value
     if (sel.kind === 'original') return originalLayouts.value
     const entry = resolveEntry(sel)
@@ -375,7 +375,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     const clone = JSON.parse(JSON.stringify(toRaw(rnbo.value))) as RNBO
     // applyBestLayout only reads id/x/y on each layout entry, so passing
     // these minimal records is safe.
-    const layouts = positions.map((p) => ({ ...p })) as unknown as BoxLayout[]
+    const layouts = positions.map((p) => ({ ...p })) as unknown as Box[]
     const c = { ...defaultConfig, ...toRaw(config.value) } as Required<Config>
     applyBestLayout(clone, layouts, c)
     return clone

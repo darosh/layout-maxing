@@ -7,7 +7,7 @@ import {
   getViewPort,
   normalizeLayouts,
   cloneLayouts,
-  type BoxLayout,
+  type Box,
 } from 'layout-maxing'
 import { defaultConfig } from 'layout-maxing'
 
@@ -15,7 +15,7 @@ const store = useOptimizerStore()
 
 const cfg = computed(() => ({ ...defaultConfig, ...store.config }))
 
-const layouts = ref<BoxLayout[]>([])
+const layouts = ref<Box[]>([])
 const lines = computed(() => store.lines)
 
 const viewport = computed(() => {

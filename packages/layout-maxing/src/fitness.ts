@@ -1,5 +1,5 @@
 import { type Config, defaultConfig } from './config.ts'
-import { type BoxLayout, type Line } from './layout.ts'
+import { type Box, type Line } from './layout.ts'
 import {
   segmentsIntersect,
   segmentsOverlap,
@@ -58,15 +58,15 @@ export const fitnessMeta: FitnessMeta = {
 }
 
 export function fitness(
-  layouts: BoxLayout[],
+  layouts: Box[],
   lines: Line[] | undefined,
   cfg?: Config,
-  /** @deprecated groupIdx on BoxLayout is preferred; this param is ignored */
+  /** @deprecated groupIdx on Box is preferred; this param is ignored */
   _groupMap?: Map<string, number>,
 ): Fitness {
   lines ??= []
   const c = { ...defaultConfig, ...cfg }
-  const boxMap = new Map<BoxId, BoxLayout>()
+  const boxMap = new Map<BoxId, Box>()
   for (const b of layouts) boxMap.set(b.id, b)
 
   let totalLength = 0
@@ -92,7 +92,7 @@ export function fitness(
   }
 
   // Compute misalignedSS: SSC sibling pairs sharing a child without shared x or y
-  const sscByChild = new Map<BoxId, BoxLayout[]>()
+  const sscByChild = new Map<BoxId, Box[]>()
   for (const l of lines) {
     const srcId = l.patchline.source[0]
     if (!sscSourceIds.has(srcId)) continue

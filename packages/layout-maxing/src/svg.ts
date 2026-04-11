@@ -1,5 +1,5 @@
 import { type Config, defaultConfig } from './config.ts'
-import { type BoxLayout, type Line } from './layout.ts'
+import { type Box, type Line } from './layout.ts'
 import { getOutletPos, getInletPos, getStraightLinePoints, getViewPort } from './geometry.ts'
 
 type BoxId = string
@@ -7,14 +7,14 @@ type BoxId = string
 const GROUP_PAD = 5
 
 export function toSvg(
-  layouts: BoxLayout[],
+  layouts: Box[],
   lines: Line[] | undefined,
   cfg?: Config,
   boxgroups?: Array<{ boxes: BoxId[] }>,
 ): string {
   lines ??= []
   const c = { ...defaultConfig, ...cfg }
-  const boxMap = new Map<BoxId, BoxLayout>()
+  const boxMap = new Map<BoxId, Box>()
   for (const b of layouts) {
     boxMap.set(b.id, b)
   }
@@ -26,7 +26,7 @@ export function toSvg(
   // Draw group bounding boxes
   if (c.keepGroups && boxgroups?.length) {
     for (const group of boxgroups) {
-      const members = group.boxes.map((id) => boxMap.get(id)).filter(Boolean) as BoxLayout[]
+      const members = group.boxes.map((id) => boxMap.get(id)).filter(Boolean) as Box[]
       if (members.length < 2) continue
       let minX = Infinity,
         minY = Infinity,

@@ -1,6 +1,6 @@
 import { type Config } from './config.ts'
 import {
-  type BoxLayout,
+  type Box,
   type Line,
   type GroupPlan,
   fixOverlaps,
@@ -47,8 +47,8 @@ function roulette(weights: number[], rand: () => number): number {
   return weights.length - 1
 }
 
-interface Layouts {
-  layouts: BoxLayout[]
+interface Population {
+  layouts: Box[]
   fitness?: Fitness
   // monitoring fields — do not affect algorithm behavior
   _mutation?: string
@@ -95,7 +95,7 @@ function uniqueIndexes(
 }
 
 function tournamentSelect(
-  population: Layouts[],
+  population: Population[],
   prop: keyof Fitness,
   rand: () => number,
   cfg: Required<Config>,
@@ -120,14 +120,14 @@ function tournamentSelect(
 }
 
 export async function createPopulation(
-  startingLayouts: BoxLayout[][],
+  startingLayouts: Box[][],
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
   groupPlan: GroupPlan,
-  getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
+  getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
 ) {
-  const individuals: Layouts[] = []
+  const individuals: Population[] = []
 
   for (let i = 0; i < cfg.popSize; i++) {
     const base = startingLayouts[i % startingLayouts.length]
@@ -168,18 +168,18 @@ export async function createPopulation(
 }
 
 async function runGenetic(
-  startingLayouts: BoxLayout[][],
+  startingLayouts: Box[][],
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
   groupPlan: GroupPlan,
-  getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
-  onIntermediate?: (layouts: BoxLayout[]) => void,
+  getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
+  onIntermediate?: (layouts: Box[]) => void,
   onGenerationEnd?: (stop: number, snapshot?: GenerationSnapshot) => void,
   logProgress?: (...args) => void,
   logInfo?: (...args) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
-): Promise<BoxLayout[]> {
+): Promise<Box[]> {
   // Create population
   let population = await createPopulation(startingLayouts, lines, rand, cfg, groupPlan, getFitness)
 
@@ -206,7 +206,7 @@ async function runGenetic(
   )
   let bestFitnessScore = population[bestInitIdx].fitness!.score
   let bestFitness: Fitness | undefined = population[bestInitIdx].fitness
-  let bestIndividual: BoxLayout[] = cloneLayouts(population[bestInitIdx].layouts)
+  let bestIndividual: Box[] = cloneLayouts(population[bestInitIdx].layouts)
 
   if (logInfo) logInfo('Starting genetic layout optimization...')
   let stop = cfg.stop
@@ -297,7 +297,7 @@ async function runGenetic(
     }
 
     // Build next generation
-    const newPopulation: Layouts[] = [
+    const newPopulation: Population[] = [
       {
         layouts: cloneLayouts(bestIndividual),
         fitness: bestFitness,
@@ -307,38 +307,38 @@ async function runGenetic(
     let populationCopy = [...population].splice(currentBestIdx, 1)
 
     // monitoring helper: track elite survival
-    const trackEliteSurvival = (ind: Layouts) => {
+    const trackEliteSurvival = (ind: Population) => {
       if (ind._mutation && monitor.runTotals[ind._mutation]) {
         monitor.runTotals[ind._mutation].survived++
       }
     }
 
-    const bestByCollisions = minBy<Layouts>(populationCopy, (v) => v.fitness!.collisions)!
+    const bestByCollisions = minBy<Population>(populationCopy, (v) => v.fitness!.collisions)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByCollisions), 1)
     trackEliteSurvival(bestByCollisions)
     newPopulation.push(bestByCollisions)
 
-    const bestByCrossings = minBy<Layouts>(populationCopy, (v) => v.fitness!.crossings)!
+    const bestByCrossings = minBy<Population>(populationCopy, (v) => v.fitness!.crossings)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByCrossings), 1)
     trackEliteSurvival(bestByCrossings)
     newPopulation.push(bestByCrossings)
 
-    const bestByOverlaps = minBy<Layouts>(populationCopy, (v) => v.fitness!.overlaps)!
+    const bestByOverlaps = minBy<Population>(populationCopy, (v) => v.fitness!.overlaps)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByOverlaps), 1)
     trackEliteSurvival(bestByOverlaps)
     newPopulation.push(bestByOverlaps)
 
-    const bestByLength = minBy<Layouts>(populationCopy, (v) => v.fitness!.length)!
+    const bestByLength = minBy<Population>(populationCopy, (v) => v.fitness!.length)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByLength), 1)
     trackEliteSurvival(bestByLength)
     newPopulation.push(bestByLength)
 
-    const bestByScore = minBy<Layouts>(populationCopy, (v) => v.fitness!.score)!
+    const bestByScore = minBy<Population>(populationCopy, (v) => v.fitness!.score)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByScore), 1)
     trackEliteSurvival(bestByScore)
     newPopulation.push(bestByScore)
 
-    const bestByView = minBy<Layouts>(populationCopy, (v) => v.fitness!.view)!
+    const bestByView = minBy<Population>(populationCopy, (v) => v.fitness!.view)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByView), 1)
     trackEliteSurvival(bestByView)
     newPopulation.push(bestByView)
@@ -351,7 +351,7 @@ async function runGenetic(
       const i1 = tournamentSelect(population, props[newPopulation.length % props.length], rand, cfg)
       const p1 = population[i1]
 
-      let child: BoxLayout[]
+      let child: Box[]
       let childMutation: string = 'none'
       let childMutatedBoxId: string = ''
       if (rand() < cfg.crossoverRate) {

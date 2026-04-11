@@ -1,5 +1,5 @@
 import type { Config } from './config.ts'
-import type { BoxLayout } from './layout.ts'
+import type { Box } from './layout.ts'
 
 export type MutationStat = {
   attempts: number // times selected by roulette
@@ -101,7 +101,7 @@ function percentile(sorted: number[], p: number): number {
 }
 
 export function computePopulationDiversity(
-  population: { layouts: BoxLayout[] }[],
+  population: { layouts: Box[] }[],
   cfg: Pick<Required<Config>, 'gridX' | 'gridY'>,
 ): number {
   const n = population.length

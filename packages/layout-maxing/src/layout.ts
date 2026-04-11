@@ -12,7 +12,7 @@ export interface Line {
 }
 
 // Simplified layout data used by the genetic algorithm
-export type BoxLayout = {
+export type Box = {
   id: BoxId
   index: number
   x: number
@@ -28,7 +28,7 @@ export type BoxLayout = {
   _mutations?: Record<string, number> // monitoring: count of each mutation type that moved this box
 }
 
-interface Box {
+interface PatcherBox {
   box: {
     id: BoxId
     patching_rect: [number, number, number, number]
@@ -43,13 +43,13 @@ interface Box {
 
 export interface Patcher {
   appversion: Record<string, string | number>
-  boxes: Box[]
+  boxes: PatcherBox[]
   lines: Line[]
   boxgroups?: Array<{ boxes: BoxId[] }>
 }
 
 // Shift so min x=0 and min y=0 (top-left aligned to origin)
-export function normalizeLayouts(layouts: BoxLayout[]): void {
+export function normalizeLayouts(layouts: Box[]): void {
   if (layouts.length === 0) return
   let minX = Infinity
   let minY = Infinity
@@ -66,7 +66,7 @@ export function normalizeLayouts(layouts: BoxLayout[]): void {
 // Stamp groupIdx on layouts from raw boxgroups so fitness can skip same-group
 // pairs. Safe to call before fillDepths/stripOrphans.
 export function stampGroupIdx(
-  layouts: BoxLayout[],
+  layouts: Box[],
   boxgroups: Array<{ boxes: BoxId[] }> | undefined,
 ): void {
   if (!boxgroups?.length) return
@@ -82,7 +82,7 @@ export function stampGroupIdx(
 // If a group has any connected member (depth ≥ 0), mark all its members as
 // connected so stripOrphans won't remove them.
 export function preserveGroupMembers(
-  layouts: BoxLayout[],
+  layouts: Box[],
   boxgroups: Array<{ boxes: BoxId[] }> | undefined,
 ): void {
   if (!boxgroups?.length) return
@@ -97,7 +97,7 @@ export function preserveGroupMembers(
 
 // Returns a filtered array (orphans removed) + re-indexes.
 // Requires fillDepths() to have been called so depth === -1 marks orphans.
-export function stripOrphans(layouts: BoxLayout[]): BoxLayout[] {
+export function stripOrphans(layouts: Box[]): Box[] {
   const kept = layouts.filter((l) => l.depth !== -1)
   kept.forEach((l, i) => (l.index = i))
   return kept
@@ -112,14 +112,14 @@ export type GroupPlan = Array<{
 // Uses stable BoxId so callers don't have to worry about array reordering
 // (e.g. fixOverlaps sorts the array and breaks positional indexing).
 export function buildGroupPlan(
-  layouts: BoxLayout[],
+  layouts: Box[],
   boxgroups: Array<{ boxes: BoxId[] }> | undefined,
 ): GroupPlan {
   if (!boxgroups?.length) return []
   const byId = new Map(layouts.map((l) => [l.id, l]))
   const plan: GroupPlan = []
   for (const g of boxgroups) {
-    const present = g.boxes.map((id) => byId.get(id)).filter(Boolean) as BoxLayout[]
+    const present = g.boxes.map((id) => byId.get(id)).filter(Boolean) as Box[]
     if (present.length < 2) continue
     const leader = present[0]
     plan.push({
@@ -135,7 +135,7 @@ export function buildGroupPlan(
 }
 
 // Snap each group member's position to leader + captured offset.
-export function alignGroups(layouts: BoxLayout[], plan: GroupPlan): void {
+export function alignGroups(layouts: Box[], plan: GroupPlan): void {
   if (plan.length === 0) return
   const byId = new Map(layouts.map((l) => [l.id, l]))
   for (const g of plan) {
@@ -150,10 +150,10 @@ export function alignGroups(layouts: BoxLayout[], plan: GroupPlan): void {
   }
 }
 
-export function fillDepths(layouts: BoxLayout[], lines: Line[] | undefined): void {
+export function fillDepths(layouts: Box[], lines: Line[] | undefined): void {
   lines ??= []
-  // Create quick lookup: id → BoxLayout
-  const boxMap = new Map<BoxId, BoxLayout>()
+  // Create quick lookup: id → Box
+  const boxMap = new Map<BoxId, Box>()
   for (const box of layouts) {
     boxMap.set(box.id, box)
 
@@ -182,7 +182,7 @@ export function fillDepths(layouts: BoxLayout[], lines: Line[] | undefined): voi
     outgoing.get(srcId)!.push(destId)
   }
 
-  // Fill parents and children arrays with actual BoxLayout references
+  // Fill parents and children arrays with actual Box references
   for (const box of layouts) {
     const parentIds = incoming.get(box.id) || []
     const childIds = outgoing.get(box.id) || []
@@ -239,8 +239,8 @@ export function fillDepths(layouts: BoxLayout[], lines: Line[] | undefined): voi
   }
 }
 
-export function layoutShrink(layouts: BoxLayout[], stepY: number) {
-  const rows = new Map<number, BoxLayout[]>()
+export function layoutShrink(layouts: Box[], stepY: number) {
+  const rows = new Map<number, Box[]>()
 
   for (const l of layouts) {
     if (rows.has(l.y)) {
@@ -264,11 +264,11 @@ export function layoutShrink(layouts: BoxLayout[], stepY: number) {
   }
 }
 
-function boxesOverlap(a: BoxLayout, b: BoxLayout): boolean {
+function boxesOverlap(a: Box, b: Box): boolean {
   return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 }
 
-export function fixOverlaps(layouts: BoxLayout[], cfg: Required<Config>): BoxLayout[] {
+export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
   const fixed = layouts.map((l) => ({ ...l }))
 
   // Initial grid snap
@@ -326,8 +326,8 @@ export function fixOverlaps(layouts: BoxLayout[], cfg: Required<Config>): BoxLay
   return fixed
 }
 
-export function createInitialLayouts(patcher: Patcher): BoxLayout[] {
-  return patcher.boxes.map((b: Box, index) => {
+export function createInitialLayouts(patcher: Patcher): Box[] {
+  return patcher.boxes.map((b: PatcherBox, index) => {
     const data = b.box
     return {
       id: data.id,
@@ -342,8 +342,8 @@ export function createInitialLayouts(patcher: Patcher): BoxLayout[] {
   })
 }
 
-export function simpleFlow(baseLayouts: BoxLayout[], cfg: Required<Config>) {
-  const cols: Record<string, BoxLayout[]> = {}
+export function simpleFlow(baseLayouts: Box[], cfg: Required<Config>) {
+  const cols: Record<string, Box[]> = {}
 
   for (const l of baseLayouts) {
     l.y = l.depth! * cfg.gridY
@@ -355,7 +355,7 @@ export function simpleFlow(baseLayouts: BoxLayout[], cfg: Required<Config>) {
 }
 
 export function dagreFlow(
-  layouts: BoxLayout[],
+  layouts: Box[],
   lines: Line[],
   rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB',
 ) {

@@ -1,6 +1,6 @@
 import { type Config, defaultConfig } from './config.ts'
 import {
-  type BoxLayout,
+  type Box,
   type Line,
   type Patcher,
   type GroupPlan,
@@ -37,7 +37,7 @@ function createDeterministicRandom(seed: number): () => number {
   }
 }
 
-export function applyBestLayout(rnbo: RNBO, best: BoxLayout[], cfg: Required<Config>) {
+export function applyBestLayout(rnbo: RNBO, best: Box[], cfg: Required<Config>) {
   let working = best
   if (cfg.normalizeExport) {
     working = best.map((l) => ({ ...l }))
@@ -77,8 +77,8 @@ export function jsonDiff<T>(defaults: FlatObject<T>, tgt: FlatObject<T>): FlatOb
 
 export async function main(
   rnbo: RNBO,
-  getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
-  onIntermediate?: (layouts: BoxLayout[]) => void,
+  getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
+  onIntermediate?: (layouts: Box[]) => void,
   cfg?: Config,
   onGenerationEnd?: (stop: number) => void,
   logProgress?: (...args: any) => void,
@@ -120,7 +120,7 @@ export async function main(
 
   const groupPlan: GroupPlan = c.keepGroups ? buildGroupPlan(baseLayouts, patcher.boxgroups) : []
 
-  let startingLayouts: BoxLayout[][] = []
+  let startingLayouts: Box[][] = []
 
   if (c.useDagre) {
     startingLayouts.push(

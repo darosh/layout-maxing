@@ -8,7 +8,7 @@ import {
   help,
   applyBestLayout,
 } from 'layout-maxing'
-import type { BoxLayout, Config, Fitness, RNBO } from 'layout-maxing'
+import type { Box, Config, Fitness, RNBO } from 'layout-maxing'
 import { runCalibrate, getNumericParams, printCalibrateResults } from './calibrate.ts'
 import { cpus } from 'node:os'
 import { dirname, parse, format } from 'jsr:@std/path'
@@ -153,7 +153,7 @@ async function cli() {
       const bestIndividual = await main(
         rnbo,
         getFitness,
-        (layouts: BoxLayout[]) => {
+        (layouts: Box[]) => {
           if (c.writeSvg) {
             const svg = toSvg(layouts, lines, cfg, rnbo.patcher.boxgroups)
             const svgPath = `${outputPath}.svg`
