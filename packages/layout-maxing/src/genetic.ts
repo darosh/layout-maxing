@@ -48,6 +48,8 @@ function roulette(weights: number[], rand: () => number): number {
 }
 
 interface Population {
+  id: number
+  gen: number
   layouts: Box[]
   fitness?: Fitness
   // monitoring fields — do not affect algorithm behavior
@@ -147,11 +149,13 @@ export async function createPopulation(
     if (cfg.keepGroups) alignGroups(ind, groupPlan)
     if (cfg.normalize) normalizeLayouts(ind)
 
-    individuals.push({ layouts: ind, fitness: undefined as any })
+    individuals.push({ id: i, gen: 0, layouts: ind, fitness: undefined as any })
   }
 
   // Run fitness in parallel
   const fitnessPromises = individuals.map((ind) => {
+    ;(ind.layouts as any)._popId = ind.id
+    ;(ind.layouts as any)._popGen = ind.gen
     const result = getFitness
       ? getFitness(ind.layouts, lines, cfg)
       : fitness(ind.layouts, lines, cfg)
@@ -213,10 +217,13 @@ async function runGenetic(
   let lastProgressLog = 0
   const monitor = createRunMonitor()
   let stagnation = 0
+  let nextPopId = cfg.popSize
 
   for (let gen = 0; gen < cfg.generations; gen++) {
     const fitnessPromises = population.map(async (ind) => {
       if (ind.fitness === undefined) {
+        ;(ind.layouts as any)._popId = ind.id
+        ;(ind.layouts as any)._popGen = ind.gen
         ind.fitness = getFitness
           ? await getFitness(ind.layouts, lines, cfg)
           : fitness(ind.layouts, lines, cfg)
@@ -299,6 +306,7 @@ async function runGenetic(
     // Build next generation
     const newPopulation: Population[] = [
       {
+        ...population[currentBestIdx],
         layouts: cloneLayouts(bestIndividual),
         fitness: bestFitness,
       },
@@ -444,6 +452,8 @@ async function runGenetic(
       if (cfg.normalize) normalizeLayouts(child)
 
       newPopulation.push({
+        id: nextPopId++,
+        gen: gen + 1,
         layouts: child,
         _mutation: childMutation,
         _mutatedBoxId: childMutatedBoxId,

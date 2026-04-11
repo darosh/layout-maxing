@@ -177,17 +177,35 @@ self.onmessage = async (e: MessageEvent) => {
   let currentGen = 0
 
   // Top-N candidates by score (ascending)
-  const top: { score: number; layouts: Box[]; fitness: Fitness }[] = []
+  const top: {
+    score: number
+    layouts: Box[]
+    fitness: Fitness
+    popId?: number
+    popGen?: number
+  }[] = []
   // Sliding window of current population (last popSize evaluations)
-  const currentPop: { score: number; layouts: Box[]; fitness: Fitness }[] = []
+  const currentPop: {
+    score: number
+    layouts: Box[]
+    fitness: Fitness
+    popId?: number
+    popGen?: number
+  }[] = []
 
-  function updateTop(score: number, layouts: Box[], fitness: Fitness) {
+  function updateTop(
+    score: number,
+    layouts: Box[],
+    fitness: Fitness,
+    popId?: number,
+    popGen?: number,
+  ) {
     const worst = top.length >= topN ? top[top.length - 1]!.score : Infinity
     if (score < worst || top.length < topN) {
       // Avoid near-duplicate scores (within 0.01%)
       const dup = top.some((t) => Math.abs(t.score - score) / score < 0.0001)
       if (!dup) {
-        top.push({ score, layouts: cloneForSvg(layouts), fitness })
+        top.push({ score, layouts: cloneForSvg(layouts), fitness, popId, popGen })
         top.sort((a, b) => a.score - b.score)
         if (top.length > topN) top.pop()
       }
@@ -212,6 +230,8 @@ self.onmessage = async (e: MessageEvent) => {
       fitness: t.fitness,
       positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
       mutations: aggregateMutations(t.layouts),
+      popId: t.popId,
+      popGen: t.popGen,
     }))
   }
 
@@ -225,6 +245,8 @@ self.onmessage = async (e: MessageEvent) => {
         fitness: t.fitness,
         positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
         mutations: aggregateMutations(t.layouts),
+        popId: t.popId,
+        popGen: t.popGen,
       }))
   }
 
@@ -278,9 +300,17 @@ self.onmessage = async (e: MessageEvent) => {
           bestLayouts = cloneForSvg(layouts)
         }
         // Track top-N
-        updateTop(result.score, layouts, result)
+        const popId: number | undefined = (layouts as any)._popId
+        const popGen: number | undefined = (layouts as any)._popGen
+        updateTop(result.score, layouts, result, popId, popGen)
         // Sliding window for current population
-        currentPop.push({ score: result.score, layouts: cloneForSvg(layouts), fitness: result })
+        currentPop.push({
+          score: result.score,
+          layouts: cloneForSvg(layouts),
+          fitness: result,
+          popId,
+          popGen,
+        })
         if (currentPop.length > c.popSize) currentPop.shift()
         const now = Date.now()
 

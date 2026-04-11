@@ -60,6 +60,14 @@ const fullScore = computed(() => {
         <template v-else>{{ INPUT_LABEL }}</template>
       </span>
     </div>
+    <div class="overlay overlay-tl-2">
+      <template v-if="store.displayedEntry?.popId != null"
+        ><br /><span class="selection-label">ID: {{ store.displayedEntry.popId }}</span></template
+      >
+      <template v-if="store.displayedEntry?.popGen != null"
+        ><br /><span class="selection-label">GEN: {{ store.displayedEntry.popGen }}</span></template
+      >
+    </div>
 
     <div
       style="
@@ -169,6 +177,12 @@ const fullScore = computed(() => {
   top: 1.25rem;
   left: 1.25rem;
   gap: 0.6rem;
+}
+
+.overlay-tl-2 {
+  top: 2.25rem;
+  left: 1.25rem;
+  display: block;
 }
 
 .overlay-br {

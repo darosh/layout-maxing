@@ -22,6 +22,8 @@ export interface TopEntry {
   fitness: Fitness
   positions: { id: string; x: number; y: number }[]
   mutations: Record<string, number> // summed _mutations counts across all boxes
+  popId?: number
+  popGen?: number
 }
 
 export type Selection =
