@@ -49,10 +49,23 @@ const rows = computed((): MutRow[] => {
   const mutationOrder = [...known, ...Object.keys(totals).filter((n) => !known.includes(n))]
 
   return mutationOrder
-    .filter((name) => name in totals)
     .map((name): MutRow => {
-      const t = totals[name]!
+      const t = totals[name]
       const meta = mutationMeta[name]
+
+      if (!t) {
+        return {
+          shortName: meta?.[1] ?? name.slice(0, 4).toUpperCase(),
+          label: meta?.[0] ?? name,
+          description: meta?.[2] ?? '',
+          attempts: 0,
+          impPct: 0,
+          avgDelta: 0,
+        bestCount: 0,
+          deadWeight: true
+        }
+      }
+
       const bestCount = bestCounts[name] ?? 0
       return {
         name,
@@ -67,8 +80,6 @@ const rows = computed((): MutRow[] => {
       }
     })
 })
-
-const mutationOrder = computed(() => rows.value.map((r) => r.name))
 
 const hasBestData = computed(() => props.runMonitor !== null)
 
@@ -131,16 +142,18 @@ function colTooltip(key: string): string {
           >
             {{ row.shortName }}
           </td>
-          <td>{{ row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
-          <td>{{ row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</td>
-          <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">
-            {{ row.avgDelta < 0 ? '−' : '' }}{{ formatScore(Math.abs(row.avgDelta)) }}
+          <td><template v-if="row.attempts">{{ row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</template></td>
+          <td><template v-if="row.attempts">{{ row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</template></td>
+          <td :class="row.avgDelta < 0 ? 'good' : 'neutral'"><template v-if="row.attempts">
+            {{ row.avgDelta < 0 ? '−' : '' }}{{ formatScore(Math.abs(row.avgDelta)) }}</template>
           </td>
           <td v-if="hasBestData" class="td-best">
+            <template v-if="row.attempts">
             <span v-if="row.bestCount > 0" class="best-count">{{
               row.bestCount.toLocaleString('en-US', { maximumFractionDigits: 0 })
             }}</span>
             <span v-else class="empty">—</span>
+            </template>
           </td>
         </tr>
       </tbody>

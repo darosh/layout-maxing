@@ -51,8 +51,6 @@ const chart = computed(() => {
   const yScore = (v: number) => PAD.top + ((v - logMin) / logRange) * innerH
   const yDiversity = (v: number) => PAD.top + ((v - logMinDiv) / logRangeDiv) * innerH
 
-  console.log(logMinDiv, logMaxDiv, logRangeDiv)
-
   const bestPts: [number, number][] = snaps.map((s, i) => [xOf(i), yScore(s.best)])
   const medianPts: [number, number][] = snaps.map((s, i) => [xOf(i), yScore(s.median)])
   const p75Pts: [number, number][] = snaps.map((s, i) => [xOf(i), yScore(s.p75)])
