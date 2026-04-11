@@ -44,7 +44,8 @@ const rows = computed((): MutRow[] => {
     }
   }
 
-  const mutationOrder = Object.keys(mutationMeta)
+  const known = ['crossover', ...Object.keys(mutationMeta)]
+  const mutationOrder = [...known, ...Object.keys(totals).filter((n) => !known.includes(n))]
 
   return mutationOrder
     .filter((name) => name in totals)
@@ -101,14 +102,14 @@ function colTooltip(key: string): string {
             @mouseenter="tooltip?.show($event, colTooltip('imp'))"
             @mouseleave="tooltip?.hide()"
           >
-            imp%
+            imp %
           </th>
           <th
             class="th-interactive"
             @mouseenter="tooltip?.show($event, colTooltip('davg'))"
             @mouseleave="tooltip?.hide()"
           >
-            Δavg
+            Δ avg
           </th>
           <th
             v-if="hasBestData"

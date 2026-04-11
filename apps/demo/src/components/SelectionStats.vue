@@ -25,20 +25,20 @@ const selRows = computed((): SelRow[] => {
   if (!entry) return []
   const counts = entry.mutations
   const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1
-  return props.mutationOrder
-    .filter((name) => name in counts)
-    .map((name): SelRow => {
-      const meta = mutationMeta[name]
-      const count = counts[name]!
-      return {
-        name,
-        shortName: meta?.[1] ?? name.slice(0, 4).toUpperCase(),
-        label: meta?.[0] ?? name,
-        description: meta?.[2] ?? '',
-        count,
-        pct: (count / total) * 100,
-      }
-    })
+  const known = ['crossover', ...props.mutationOrder]
+  const order = [...known, ...Object.keys(counts).filter((n) => !known.includes(n))]
+  return order.map((name): SelRow => {
+    const meta = mutationMeta[name]
+    const count = counts[name] ?? 0
+    return {
+      name,
+      shortName: meta?.[1] ?? name.slice(0, 4).toUpperCase(),
+      label: meta?.[0] ?? name,
+      description: meta?.[2] ?? '',
+      count,
+      pct: (count / total) * 100,
+    }
+  })
 })
 
 function mutTooltip(row: { shortName: string; label: string; description: string }): string {
@@ -58,7 +58,7 @@ function mutTooltip(row: { shortName: string; label: string; description: string
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in selRows" :key="row.name">
+        <tr v-for="row in selRows" :key="row.name" :class="{ 'empty-row': !row.count }">
           <td
             class="td-name th-interactive"
             @mouseenter="tooltip?.show($event, mutTooltip(row))"
@@ -66,9 +66,17 @@ function mutTooltip(row: { shortName: string; label: string; description: string
           >
             {{ row.shortName }}
           </td>
-          <td>{{ row.count.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
+          <td>
+            <template v-if="row.count">{{
+              row.count.toLocaleString('en-US', { maximumFractionDigits: 0 })
+            }}</template
+            ><template v-else>—</template>
+          </td>
           <td class="td-pct">
-            {{ row.pct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}
+            <template v-if="row.count">
+              {{ row.pct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}
+            </template>
+            <template v-else>—</template>
           </td>
         </tr>
       </tbody>
@@ -110,7 +118,6 @@ td {
 td.td-name {
   text-align: left;
   color: var(--p-surface-400);
-  padding-right: 6px;
   cursor: default;
   pointer-events: auto;
 }
@@ -121,5 +128,9 @@ td.td-name:hover {
 
 td.td-pct {
   color: var(--p-surface-500);
+}
+
+tr.empty-row td {
+  opacity: 0.33 !important;
 }
 </style>
