@@ -3,6 +3,7 @@ import { mutationMeta } from 'layout-maxing'
 import { computed, ref } from 'vue'
 import FlyingTooltip from './FlyingTooltip.vue'
 import type { TopEntry } from '@/stores/optimizer'
+import { formatScore } from '@/utils/formatScore.ts'
 
 const props = defineProps<{
   selectedEntry: TopEntry | null
@@ -67,9 +68,7 @@ function mutTooltip(row: { shortName: string; label: string; description: string
             {{ row.shortName }}
           </td>
           <td>
-            <template v-if="row.count">{{
-              row.count.toLocaleString('en-US', { maximumFractionDigits: 0 })
-            }}</template
+            <template v-if="row.count">{{ formatScore(row.count) }}</template
             ><template v-else>—</template>
           </td>
           <td class="td-pct">
@@ -89,7 +88,6 @@ table {
   border-collapse: collapse;
   font-family: monospace;
   font-size: 0.7rem;
-  color: var(--p-surface-300);
   user-select: none;
 }
 
@@ -113,7 +111,7 @@ th.th-interactive {
 td {
   text-align: right;
   padding: 0 0.5rem;
-  color: var(--p-surface-300);
+  color: var(--p-surface-400);
 }
 
 td.td-name {
@@ -128,7 +126,7 @@ td.td-name:hover {
 }
 
 td.td-pct {
-  color: var(--p-surface-500);
+  color: var(--p-surface-400);
 }
 
 tr.empty-row td {

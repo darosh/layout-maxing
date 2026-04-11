@@ -3,6 +3,7 @@ import type { GenerationSnapshot, RunMonitor } from 'layout-maxing'
 import { mutationMeta, statMeta } from 'layout-maxing'
 import { computed, ref } from 'vue'
 import FlyingTooltip from './FlyingTooltip.vue'
+import { formatScore } from '@/utils/formatScore.ts'
 
 const props = defineProps<{
   snapshots: GenerationSnapshot[]
@@ -133,7 +134,7 @@ function colTooltip(key: string): string {
           <td>{{ row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
           <td>{{ row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</td>
           <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">
-            {{ row.avgDelta.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}
+            {{ row.avgDelta < 0 ? '−' : '' }}{{ formatScore(Math.abs(row.avgDelta)) }}
           </td>
           <td v-if="hasBestData" class="td-best">
             <span v-if="row.bestCount > 0" class="best-count">{{
@@ -187,7 +188,7 @@ th.th-interactive:hover {
 td {
   text-align: right;
   padding: 0 0.5rem;
-  color: var(--p-surface-300);
+  color: var(--p-surface-400);
   opacity: 0.95;
 }
 
@@ -226,8 +227,6 @@ td.td-best {
 
 tr.dead-weight td {
   opacity: 0.75;
-  text-decoration: line-through;
-  text-decoration-color: var(--p-surface-600);
 }
 
 tr.dead-weight td.td-name {

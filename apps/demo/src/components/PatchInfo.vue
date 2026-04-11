@@ -84,14 +84,7 @@ const fullScore = computed(() => {
       <div class="stat-bg">
         <GenerationChart :snapshots="store.snapshots" />
       </div>
-      <div
-        style="
-          margin-right: 0.75rem;
-          display: flex;
-          flex-direction: column;
-          align-items: end;
-        "
-      >
+      <div style="margin-right: 0.75rem; display: flex; flex-direction: column; align-items: end">
         <div class="stat-bg">
           <MutationStats :snapshots="store.snapshots" :run-monitor="store.runMonitor" />
         </div>
