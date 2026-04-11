@@ -29,3 +29,8 @@ dist-ssr
 # IDE
 .idea
 .aider*
+.agents
+.claude
+skills-lock.json
+PLAN.md
+
