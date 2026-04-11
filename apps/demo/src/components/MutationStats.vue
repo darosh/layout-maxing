@@ -3,12 +3,10 @@ import type { GenerationSnapshot, RunMonitor } from 'layout-maxing'
 import { mutationMeta, statMeta } from 'layout-maxing'
 import { computed, ref } from 'vue'
 import FlyingTooltip from './FlyingTooltip.vue'
-import type { TopEntry } from '@/stores/optimizer'
 
 const props = defineProps<{
   snapshots: GenerationSnapshot[]
   runMonitor: RunMonitor | null
-  selectedEntry: TopEntry | null
 }>()
 
 const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
@@ -23,15 +21,6 @@ type MutRow = {
   avgDelta: number
   bestCount: number
   deadWeight: boolean
-}
-
-type SelRow = {
-  name: string
-  shortName: string
-  label: string
-  description: string
-  count: number
-  pct: number
 }
 
 const rows = computed((): MutRow[] => {
@@ -55,7 +44,10 @@ const rows = computed((): MutRow[] => {
     }
   }
 
-  return Object.keys(totals)
+  const mutationOrder = Object.keys(mutationMeta)
+
+  return mutationOrder
+    .filter((name) => name in totals)
     .map((name): MutRow => {
       const t = totals[name]!
       const meta = mutationMeta[name]
@@ -72,29 +64,9 @@ const rows = computed((): MutRow[] => {
         deadWeight: props.runMonitor !== null && bestCount === 0,
       }
     })
-    .sort((a, b) => b.bestCount - a.bestCount || b.impPct - a.impPct)
 })
 
-// Per-mutation breakdown for the selected entry (summed across all boxes' histories)
-const selRows = computed((): SelRow[] => {
-  const entry = props.selectedEntry
-  if (!entry) return []
-  const counts = entry.mutations
-  const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1
-  return Object.entries(counts)
-    .map(([name, count]): SelRow => {
-      const meta = mutationMeta[name]
-      return {
-        name,
-        shortName: meta?.[1] ?? name.slice(0, 4).toUpperCase(),
-        label: meta?.[0] ?? name,
-        description: meta?.[2] ?? '',
-        count,
-        pct: (count / total) * 100,
-      }
-    })
-    .sort((a, b) => b.count - a.count)
-})
+const mutationOrder = computed(() => rows.value.map((r) => r.name))
 
 const hasBestData = computed(() => props.runMonitor !== null)
 
@@ -159,67 +131,38 @@ function colTooltip(key: string): string {
           </td>
           <td>{{ row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
           <td>{{ row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</td>
-          <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">{{ row.avgDelta.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
+          <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">
+            {{ row.avgDelta.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}
+          </td>
           <td v-if="hasBestData" class="td-best">
-            <span v-if="row.bestCount > 0" class="best-count">{{ row.bestCount.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</span>
+            <span v-if="row.bestCount > 0" class="best-count">{{
+              row.bestCount.toLocaleString('en-US', { maximumFractionDigits: 0 })
+            }}</span>
             <span v-else class="empty">—</span>
           </td>
         </tr>
       </tbody>
     </table>
-
-    <!-- Selected item breakdown -->
-    <template v-if="selRows.length">
-      <div class="section-divider"></div>
-      <table>
-        <thead>
-          <tr>
-            <th class="th-name"></th>
-            <th>boxes</th>
-            <th>%</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="row in selRows" :key="row.name">
-            <td
-              class="td-name th-interactive"
-              @mouseenter="tooltip?.show($event, mutTooltip(row))"
-              @mouseleave="tooltip?.hide()"
-            >
-              {{ row.shortName }}
-            </td>
-            <td>{{ row.count.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</td>
-            <td class="td-pct">{{ row.pct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
   </div>
 </template>
 
 <style scoped>
 .mut-stats {
   user-select: none;
-  background: color-mix(in srgb, var(--p-surface-900) 70%, transparent);
-  border-radius: 4px;
-  padding: 0.3rem 0.4rem;
+  font-size: 0.7rem;
 }
 
 table {
   border-collapse: collapse;
   font-family: monospace;
-  font-size: 8px;
   color: var(--p-surface-300);
-  line-height: 1.5;
 }
 
 th {
-  font-size: 7px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--p-surface-500);
   text-align: right;
-  padding: 0 2px;
+  padding: 0 0.5rem;
   font-weight: normal;
 }
 
@@ -242,16 +185,14 @@ th.th-interactive:hover {
 
 td {
   text-align: right;
-  padding: 0 2px;
+  padding: 0 0.5rem;
   color: var(--p-surface-300);
-  opacity: 0.85;
+  opacity: 0.95;
 }
 
 td.td-name {
   text-align: left;
   color: var(--p-surface-400);
-  padding-right: 6px;
-  letter-spacing: 0.03em;
   cursor: default;
   pointer-events: auto;
 }
@@ -273,11 +214,6 @@ td.td-best {
   min-width: 20px;
 }
 
-td.td-pct {
-  color: var(--p-surface-500);
-  min-width: 20px;
-}
-
 .best-count {
   color: var(--p-primary-400);
   font-weight: bold;
@@ -288,7 +224,7 @@ td.td-pct {
 }
 
 tr.dead-weight td {
-  opacity: 0.35;
+  opacity: 0.75;
   text-decoration: line-through;
   text-decoration-color: var(--p-surface-600);
 }
@@ -296,27 +232,5 @@ tr.dead-weight td {
 tr.dead-weight td.td-name {
   text-decoration: none;
   color: var(--p-surface-600);
-}
-
-.legend {
-  font-family: monospace;
-  font-size: 7px;
-  color: var(--p-surface-600);
-  margin-top: 0.2rem;
-  text-align: right;
-}
-
-.legend-dead-example {
-  opacity: 0.35;
-  text-decoration: line-through;
-  text-decoration-color: var(--p-surface-600);
-  color: var(--p-surface-400);
-}
-
-.section-divider {
-  height: 1px;
-  background: var(--p-surface-700);
-  margin: 0.35rem 0;
-  opacity: 0.5;
 }
 </style>
