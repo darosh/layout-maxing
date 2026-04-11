@@ -5,6 +5,7 @@ import { formatFullScore, formatScore as fmt } from '../utils/formatScore'
 import { BEST_LABEL, CURRENT_LABEL, INPUT_LABEL } from '@/utils/consts.ts'
 import FlyingTooltip from './FlyingTooltip.vue'
 import { fitnessMeta } from 'layout-maxing'
+import GenerationChart from '@/components/GenerationChart.vue'
 
 const store = useOptimizerStore()
 const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
@@ -57,6 +58,10 @@ const fullScore = computed(() => {
         >
         <template v-else>{{ INPUT_LABEL }}</template>
       </span>
+    </div>
+
+    <div style="position: absolute; right: 0.25rem; top: 1.5rem">
+      <GenerationChart :snapshots="store.snapshots" />
     </div>
 
     <!-- Bottom-right: detail metrics -->

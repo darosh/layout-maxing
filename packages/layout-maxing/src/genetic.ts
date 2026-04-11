@@ -23,6 +23,19 @@ import {
   mutateShiftCol,
 } from './mutation.ts'
 import { getViewPort } from './geometry.ts'
+import {
+  type GenerationSnapshot,
+  type RunMonitor,
+  MUTATION_NAMES,
+  createMutationStat,
+  createRunMonitor,
+  computePopulationDiversity,
+  buildGenerationSnapshot,
+  accumulateMutStats,
+  computeDeadWeightMutations,
+} from './monitor.ts'
+
+export type { GenerationSnapshot, RunMonitor }
 
 function roulette(weights: number[], rand: () => number): number {
   const total = weights.reduce((a, b) => a + b, 0)
@@ -37,6 +50,11 @@ function roulette(weights: number[], rand: () => number): number {
 interface Layouts {
   layouts: BoxLayout[]
   fitness?: Fitness
+  // monitoring fields — do not affect algorithm behavior
+  _mutation?: string
+  _mutatedBoxId?: string
+  _parentScore?: number
+  lastMutation?: string // persisted after selection, used for deadWeight computation
 }
 
 function minBy<T>(arr: T[], fn: (item: T) => number): T | undefined {
@@ -157,9 +175,10 @@ async function runGenetic(
   groupPlan: GroupPlan,
   getFitness?: (layouts: BoxLayout[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: BoxLayout[]) => void,
-  onGenerationEnd?: (stop: number) => void,
+  onGenerationEnd?: (stop: number, snapshot?: GenerationSnapshot) => void,
   logProgress?: (...args) => void,
   logInfo?: (...args) => void,
+  onMonitorEnd?: (monitor: RunMonitor) => void,
 ): Promise<BoxLayout[]> {
   // Create population
   let population = await createPopulation(startingLayouts, lines, rand, cfg, groupPlan, getFitness)
@@ -192,6 +211,8 @@ async function runGenetic(
   if (logInfo) logInfo('Starting genetic layout optimization...')
   let stop = cfg.stop
   let lastProgressLog = 0
+  const monitor = createRunMonitor()
+  let stagnation = 0
 
   for (let gen = 0; gen < cfg.generations; gen++) {
     const fitnessPromises = population.map(async (ind) => {
@@ -210,13 +231,36 @@ async function runGenetic(
     const minScore = Math.min(...fitnessValues.map(({ score }) => score))
     const currentBestIdx = fitnessValues.findIndex(({ score }) => score === minScore)
 
+    // --- monitoring: per-mutation improvement stats ---
+    const genMutStats: Record<string, ReturnType<typeof createMutationStat>> = {}
+    for (const ind of population) {
+      const mut = ind._mutation
+      if (!mut) continue
+      if (!genMutStats[mut]) genMutStats[mut] = createMutationStat()
+      const delta = ind._parentScore !== undefined ? ind.fitness!.score - ind._parentScore : 0
+      genMutStats[mut].attempts++
+      genMutStats[mut].totalDelta += delta
+      if (delta < 0) genMutStats[mut].improvements++
+    }
+
     if (fitnessValues[currentBestIdx].score < bestFitnessScore) {
+      const prevBest = bestFitnessScore
       bestFitness = fitnessValues[currentBestIdx]
       bestFitnessScore = bestFitness.score
       bestIndividual = cloneLayouts(population[currentBestIdx].layouts)
       stop = cfg.stop
+      stagnation = 0
+      // record lineage event
+      const newBest = population[currentBestIdx]
+      monitor.bestLineage.push({
+        gen,
+        mutation: newBest._mutation ?? 'unknown',
+        boxId: newBest._mutatedBoxId ?? '',
+        delta: bestFitnessScore - prevBest,
+      })
     } else {
       stop--
+      stagnation++
       if (stop === cfg.svgAtStop && onIntermediate) {
         onIntermediate(bestIndividual)
       }
@@ -234,7 +278,19 @@ async function runGenetic(
       }
     }
 
-    onGenerationEnd?.(stop)
+    // --- monitoring: build and store snapshot ---
+    const diversity = computePopulationDiversity(population, cfg)
+    const snapshot = buildGenerationSnapshot(
+      gen,
+      fitnessValues.map((f) => f.score),
+      diversity,
+      stagnation,
+      genMutStats,
+    )
+    monitor.snapshots.push(snapshot)
+    accumulateMutStats(monitor.runTotals, genMutStats)
+
+    onGenerationEnd?.(stop, snapshot)
 
     if (!stop) {
       break
@@ -250,28 +306,41 @@ async function runGenetic(
 
     let populationCopy = [...population].splice(currentBestIdx, 1)
 
+    // monitoring helper: track elite survival
+    const trackEliteSurvival = (ind: Layouts) => {
+      if (ind._mutation && monitor.runTotals[ind._mutation]) {
+        monitor.runTotals[ind._mutation].survived++
+      }
+    }
+
     const bestByCollisions = minBy<Layouts>(populationCopy, (v) => v.fitness!.collisions)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByCollisions), 1)
+    trackEliteSurvival(bestByCollisions)
     newPopulation.push(bestByCollisions)
 
     const bestByCrossings = minBy<Layouts>(populationCopy, (v) => v.fitness!.crossings)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByCrossings), 1)
+    trackEliteSurvival(bestByCrossings)
     newPopulation.push(bestByCrossings)
 
     const bestByOverlaps = minBy<Layouts>(populationCopy, (v) => v.fitness!.overlaps)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByOverlaps), 1)
+    trackEliteSurvival(bestByOverlaps)
     newPopulation.push(bestByOverlaps)
 
     const bestByLength = minBy<Layouts>(populationCopy, (v) => v.fitness!.length)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByLength), 1)
+    trackEliteSurvival(bestByLength)
     newPopulation.push(bestByLength)
 
     const bestByScore = minBy<Layouts>(populationCopy, (v) => v.fitness!.score)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByScore), 1)
+    trackEliteSurvival(bestByScore)
     newPopulation.push(bestByScore)
 
     const bestByView = minBy<Layouts>(populationCopy, (v) => v.fitness!.view)!
     populationCopy = populationCopy.splice(populationCopy.indexOf(bestByView), 1)
+    trackEliteSurvival(bestByView)
     newPopulation.push(bestByView)
 
     // const props = <(keyof Fitness)[]>['score', 'view', 'crossings']
@@ -283,6 +352,8 @@ async function runGenetic(
       const p1 = population[i1]
 
       let child: BoxLayout[]
+      let childMutation: string = 'none'
+      let childMutatedBoxId: string = ''
       if (rand() < cfg.crossoverRate) {
         const i2 = tournamentSelect(
           population,
@@ -292,11 +363,13 @@ async function runGenetic(
           [i1],
         )
         child = crossover(p1.layouts, population[i2].layouts, rand, cfg)
+        childMutation = 'crossover'
       } else {
         child = cloneLayouts(p1.layouts)
 
         if (rand() < cfg.mutationRate) {
           const mutationTarget = child[Math.floor(rand() * child.length)]
+          childMutatedBoxId = mutationTarget.id
 
           const mutIdx = roulette(
             [
@@ -313,6 +386,8 @@ async function runGenetic(
             ],
             rand,
           )
+
+          childMutation = MUTATION_NAMES[mutIdx]
 
           const mxy = rand()
           const [_x, _y, w, h] = getViewPort(child)
@@ -357,7 +432,13 @@ async function runGenetic(
       if (cfg.keepGroups) alignGroups(child, groupPlan)
       if (cfg.normalize) normalizeLayouts(child)
 
-      newPopulation.push({ layouts: child })
+      newPopulation.push({
+        layouts: child,
+        _mutation: childMutation,
+        _mutatedBoxId: childMutatedBoxId,
+        _parentScore: p1.fitness!.score,
+        lastMutation: childMutation,
+      })
     }
 
     population = newPopulation
@@ -367,6 +448,13 @@ async function runGenetic(
     logInfo(
       `Optimization finished. Final fitness: ${bestFitnessScore.toFixed(0)}\n${JSON.stringify(bestFitness, null, 2)}`,
     )
+
+  // Finalize monitor
+  const sortedFinal = [...population]
+    .filter((ind) => ind.fitness !== undefined)
+    .sort((a, b) => a.fitness!.score - b.fitness!.score)
+  monitor.deadWeightMutations = computeDeadWeightMutations(sortedFinal, monitor.runTotals)
+  onMonitorEnd?.(monitor)
 
   return bestIndividual
 }

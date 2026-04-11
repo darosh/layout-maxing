@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, toRaw, watch } from 'vue'
 import { defaultConfig, applyBestLayout } from 'layout-maxing'
-import type { RNBO, Config, Fitness, BoxLayout, Line } from 'layout-maxing'
+import type { RNBO, Config, Fitness, BoxLayout, Line, GenerationSnapshot } from 'layout-maxing'
 
 const CONFIG_KEY = 'layout-maxing-config'
 const RUN_KEY = 'layout-maxing-run'
@@ -88,6 +88,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   })
   const top = ref<TopEntry[]>([])
   const currentGenTop = ref<TopEntry[]>([])
+  const snapshots = ref<GenerationSnapshot[]>([])
   const resultRnbo = ref<RNBO | null>(null)
   const error = ref<string | null>(null)
 
@@ -235,6 +236,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     status.value = 'running'
     error.value = null
     resultRnbo.value = null
+    snapshots.value = []
     runId.value++
     progress.value = {
       evalCount: 0,
@@ -274,6 +276,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
           }
           if (msg.top?.length) top.value = msg.top
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
+          if (msg.snapshots?.length) snapshots.value = msg.snapshots
           break
         case 'svg':
           if (msg.top?.length) top.value = msg.top
@@ -387,6 +390,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     runId,
     topN,
     allTimeTop,
+    snapshots,
     switchMode,
     isConfigDefault,
     status,

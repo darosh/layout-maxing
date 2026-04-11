@@ -9,7 +9,7 @@ import {
   preserveGroupMembers,
   stampGroupIdx,
 } from 'layout-maxing'
-import type { RNBO, Config, BoxLayout, Line, Fitness } from 'layout-maxing'
+import type { RNBO, Config, BoxLayout, Line, Fitness, GenerationSnapshot } from 'layout-maxing'
 
 type Position = { id: string; x: number; y: number }
 type TopEntry = { score: number; svg: string; fitness: Fitness; positions: Position[] }
@@ -29,6 +29,7 @@ type ProgressMsg = {
   top: TopEntry[] | null
   currentGenTop: TopEntry[] | null
   layouts: BoxLayout[] | null
+  snapshots: GenerationSnapshot[] | null
 }
 type OriginalMsg = {
   type: 'original'
@@ -161,6 +162,9 @@ self.onmessage = async (e: MessageEvent) => {
   let lastProgressTime = 0
   let stopIn = c.stop
   const startTime = Date.now()
+  const snapshotBuffer: GenerationSnapshot[] = []
+  const MAX_SNAPSHOTS = (240 - 40 - 40) * 3
+  let currentGen = 0
 
   // Top-N candidates by score (ascending)
   const top: { score: number; layouts: BoxLayout[]; fitness: Fitness }[] = []
@@ -260,7 +264,7 @@ self.onmessage = async (e: MessageEvent) => {
         // Progress + SVG update, every progressInterval ms
         if (now - lastProgressTime >= progressInterval) {
           lastProgressTime = now
-          const generation = Math.floor(evalCount / c.popSize)
+          const generation = currentGen
           const elapsed = now - startTime
           const sortedGen = [...currentPop].sort((a, b) => a.score - b.score)
           const gen1stScore = sortedGen[0]?.score ?? null
@@ -282,6 +286,7 @@ self.onmessage = async (e: MessageEvent) => {
             top: buildTopEntries(),
             currentGenTop: buildCurrentGenEntries(),
             layouts: bestLayouts ? [...bestLayouts] : null,
+            snapshots: snapshotBuffer.length ? [...snapshotBuffer] : null,
           })
         }
 
@@ -289,8 +294,23 @@ self.onmessage = async (e: MessageEvent) => {
       },
       undefined,
       cfg,
-      (stop: number) => {
+      (stop: number, snapshot?: GenerationSnapshot) => {
         stopIn = stop
+        if (snapshot) {
+          currentGen = snapshot.gen
+          snapshotBuffer.push(snapshot)
+          // Downsample: keep evenly-spaced subset when buffer grows too large
+          if (snapshotBuffer.length > MAX_SNAPSHOTS * 1.2) {
+            const keep = MAX_SNAPSHOTS
+            const step = snapshotBuffer.length / keep
+            const downsampled = Array.from(
+              { length: keep },
+              (_, i) => <GenerationSnapshot>snapshotBuffer[Math.round(i * step)],
+            )
+            snapshotBuffer.length = 0
+            snapshotBuffer.push(...downsampled)
+          }
+        }
       },
       c.logProgress ? console.log : undefined,
       c.logInfo ? console.log : undefined,
@@ -303,7 +323,7 @@ self.onmessage = async (e: MessageEvent) => {
     post({
       type: 'progress',
       evalCount,
-      generation: Math.floor(evalCount / c.popSize),
+      generation: currentGen,
       elapsed: finalElapsed,
       bestScore,
       gen1stScore: sortedFinal[0]?.score ?? null,
@@ -315,6 +335,7 @@ self.onmessage = async (e: MessageEvent) => {
       top: buildTopEntries(),
       currentGenTop: buildCurrentGenEntries(),
       layouts: bestLayouts ? [...bestLayouts] : null,
+      snapshots: snapshotBuffer.length ? [...snapshotBuffer] : null,
     })
     applyBestLayout(rnbo, bestIndividual, c)
     const finalLayouts = buildLayoutsForView()
