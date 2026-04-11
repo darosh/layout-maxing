@@ -216,6 +216,7 @@ const btnPause = computed(() => store.status === 'running')
         </div>
         <TopResultsBar />
         <div
+          @click="store.showStats = !store.showStats"
           style="
             position: absolute;
             flex: 1;

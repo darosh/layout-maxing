@@ -71,6 +71,7 @@ const fullScore = computed(() => {
     </div>
 
     <div
+      v-if="store.showStats"
       style="
         position: absolute;
         right: 0.25rem;

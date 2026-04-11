@@ -90,6 +90,7 @@ table {
   font-family: monospace;
   font-size: 0.7rem;
   color: var(--p-surface-300);
+  user-select: none;
 }
 
 th {

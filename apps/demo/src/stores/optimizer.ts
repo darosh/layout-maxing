@@ -58,6 +58,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const progressInterval = ref<number>(savedRun?.progressInterval ?? 200)
   const topN = ref<number>(savedRun?.topN ?? 15)
   const allTimeTop = ref<boolean>(savedRun?.allTimeTop ?? true)
+  const showStats = ref<boolean>(savedRun?.showStats ?? false)
   // Persist config changes
   watch(
     config,
@@ -68,13 +69,14 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   )
 
   // Persist run settings changes
-  watch([progressInterval, topN, allTimeTop], () => {
+  watch([progressInterval, topN, allTimeTop, showStats], () => {
     localStorage.setItem(
       RUN_KEY,
       JSON.stringify({
         progressInterval: progressInterval.value,
         topN: topN.value,
         allTimeTop: allTimeTop.value,
+        showStats: showStats.value,
       }),
     )
   })
@@ -443,5 +445,6 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     pauseOptimization,
     resumeOptimization,
     resetConfig,
+    showStats,
   }
 })
