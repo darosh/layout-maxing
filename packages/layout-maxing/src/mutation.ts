@@ -224,7 +224,15 @@ export function crossover(
     if (rand() < cfg.crossoverMix) {
       child[i].x = parent2[i].x
       child[i].y = parent2[i].y
+      // Merge both parents' histories; crossover itself counts as 1
+      const merged: Record<string, number> = { ...parent2[i]._mutations }
+      for (const [k, v] of Object.entries(parent1[i]._mutations ?? {})) {
+        merged[k] = (merged[k] ?? 0) + v
+      }
+      merged['crossover'] = (merged['crossover'] ?? 0) + 1
+      child[i]._mutations = merged
     }
+    // else: child already cloned parent1's _mutations via cloneLayouts
   }
   // return fixOverlaps(child)
   return child

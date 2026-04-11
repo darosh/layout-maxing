@@ -47,6 +47,29 @@ export const MUTATION_NAMES = [
   'shiftCol',
 ] as const
 
+// Tuple: [label, shortcut, description]
+export type MutationMetaEntry = [label: string, shortcut: string, description: string]
+
+export const mutationMeta: Record<string, MutationMetaEntry> = {
+  quadrant:    ['Quadrant',     'QUAD', 'Move a box to a different quadrant of the canvas'],
+  single:      ['Single',       'SNGL', 'Nudge one box by a small random grid offset'],
+  children:    ['Children',     'CHLD', 'Relocate a box near one of its downstream children'],
+  parents:     ['Parents',      'PRNT', 'Relocate a box near one of its upstream parents'],
+  swapSibling: ['Swap Sibling', 'SWSB', 'Swap positions with a box that shares a parent or child'],
+  swapRandom:  ['Swap Random',  'SWRN', 'Swap positions with any random box'],
+  swapInRow:   ['Swap In Row',  'SWRW', 'Swap positions with a box on the same grid row'],
+  swapInCol:   ['Swap In Col',  'SWCL', 'Swap positions with a box on the same grid column'],
+  shiftRow:    ['Shift Row',    'SHRW', 'Shift an entire row of boxes horizontally'],
+  shiftCol:    ['Shift Col',    'SHCL', 'Shift an entire column of boxes vertically'],
+}
+
+export const statMeta: Record<string, MutationMetaEntry> = {
+  att:  ['Attempts', 'ATT', 'How many times this mutation was selected by roulette wheel'],
+  imp:  ['Improvement %', 'IMP', 'Percentage of attempts that produced a better score than the parent'],
+  davg: ['Avg Δ Score', 'ΔAVG', 'Average fitness change per attempt (negative = improvement)'],
+  best: ['Best lineage', 'BEST', 'How many times this mutation found a new all-time best individual. Zero = dead weight (never improved the best).'],
+}
+
 export function createMutationStat(): MutationStat {
   return { attempts: 0, improvements: 0, survived: 0, totalDelta: 0 }
 }

@@ -6,6 +6,7 @@ import { BEST_LABEL, CURRENT_LABEL, INPUT_LABEL } from '@/utils/consts.ts'
 import FlyingTooltip from './FlyingTooltip.vue'
 import { fitnessMeta } from 'layout-maxing'
 import GenerationChart from '@/components/GenerationChart.vue'
+import MutationStats from '@/components/MutationStats.vue'
 
 const store = useOptimizerStore()
 const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
@@ -60,8 +61,9 @@ const fullScore = computed(() => {
       </span>
     </div>
 
-    <div style="position: absolute; right: 0.25rem; top: 1.5rem">
+    <div style="position: absolute; right: 0.25rem; top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end">
       <GenerationChart :snapshots="store.snapshots" />
+      <MutationStats :snapshots="store.snapshots" :run-monitor="store.runMonitor" :selected-entry="store.displayedEntry" />
     </div>
 
     <!-- Bottom-right: detail metrics -->

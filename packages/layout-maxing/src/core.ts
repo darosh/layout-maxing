@@ -18,6 +18,7 @@ import {
 import { cloneLayouts } from './mutation.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import runGenetic from './genetic.ts'
+import type { RunMonitor } from './monitor.ts'
 
 type BoxId = string
 
@@ -82,6 +83,7 @@ export async function main(
   onGenerationEnd?: (stop: number) => void,
   logProgress?: (...args: any) => void,
   logInfo?: (...args: any) => void,
+  onMonitorEnd?: (monitor: RunMonitor) => void,
 ) {
   if (logInfo && cfg) {
     logInfo(`Configuration\n${JSON.stringify(jsonDiff<Config>(defaultConfig, cfg))}`)
@@ -163,5 +165,6 @@ export async function main(
     onGenerationEnd,
     logProgress,
     logInfo,
+    onMonitorEnd,
   )
 }

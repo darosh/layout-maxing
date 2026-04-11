@@ -25,6 +25,7 @@ export type BoxLayout = {
   children?: number[]
   parents?: number[]
   groupIdx?: number
+  _mutations?: Record<string, number> // monitoring: count of each mutation type that moved this box
 }
 
 interface Box {

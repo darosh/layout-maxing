@@ -427,6 +427,14 @@ async function runGenetic(
         }
       }
 
+      // Increment per-box mutation counts (monitoring, doesn't affect algorithm)
+      if (childMutation !== 'crossover' && childMutation !== 'none' && childMutatedBoxId) {
+        const box = child.find((b) => b.id === childMutatedBoxId)
+        if (box) {
+          box._mutations = { ...box._mutations, [childMutation]: (box._mutations?.[childMutation] ?? 0) + 1 }
+        }
+      }
+
       // child = fixOverlaps(child, cfg)
 
       if (cfg.keepGroups) alignGroups(child, groupPlan)

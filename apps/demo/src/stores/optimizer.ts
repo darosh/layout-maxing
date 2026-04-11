@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, toRaw, watch } from 'vue'
 import { defaultConfig, applyBestLayout } from 'layout-maxing'
-import type { RNBO, Config, Fitness, BoxLayout, Line, GenerationSnapshot } from 'layout-maxing'
+import type { RNBO, Config, Fitness, BoxLayout, Line, GenerationSnapshot, RunMonitor } from 'layout-maxing'
 
 const CONFIG_KEY = 'layout-maxing-config'
 const RUN_KEY = 'layout-maxing-run'
@@ -13,6 +13,7 @@ export interface TopEntry {
   svg: string
   fitness: Fitness
   positions: { id: string; x: number; y: number }[]
+  mutations: Record<string, number> // summed _mutations counts across all boxes
 }
 
 export type Selection =
@@ -89,6 +90,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const top = ref<TopEntry[]>([])
   const currentGenTop = ref<TopEntry[]>([])
   const snapshots = ref<GenerationSnapshot[]>([])
+  const runMonitor = ref<RunMonitor | null>(null)
   const resultRnbo = ref<RNBO | null>(null)
   const error = ref<string | null>(null)
 
@@ -186,6 +188,12 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     return resolveEntry(sel)?.fitness ?? null
   })
 
+  const displayedEntry = computed<TopEntry | null>(() => {
+    const sel = selection.value
+    if (sel.kind === 'original') return null
+    return resolveEntry(sel) ?? null
+  })
+
   const canExport = computed(
     () => selection.value.kind === 'original' || top.value.length > 0 || resultRnbo.value !== null,
   )
@@ -237,6 +245,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     error.value = null
     resultRnbo.value = null
     snapshots.value = []
+    runMonitor.value = null
     runId.value++
     progress.value = {
       evalCount: 0,
@@ -286,6 +295,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
           status.value = 'done'
           if (msg.top?.length) top.value = msg.top
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
+          if (msg.runMonitor) runMonitor.value = msg.runMonitor
           resultRnbo.value = msg.rnbo ?? null
           worker?.terminate()
           worker = null
@@ -391,6 +401,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     topN,
     allTimeTop,
     snapshots,
+    runMonitor,
     switchMode,
     isConfigDefault,
     status,
@@ -408,6 +419,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     originalFitness,
     displayedSvg,
     displayedFitness,
+    displayedEntry,
     displayedLayouts,
     lines,
     canExport,

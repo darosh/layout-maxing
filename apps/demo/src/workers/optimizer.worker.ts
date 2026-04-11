@@ -9,7 +9,7 @@ import {
   preserveGroupMembers,
   stampGroupIdx,
 } from 'layout-maxing'
-import type { RNBO, Config, BoxLayout, Line, Fitness, GenerationSnapshot } from 'layout-maxing'
+import type { RNBO, Config, BoxLayout, Line, Fitness, GenerationSnapshot, RunMonitor } from 'layout-maxing'
 
 type Position = { id: string; x: number; y: number }
 type TopEntry = { score: number; svg: string; fitness: Fitness; positions: Position[] }
@@ -45,6 +45,7 @@ type DoneMsg = {
   currentGenTop: TopEntry[]
   rnbo: RNBO
   layouts: BoxLayout[]
+  runMonitor?: RunMonitor
 }
 type ErrorMsg = { type: 'error'; message: string; stack?: string }
 
@@ -160,6 +161,7 @@ self.onmessage = async (e: MessageEvent) => {
   let bestFitness: Fitness | null = null
   let bestLayouts: BoxLayout[] | null = null
   let lastProgressTime = 0
+  let finalRunMonitor: RunMonitor | undefined
   let stopIn = c.stop
   const startTime = Date.now()
   const snapshotBuffer: GenerationSnapshot[] = []
@@ -184,12 +186,24 @@ self.onmessage = async (e: MessageEvent) => {
     }
   }
 
+  function aggregateMutations(layouts: BoxLayout[]): Record<string, number> {
+    const totals: Record<string, number> = {}
+    for (const box of layouts) {
+      if (!box._mutations) continue
+      for (const [k, v] of Object.entries(box._mutations)) {
+        totals[k] = (totals[k] ?? 0) + v
+      }
+    }
+    return totals
+  }
+
   function buildTopEntries(): TopEntry[] {
     return top.map((t) => ({
       score: t.score,
       svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups),
       fitness: t.fitness,
       positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
+      mutations: aggregateMutations(t.layouts),
     }))
   }
 
@@ -202,6 +216,7 @@ self.onmessage = async (e: MessageEvent) => {
         svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups),
         fitness: t.fitness,
         positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
+        mutations: aggregateMutations(t.layouts),
       }))
   }
 
@@ -314,6 +329,7 @@ self.onmessage = async (e: MessageEvent) => {
       },
       c.logProgress ? console.log : undefined,
       c.logInfo ? console.log : undefined,
+      (monitor: RunMonitor) => { finalRunMonitor = monitor },
     )
 
     pool.terminate()
@@ -351,6 +367,7 @@ self.onmessage = async (e: MessageEvent) => {
       currentGenTop: buildCurrentGenEntries(),
       rnbo,
       layouts: finalLayouts,
+      runMonitor: finalRunMonitor,
     })
   } catch (err) {
     pool.terminate()
