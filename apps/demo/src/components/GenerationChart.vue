@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import type { GenerationSnapshot } from 'layout-maxing'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { formatScore } from '@/utils/formatScore.ts'
 
 const props = defineProps<{
   snapshots: GenerationSnapshot[]
 }>()
 
-const W = 240
-const H = 72
+const W = 320
+const H = 90
 const M = 6
-const PAD = { top: 1, right: 40, bottom: 11, left: 40 }
+const PAD = { top: 1, right: 1, bottom: 11, left: 40 }
 const innerW = W - PAD.left - PAD.right
 const innerH = H - PAD.top - PAD.bottom
+
+type SeriesKey = 'best' | 'median' | 'diversity' | 'eff-mut-rate' | 'eff-mutate'
+const hoveredSeries = ref<SeriesKey>('best')
 
 function toPath(points: [number, number][]): string {
   if (!points.length) return ''
@@ -40,14 +43,25 @@ const chart = computed(() => {
   const logRange = logMax - logMin || 1
 
   const logDiv = snaps.map((s) => s.diversity)
-
   const logMinDiv = Math.min(...logDiv)
   const logMaxDiv = Math.max(...logDiv)
   const logRangeDiv = logMaxDiv - logMinDiv || 1
 
+  const mutRates = snaps.map((s) => s.effectiveMutRate)
+  const minMutRate = Math.min(...mutRates)
+  const maxMutRate = Math.max(...mutRates)
+  const rangeMutRate = maxMutRate - minMutRate || 1
+
+  const mutates = snaps.map((s) => s.effectiveMutate)
+  const minMutate = Math.min(...mutates)
+  const maxMutate = Math.max(...mutates)
+  const rangeMutate = maxMutate - minMutate || 1
+
+  const medians = snaps.map((s) => s.median)
+  const minMedian = Math.min(...medians)
+  const maxMedian = Math.max(...medians)
+
   const xOf = (i: number) => PAD.left + (i / (n - 1)) * innerW
-  // low score (good) → top of chart
-  // const yScore = (v: number) => PAD.top + ((L(v) - logMin) / logRange) * innerH
   const yScore = (v: number) => PAD.top + ((v - logMin) / logRange) * innerH
   const yDiversity = (v: number) => PAD.top + ((v - logMinDiv) / logRangeDiv) * innerH
 
@@ -55,6 +69,14 @@ const chart = computed(() => {
   const medianPts: [number, number][] = snaps.map((s, i) => [xOf(i), yScore(s.median)])
   const p75Pts: [number, number][] = snaps.map((s, i) => [xOf(i), yScore(s.p75)])
   const divPts: [number, number][] = snaps.map((s, i) => [xOf(i), yDiversity(s.diversity)])
+
+  const yMutRate = (v: number) => PAD.top + ((v - minMutRate) / rangeMutRate) * innerH
+  const yMutate = (v: number) => PAD.top + ((v - minMutate) / rangeMutate) * innerH
+  const effMutRatePts: [number, number][] = snaps.map((s, i) => [
+    xOf(i),
+    yMutRate(s.effectiveMutRate),
+  ])
+  const effMutatePts: [number, number][] = snaps.map((s, i) => [xOf(i), yMutate(s.effectiveMutate)])
 
   // Area fill between median and best
   const areaPath =
@@ -66,20 +88,40 @@ const chart = computed(() => {
       .join(' ') +
     ' Z'
 
+  const seriesLabels: Record<SeriesKey, { min: string; max: string }> = {
+    best: { min: formatScore(logMin), max: formatScore(logMax) },
+    median: { min: formatScore(minMedian), max: formatScore(maxMedian) },
+    diversity: { min: logMinDiv.toFixed(3), max: logMaxDiv.toFixed(3) },
+    'eff-mut-rate': { min: minMutRate.toFixed(3), max: maxMutRate.toFixed(3) },
+    'eff-mutate': { min: minMutate.toFixed(3), max: maxMutate.toFixed(3) },
+  }
+
   return {
     bestPath: toPath(bestPts),
     medianPath: toPath(medianPts),
     p75Path: toPath(p75Pts),
     divPath: toPath(divPts),
+    effMutRatePath: toPath(effMutRatePts),
+    effMutatePath: toPath(effMutatePts),
     areaPath,
     firstGen: snaps[0]!.gen,
     lastGen: snaps[n - 1]!.gen,
-    minScore: formatScore(logMin),
-    maxScore: formatScore(logMax),
-    minDiv: logMinDiv.toFixed(2),
-    maxDiv: logMaxDiv.toFixed(2),
+    seriesLabels,
   }
 })
+
+const scoreLabels = computed(
+  () => chart.value?.seriesLabels[hoveredSeries.value] ?? { min: '', max: '' },
+)
+
+const seriesColor: Record<SeriesKey, string> = {
+  best: 'var(--p-primary-400)',
+  median: 'var(--p-surface-400)',
+  diversity: 'var(--p-cyan-500)',
+  'eff-mut-rate': 'var(--p-amber-500)',
+  'eff-mutate': 'var(--p-orange-500)',
+}
+const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
 </script>
 
 <template>
@@ -127,6 +169,22 @@ const chart = computed(() => {
           stroke-width="1"
           stroke-opacity=".75" />
 
+        <!-- effectiveMutRate line -->
+        <path
+          :d="chart!.effMutRatePath"
+          fill="none"
+          stroke="var(--p-amber-500)"
+          stroke-width="1"
+          stroke-opacity=".75" />
+
+        <!-- effectiveMutate line -->
+        <path
+          :d="chart!.effMutatePath"
+          fill="none"
+          stroke="var(--p-orange-500)"
+          stroke-width="1"
+          stroke-opacity=".75" />
+
         <!-- best line -->
         <path :d="chart!.bestPath" fill="none" stroke="var(--p-primary-400)" stroke-width="1" />
       </g>
@@ -146,11 +204,11 @@ const chart = computed(() => {
       <!-- score labels -->
       <text
         :x="PAD.left - M"
-        :y="H - PAD.bottom - M / 2"
+        :y="H - PAD.bottom"
         text-anchor="end"
         class="axis-label"
-        style="fill: var(--p-primary-400)">
-        {{ chart!.maxScore }}
+        :style="{ fill: scoreLabelColor }">
+        {{ scoreLabels.max }}
       </text>
       <text
         :x="PAD.left - M"
@@ -158,34 +216,20 @@ const chart = computed(() => {
         text-anchor="end"
         alignment-baseline="hanging"
         class="axis-label"
-        style="fill: var(--p-primary-400)">
-        {{ chart!.minScore }}
-      </text>
-      <!-- div labels -->
-      <text
-        :x="W - PAD.right + M"
-        :y="H - PAD.bottom - M / 2"
-        text-anchor="start"
-        class="axis-label"
-        style="fill: var(--p-cyan-600)">
-        {{ chart!.minDiv }}
-      </text>
-      <text
-        :x="W - PAD.right + M"
-        :y="PAD.top"
-        text-anchor="start"
-        alignment-baseline="hanging"
-        class="axis-label"
-        style="fill: var(--p-cyan-600)">
-        {{ chart!.maxDiv }}
+        :style="{ fill: scoreLabelColor }">
+        {{ scoreLabels.min }}
       </text>
     </svg>
 
     <div class="chart-legend">
-      <span class="legend-item best">best</span>
-      <span class="legend-item median">median</span>
+      <span class="legend-item best" @mouseenter="hoveredSeries = 'best'">best</span>
+      <span class="legend-item median" @mouseenter="hoveredSeries = 'median'">median</span>
       <!--      <span class="legend-item p75">p75</span>-->
-      <span class="legend-item diversity">diversity</span>
+      <span class="legend-item diversity" @mouseenter="hoveredSeries = 'diversity'">diversity</span>
+      <span class="legend-item eff-mut-rate" @mouseenter="hoveredSeries = 'eff-mut-rate'"
+        >mut rate</span
+      >
+      <span class="legend-item eff-mutate" @mouseenter="hoveredSeries = 'eff-mutate'">mutate</span>
     </div>
   </div>
 </template>
@@ -215,7 +259,7 @@ const chart = computed(() => {
 
 .chart-legend {
   display: flex;
-  padding: 0.5rem 40px 0.5rem 40px;
+  padding: 0.25rem 0 0.125rem 40px;
   justify-content: space-between;
   user-select: none;
 }
@@ -262,6 +306,22 @@ const chart = computed(() => {
 }
 .legend-item.diversity::before {
   background: var(--p-cyan-500);
+  opacity: 0.7;
+}
+
+.legend-item.eff-mut-rate {
+  color: var(--p-amber-500);
+}
+.legend-item.eff-mut-rate::before {
+  background: var(--p-amber-500);
+  opacity: 0.7;
+}
+
+.legend-item.eff-mutate {
+  color: var(--p-orange-500);
+}
+.legend-item.eff-mutate::before {
+  background: var(--p-orange-500);
   opacity: 0.7;
 }
 </style>
