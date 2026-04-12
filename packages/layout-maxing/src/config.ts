@@ -34,10 +34,10 @@ export interface Config {
   crossWeightRandom?: number
   crossWeightStruct?: number
   tournamentSize?: number
-  diversityBoostFactor?: number
+  diversityBoost?: number
   crowdingTieBreak?: boolean
-  stagnationResetThreshold?: number
-  stagnationResetRate?: number
+  stagnationThreshold?: number
+  stagnationRate?: number
   mutate?: number
   // Mutation weights (unitless, roulette selection)
   mutWeightQuadrant?: number
@@ -130,8 +130,8 @@ export const configMeta: ConfigMeta = {
   arMax: [5, 1, 25, 0.01, 'Maximum non-penalized aspect ratio'],
   // GA parameters
   svgAtStop: [9995, 0, 100000, 1, 'Generation count at which to write final SVG snapshot'],
-  stop: [9999, 1, 100000, 1, 'Stop after this many generations without improvement'],
-  popSize: [15, 10, 1000, 1, 'Number of individuals in the population'],
+  stop: [5000, 1, 100000, 1, 'Stop after this many generations without improvement'],
+  popSize: [25, 10, 1000, 1, 'Number of individuals in the population'],
   generations: [100000, 100, 1000000, 1, 'Maximum total generations to run'],
   mutationRate: [0.95, 0, 1, 0.01, 'Probability that a child is mutated after crossover'],
   maxChildren: [9, 1, 20, 1, 'Maximum number of children mutated'],
@@ -146,36 +146,36 @@ export const configMeta: ConfigMeta = {
   ],
   crossWeightRandom: [10, 0, 100, 1, 'Roulette weight for positional crossover (per-box mix)'],
   crossWeightStruct: [
-    0,
+    10,
     0,
     100,
     1,
     'Roulette weight for structural crossover (one box + descendants)',
   ],
-  tournamentSize: [0.5, 0, 1, 0.1, 'Fraction of population sampled in tournament selection'],
-  diversityBoostFactor: [
-    0,
+  tournamentSize: [1, 0, 1, 0.1, 'Fraction of population sampled in tournament selection'],
+  diversityBoost: [
+    0.5,
     0,
     1,
     0.01,
     'Scales up mutationRate when population diversity is low; 0 = disabled',
   ],
   crowdingTieBreak: [
-    false,
+    true,
     false,
     true,
     null,
     'Prefer less-crowded individuals when tournament fitness is tied',
   ],
-  stagnationResetThreshold: [
-    0,
+  stagnationThreshold: [
+    50,
     0,
     100000,
     1,
     'Generations without improvement before boosting mutation rate; 0 = disabled',
   ],
-  stagnationResetRate: [
-    2,
+  stagnationRate: [
+    1.1,
     1,
     10,
     0.1,

@@ -417,8 +417,8 @@ async function runGenetic(
     let effectiveMutationRate = cfg.mutationRate
     let effectiveMutate = cfg.mutate
 
-    if (cfg.diversityBoostFactor > 0) {
-      const boost = 1 + cfg.diversityBoostFactor * (1 - diversity)
+    if (cfg.diversityBoost > 0) {
+      const boost = 1 + cfg.diversityBoost * (1 - diversity)
       effectiveMutate = cfg.mutate * Math.min(2, boost)
       // effectiveMutationRate = Math.min(
       //   1,
@@ -426,8 +426,8 @@ async function runGenetic(
       // )
     }
 
-    if (cfg.stagnationResetThreshold > 0 && stagnation >= cfg.stagnationResetThreshold) {
-      effectiveMutationRate = Math.min(1, effectiveMutationRate * cfg.stagnationResetRate)
+    if (cfg.stagnationThreshold > 0 && stagnation >= cfg.stagnationThreshold) {
+      effectiveMutationRate = Math.min(1, effectiveMutationRate * cfg.stagnationRate)
     }
 
     // --- monitoring: build and store snapshot ---

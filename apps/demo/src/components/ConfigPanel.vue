@@ -797,7 +797,7 @@ function copyCli() {
             <label
               :class="{ 'non-default': isNonDefault('crossWeightStruct') }"
               @click="isNonDefault('crossWeightStruct') && resetProp('crossWeightStruct')"
-              >crossoverWtStruct</label
+              >crossWeightStruct</label
             >
             <div class="field-with-dot">
               <InputNumber
@@ -822,40 +822,38 @@ function copyCli() {
               v-tip.right="configMeta.tournamentSize[4]"
               @keydown="handleShiftKey($event, 'tournamentSize')" />
             <label
-              :class="{ 'non-default': isNonDefault('diversityBoostFactor') }"
-              @click="isNonDefault('diversityBoostFactor') && resetProp('diversityBoostFactor')"
+              :class="{ 'non-default': isNonDefault('diversityBoost') }"
+              @click="isNonDefault('diversityBoost') && resetProp('diversityBoost')"
               >diversityBoost</label
             >
             <InputNumber
-              v-model="cfg.diversityBoostFactor"
-              v-bind="numProps('diversityBoostFactor')"
+              v-model="cfg.diversityBoost"
+              v-bind="numProps('diversityBoost')"
               size="small"
-              v-tip.right="configMeta.diversityBoostFactor[4]"
-              @keydown="handleShiftKey($event, 'diversityBoostFactor')" />
+              v-tip.right="configMeta.diversityBoost[4]"
+              @keydown="handleShiftKey($event, 'diversityBoost')" />
             <label
-              :class="{ 'non-default': isNonDefault('stagnationResetThreshold') }"
-              @click="
-                isNonDefault('stagnationResetThreshold') && resetProp('stagnationResetThreshold')
-              "
-              >stagnationThresh</label
+              :class="{ 'non-default': isNonDefault('stagnationThreshold') }"
+              @click="isNonDefault('stagnationThreshold') && resetProp('stagnationThreshold')"
+              >stagnationThreshold</label
             >
             <InputNumber
-              v-model="cfg.stagnationResetThreshold"
-              v-bind="numProps('stagnationResetThreshold')"
+              v-model="cfg.stagnationThreshold"
+              v-bind="numProps('stagnationThreshold')"
               size="small"
-              v-tip.right="configMeta.stagnationResetThreshold[4]"
-              @keydown="handleShiftKey($event, 'stagnationResetThreshold')" />
+              v-tip.right="configMeta.stagnationThreshold[4]"
+              @keydown="handleShiftKey($event, 'stagnationThreshold')" />
             <label
-              :class="{ 'non-default': isNonDefault('stagnationResetRate') }"
-              @click="isNonDefault('stagnationResetRate') && resetProp('stagnationResetRate')"
+              :class="{ 'non-default': isNonDefault('stagnationRate') }"
+              @click="isNonDefault('stagnationRate') && resetProp('stagnationRate')"
               >stagnationRate</label
             >
             <InputNumber
-              v-model="cfg.stagnationResetRate"
-              v-bind="numProps('stagnationResetRate')"
+              v-model="cfg.stagnationRate"
+              v-bind="numProps('stagnationRate')"
               size="small"
-              v-tip.right="configMeta.stagnationResetRate[4]"
-              @keydown="handleShiftKey($event, 'stagnationResetRate')" />
+              v-tip.right="configMeta.stagnationRate[4]"
+              @keydown="handleShiftKey($event, 'stagnationRate')" />
           </div>
           <div class="toggles-grid">
             <label

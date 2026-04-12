@@ -5,7 +5,8 @@
 - [ ] split tests into files
 - [ ] initial mutation optional
 - [ ] mutateChild x-y overlap
-- [ ] stable sort tournament
+- [x] ~~stable sort tournament~~
+- [ ] data driven config panel
 
 ### Mutation
 
