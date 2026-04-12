@@ -129,6 +129,10 @@ const groupKeys = {
     'crossWeightRandom',
     'crossWeightStruct',
     'tournamentSize',
+    'diversityBoostFactor',
+    'crowdingWeight',
+    'stagnationResetThreshold',
+    'stagnationResetRate',
   ],
   initial: ['useDagre', 'useSimpleFlow', 'useInput'],
   run: [
@@ -817,6 +821,52 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.tournamentSize[4]"
               @keydown="handleShiftKey($event, 'tournamentSize')" />
+            <label
+              :class="{ 'non-default': isNonDefault('diversityBoostFactor') }"
+              @click="isNonDefault('diversityBoostFactor') && resetProp('diversityBoostFactor')"
+              >diversityBoost</label
+            >
+            <InputNumber
+              v-model="cfg.diversityBoostFactor"
+              v-bind="numProps('diversityBoostFactor')"
+              size="small"
+              v-tip.right="configMeta.diversityBoostFactor[4]"
+              @keydown="handleShiftKey($event, 'diversityBoostFactor')" />
+            <label
+              :class="{ 'non-default': isNonDefault('crowdingWeight') }"
+              @click="isNonDefault('crowdingWeight') && resetProp('crowdingWeight')"
+              >crowdingWeight</label
+            >
+            <InputNumber
+              v-model="cfg.crowdingWeight"
+              v-bind="numProps('crowdingWeight')"
+              size="small"
+              v-tip.right="configMeta.crowdingWeight[4]"
+              @keydown="handleShiftKey($event, 'crowdingWeight')" />
+            <label
+              :class="{ 'non-default': isNonDefault('stagnationResetThreshold') }"
+              @click="
+                isNonDefault('stagnationResetThreshold') && resetProp('stagnationResetThreshold')
+              "
+              >stagnationThresh</label
+            >
+            <InputNumber
+              v-model="cfg.stagnationResetThreshold"
+              v-bind="numProps('stagnationResetThreshold')"
+              size="small"
+              v-tip.right="configMeta.stagnationResetThreshold[4]"
+              @keydown="handleShiftKey($event, 'stagnationResetThreshold')" />
+            <label
+              :class="{ 'non-default': isNonDefault('stagnationResetRate') }"
+              @click="isNonDefault('stagnationResetRate') && resetProp('stagnationResetRate')"
+              >stagnationRate</label
+            >
+            <InputNumber
+              v-model="cfg.stagnationResetRate"
+              v-bind="numProps('stagnationResetRate')"
+              size="small"
+              v-tip.right="configMeta.stagnationResetRate[4]"
+              @keydown="handleShiftKey($event, 'stagnationResetRate')" />
           </div>
         </AccordionContent>
       </AccordionPanel>
