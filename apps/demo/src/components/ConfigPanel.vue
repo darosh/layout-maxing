@@ -155,6 +155,7 @@ const groups: GroupDef[] = [
     label: 'Mutations',
     fields: [
       { key: 'mutate' },
+      { key: 'mutateXYOverlap' },
       { key: 'mutWeightQuadrant' },
       { key: 'mutWeightSingle' },
       { key: 'mutWeightChildren' },

@@ -39,6 +39,7 @@ export interface Config {
   stagnationThreshold?: number
   stagnationRate?: number
   mutate?: number
+  mutateXYOverlap?: number
   // Mutation weights (unitless, roulette selection)
   mutWeightQuadrant?: number
   mutWeightSingle?: number
@@ -182,6 +183,13 @@ export const configMeta: ConfigMeta = {
     'Mutation rate multiplier applied during stagnation burst (requires stagnationResetThreshold > 0)',
   ],
   mutate: [0.5, 0, 10, 0.1, 'Box mutation range in viewport units'],
+  mutateXYOverlap: [
+    0.2,
+    0,
+    1,
+    0.1,
+    'Overlap between x-only and y-only mutation ranges; 0 = exclusive, 1 = always both',
+  ],
   // Mutation weights
   mutWeightQuadrant: [30, 0, 100, 1, 'Roulette weight for quadrant-flip mutation'],
   mutWeightSingle: [30, 0, 100, 1, 'Roulette weight for single-node position mutation'],

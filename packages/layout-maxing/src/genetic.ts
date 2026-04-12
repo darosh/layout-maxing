@@ -268,8 +268,9 @@ function mutateChild(
   const maxX = Math.round((0.5 * mutateX) / cfg.gridX)
   const maxY = Math.round((0.5 * mutateY) / cfg.gridY)
 
-  const x = mxy < 0.6 || mutIdx === 8 ? randGausInt(1, maxX, rand) * cfg.gridX : 0
-  const y = mxy > 0.4 || mutIdx === 9 ? randGausInt(1, maxY, rand) * cfg.gridY : 0
+  const half = cfg.mutateXYOverlap / 2
+  const x = mxy < 0.5 + half || mutIdx === 8 ? randGausInt(1, maxX, rand) * cfg.gridX : 0
+  const y = mxy > 0.5 - half || mutIdx === 9 ? randGausInt(1, maxY, rand) * cfg.gridY : 0
 
   if (mutIdx === 0) {
     const quadrant = Math.floor(rand() * 4)
