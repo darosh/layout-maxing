@@ -67,7 +67,7 @@ watch(
       </div>
       <div class="stat">
         <span class="stat-label">Status</span>
-        <span class="stat-value status" style="text-transform: capitalize">{{ store.status }}</span>
+        <span class="stat-value status" :class="{done: store.status === 'done'}" style="text-transform: capitalize">{{ store.status }}</span>
       </div>
     </div>
     <ProgressBar
@@ -127,6 +127,10 @@ watch(
   font-size: 0.875rem;
   font-family: monospace;
   color: var(--p-surface-200);
+}
+
+.stat-value.done {
+  color: var(--p-primary-400);
 }
 
 .progress-panel.idle .stat-value:not(.status),
