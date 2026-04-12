@@ -31,6 +31,8 @@ export interface Config {
   maxParents?: number
   crossoverRate?: number
   crossoverMix?: number
+  crossWeightRandom?: number
+  crossWeightStruct?: number
   tournamentSize?: number
   mutate?: number
   // Mutation weights (unitless, roulette selection)
@@ -137,6 +139,14 @@ export const configMeta: ConfigMeta = {
     1,
     0.01,
     'Fraction of genes taken from the second parent during crossover',
+  ],
+  crossWeightRandom: [10, 0, 100, 1, 'Roulette weight for positional crossover (per-box mix)'],
+  crossWeightStruct: [
+    0,
+    0,
+    100,
+    1,
+    'Roulette weight for structural crossover (one box + descendants)',
   ],
   tournamentSize: [0.5, 0, 1, 0.1, 'Fraction of population sampled in tournament selection'],
   mutate: [0.5, 0, 10, 0.1, 'Box mutation range in viewport units'],

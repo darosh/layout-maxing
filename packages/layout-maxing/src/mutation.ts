@@ -225,3 +225,41 @@ export function crossover(
   // return fixOverlaps(child)
   return child
 }
+
+export function crossoverStructural(parent1: Box[], parent2: Box[], rand: () => number): Box[] {
+  const child = cloneLayouts(parent1)
+  // Pick one random box; copy its position + all descendants' positions from parent2
+  const targetIdx = Math.floor(rand() * child.length)
+  const byIndex = new Map(parent2.map((b) => [b.index, b]))
+
+  // Collect target + all descendants via BFS
+  const toTransplant = new Set<number>()
+  const queue = [child[targetIdx].index]
+  while (queue.length > 0) {
+    const idx = queue.shift()!
+    toTransplant.add(idx)
+    const p2box = byIndex.get(idx)
+    if (p2box?.children) {
+      for (const c of p2box.children) {
+        if (!toTransplant.has(c)) queue.push(c)
+      }
+    }
+  }
+
+  const childByIndex = new Map(child.map((b) => [b.index, b]))
+  for (const idx of toTransplant) {
+    const src = byIndex.get(idx)
+    const dst = childByIndex.get(idx)
+    if (!src || !dst) continue
+    dst.x = src.x
+    dst.y = src.y
+    const merged: Record<string, number> = { ...src._mutations }
+    for (const [k, v] of Object.entries(dst._mutations ?? {})) {
+      merged[k] = (merged[k] ?? 0) + v
+    }
+    merged['crossoverStructural'] = (merged['crossoverStructural'] ?? 0) + 1
+    dst._mutations = merged
+  }
+
+  return child
+}

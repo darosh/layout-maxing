@@ -126,6 +126,8 @@ const groupKeys = {
     'mutationRate',
     'crossoverRate',
     'crossoverMix',
+    'crossWeightRandom',
+    'crossWeightStruct',
     'tournamentSize',
   ],
   initial: ['useDagre', 'useSimpleFlow', 'useInput'],
@@ -823,6 +825,42 @@ function copyCli() {
                 @keydown="handleShiftKey($event, 'crossoverMix')"
               />
               <span v-if="isHighlighted(configFeatureTags.crossoverMix ?? [])" class="hl-dot" />
+            </div>
+            <label
+              :class="{ 'non-default': isNonDefault('crossWeightRandom') }"
+              @click="isNonDefault('crossWeightRandom') && resetProp('crossWeightRandom')"
+              >crossWeightRandom</label
+            >
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.crossWeightRandom"
+                v-bind="numProps('crossWeightRandom')"
+                size="small"
+                v-tip.right="configTip('crossWeightRandom')"
+                @keydown="handleShiftKey($event, 'crossWeightRandom')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.crossWeightRandom ?? [])"
+                class="hl-dot"
+              />
+            </div>
+            <label
+              :class="{ 'non-default': isNonDefault('crossWeightStruct') }"
+              @click="isNonDefault('crossWeightStruct') && resetProp('crossWeightStruct')"
+              >crossoverWtStruct</label
+            >
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.crossWeightStruct"
+                v-bind="numProps('crossWeightStruct')"
+                size="small"
+                v-tip.right="configTip('crossWeightStruct')"
+                @keydown="handleShiftKey($event, 'crossWeightStruct')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.crossWeightStruct ?? [])"
+                class="hl-dot"
+              />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('tournamentSize') }"

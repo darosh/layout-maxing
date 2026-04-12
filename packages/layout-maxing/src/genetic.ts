@@ -11,6 +11,7 @@ import { type Fitness, fitness } from './fitness.ts'
 import {
   cloneLayouts,
   crossover,
+  crossoverStructural,
   mutateSingle,
   mutateWithChildren,
   mutateWithParents,
@@ -45,6 +46,16 @@ function roulette(weights: number[], rand: () => number): number {
     if (r <= 0) return i
   }
   return weights.length - 1
+}
+
+function singleWeight(weights: number[]): number {
+  const num = weights.filter((w) => w > 0).length
+
+  if (num > 1) {
+    return -1
+  }
+
+  return weights.findIndex(Boolean)
 }
 
 interface Population {
@@ -370,8 +381,18 @@ async function runGenetic(
           cfg,
           [i1],
         )
-        child = crossover(p1.layouts, population[i2].layouts, rand, cfg)
-        childMutation = 'crossover'
+
+        const crossWeights = [cfg.crossWeightRandom, cfg.crossWeightStruct]
+        const sw = singleWeight(crossWeights)
+        const crossoverIdx = sw !== -1 ? sw : roulette(crossWeights, rand)
+
+        if (crossoverIdx === 0) {
+          child = crossover(p1.layouts, population[i2].layouts, rand, cfg)
+          childMutation = 'crossover'
+        } else {
+          child = crossoverStructural(p1.layouts, population[i2].layouts, rand)
+          childMutation = 'crossoverStructural'
+        }
       } else {
         child = cloneLayouts(p1.layouts)
 
@@ -436,7 +457,12 @@ async function runGenetic(
       }
 
       // Increment per-box mutation counts (monitoring, doesn't affect algorithm)
-      if (childMutation !== 'crossover' && childMutation !== 'none' && childMutatedBoxId) {
+      if (
+        childMutation !== 'crossover' &&
+        childMutation !== 'crossoverStructural' &&
+        childMutation !== 'none' &&
+        childMutatedBoxId
+      ) {
         const box = child.find((b) => b.id === childMutatedBoxId)
         if (box) {
           box._mutations = {

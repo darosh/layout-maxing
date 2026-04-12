@@ -64,10 +64,15 @@ export const mutationMeta: Record<string, MutationMetaEntry> = {
 }
 
 export const crossoverMeta: Record<string, MutationMetaEntry> = {
-  uniform: [
-    'Uniform',
-    'CROSS',
+  crossover: [
+    'Positional',
+    'CROR',
     'Randomly mix genes from two parents based on crossoverMix probability',
+  ],
+  crossoverStructural: [
+    'Structural',
+    'CROS',
+    'Copy one box and all its descendants from parent2 into parent1',
   ],
 }
 
@@ -87,8 +92,10 @@ export const configFeatureTags: Partial<Record<keyof Config, string[]>> = {
   maxParents: ['PRNT'],
   mutate: ['QUAD', 'SNGL', 'CHLD', 'PRNT', 'SHRW', 'SHCL'],
   mutationRate: ['QUAD', 'SNGL', 'CHLD', 'PRNT', 'SWSB', 'SWRN', 'SWRW', 'SWCL', 'SHRW', 'SHCL'],
-  crossoverRate: ['CROSS'],
-  crossoverMix: ['CROSS'],
+  crossoverRate: ['CROR', 'CROS'],
+  crossoverMix: ['CROR'],
+  crossWeightRandom: ['CROR'],
+  crossWeightStruct: ['CROS'],
 }
 
 // Maps mutation/crossover key → primary config weight key
@@ -103,7 +110,8 @@ export const mutationConfigMap: Record<string, string> = {
   swapInCol: 'mutWeightSwapInCol',
   shiftRow: 'mutWeightShiftRow',
   shiftCol: 'mutWeightShiftCol',
-  crossover: 'crossoverRate',
+  crossover: 'crossoverWeightPositional',
+  crossoverStructural: 'crossoverWeightStructural',
 }
 
 export const statMeta: Record<string, MutationMetaEntry> = {

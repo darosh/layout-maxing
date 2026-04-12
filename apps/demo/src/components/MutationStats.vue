@@ -47,15 +47,12 @@ const rows = computed((): MutRow[] => {
     }
   }
 
-  const known = ['crossover', ...Object.keys(mutationMeta)]
+  const known = ['crossover', 'crossoverStructural', ...Object.keys(mutationMeta)]
   const mutationOrder = [...known, ...Object.keys(totals).filter((n) => !known.includes(n))]
 
   return mutationOrder.map((name): MutRow => {
     const t = totals[name]
-    const meta =
-      mutationMeta[name] ??
-      crossoverMeta[name] ??
-      (name === 'crossover' ? crossoverMeta['uniform']! : undefined)
+    const meta = mutationMeta[name] ?? crossoverMeta[name]
 
     if (!t) {
       return {
