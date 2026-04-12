@@ -64,6 +64,7 @@ const fullScore = computed(() => {
     <div class="overlay overlay-tl-2 selection-label">
       <template
         v-if="
+          store.showStats &&
           store.displayedEntry?.popId != null &&
           store.displayedEntry?.popGen != null &&
           store.displayedEntry?.prevGen != null
@@ -83,16 +84,16 @@ const fullScore = computed(() => {
       v-if="store.showStats && store.snapshots?.length >= 2"
       style="
         position: absolute;
-        right: 0;
-        top: 1.5rem;
+        right: 0.75rem;
+        top: 1rem;
         display: flex;
         flex-direction: column;
         align-items: flex-end;
       ">
-      <div class="stat-bg">
+      <div class="stat-bg" style="padding-right: 0.4rem">
         <GenerationChart :snapshots="store.snapshots" />
       </div>
-      <div style="margin-right: 0.75rem; display: flex; flex-direction: column; align-items: end">
+      <div style="margin-right: 0; display: flex; flex-direction: column; align-items: end">
         <div class="stat-bg">
           <MutationStats :snapshots="store.snapshots" :run-monitor="store.runMonitor" />
         </div>
@@ -258,7 +259,10 @@ const fullScore = computed(() => {
 }
 
 .stat-bg {
-  background: rgba(12, 12, 12, 0.97);
-  padding: 0.5rem 0.25rem;
+  padding: 0.5rem 0;
+  background: rgba(0, 0, 0, 0.25);
+}
+.stat-bg:hover {
+  background: rgba(0, 0, 0, 1);
 }
 </style>
