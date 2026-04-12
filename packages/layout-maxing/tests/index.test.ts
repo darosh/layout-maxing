@@ -115,9 +115,9 @@ test('keepGroups preserves relative positions of grouped boxes', async () => {
   const leaderBefore = beforeRects[0]
   const expectedRel = beforeRects.map(([x, y]) => [x - leaderBefore[0], y - leaderBefore[1]])
 
-  console.log('[keepGroups test] group ids:', ids)
-  console.log('[keepGroups test] before positions:', beforeRects)
-  console.log('[keepGroups test] expected relative offsets:', expectedRel)
+  // console.log('[keepGroups test] group ids:', ids)
+  // console.log('[keepGroups test] before positions:', beforeRects)
+  // console.log('[keepGroups test] expected relative offsets:', expectedRel)
 
   const best = await main(rnbo, undefined, undefined, {
     keepGroups: true,
@@ -144,8 +144,8 @@ test('keepGroups preserves relative positions of grouped boxes', async () => {
   const leaderAfter = afterRects[0]
   const actualRel = afterRects.map(([x, y]) => [x - leaderAfter[0], y - leaderAfter[1]])
 
-  console.log('[keepGroups test] after positions:', afterRects)
-  console.log('[keepGroups test] actual relative offsets:', actualRel)
+  // console.log('[keepGroups test] after positions:', afterRects)
+  // console.log('[keepGroups test] actual relative offsets:', actualRel)
 
   for (let i = 0; i < ids.length; i++) {
     expect(actualRel[i][0], `${ids[i]} dx`).toBe(expectedRel[i][0])
