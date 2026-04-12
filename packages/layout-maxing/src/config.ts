@@ -34,6 +34,10 @@ export interface Config {
   crossWeightRandom?: number
   crossWeightStruct?: number
   tournamentSize?: number
+  diversityBoostFactor?: number
+  crowdingWeight?: number
+  stagnationResetThreshold?: number
+  stagnationResetRate?: number
   mutate?: number
   // Mutation weights (unitless, roulette selection)
   mutWeightQuadrant?: number
@@ -149,6 +153,34 @@ export const configMeta: ConfigMeta = {
     'Roulette weight for structural crossover (one box + descendants)',
   ],
   tournamentSize: [0.5, 0, 1, 0.1, 'Fraction of population sampled in tournament selection'],
+  diversityBoostFactor: [
+    0,
+    0,
+    1,
+    0.01,
+    'Scales up mutationRate when population diversity is low; 0 = disabled',
+  ],
+  crowdingWeight: [
+    0,
+    0,
+    1,
+    0.01,
+    'Weight of crowding distance in tournament tie-breaking; 0 = disabled',
+  ],
+  stagnationResetThreshold: [
+    0,
+    0,
+    100000,
+    1,
+    'Generations without improvement before boosting mutation rate; 0 = disabled',
+  ],
+  stagnationResetRate: [
+    2,
+    1,
+    10,
+    0.1,
+    'Mutation rate multiplier applied during stagnation burst (requires stagnationResetThreshold > 0)',
+  ],
   mutate: [0.5, 0, 10, 0.1, 'Box mutation range in viewport units'],
   // Mutation weights
   mutWeightQuadrant: [30, 0, 100, 1, 'Roulette weight for quadrant-flip mutation'],
