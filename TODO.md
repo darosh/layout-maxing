@@ -17,6 +17,7 @@
 ### UI
 
 - [ ] presets?
+- [x] processed locally info
 - [x] smaller examples
 - [x] check exact hotkeys
 - [x] reactive tooltip, max width

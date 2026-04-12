@@ -42,6 +42,7 @@ const props = defineProps<{
         </span>
       </li>
     </ul>
+    <div class="footnote">All processing happens locally in the browser.<br>Your patch is not sent over the internet.</div>
   </div>
 </template>
 
@@ -78,6 +79,10 @@ const props = defineProps<{
 
 .subtitle {
   margin: 0 0 1.6rem 0;
+}
+
+.footnote {
+  margin-top: 1.6rem;
 }
 
 .placeholder a {
