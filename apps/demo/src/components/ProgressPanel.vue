@@ -67,7 +67,12 @@ watch(
       </div>
       <div class="stat">
         <span class="stat-label">Status</span>
-        <span class="stat-value status" :class="{done: store.status === 'done'}" style="text-transform: capitalize">{{ store.status }}</span>
+        <span
+          class="stat-value status"
+          :class="{ done: store.status === 'done' }"
+          style="text-transform: capitalize"
+          >{{ store.status }}</span
+        >
       </div>
     </div>
     <ProgressBar
