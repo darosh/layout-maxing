@@ -109,6 +109,17 @@ function uniqueIndexes(
   return result
 }
 
+function crowdingDistance(population: Population[], idx: number, prop: keyof Fitness): number {
+  const val = population[idx].fitness![prop] as number
+  const sorted = population
+    .map((ind, i) => ({ i, v: ind.fitness![prop] as number }))
+    .sort((a, b) => a.v - b.v)
+  const pos = sorted.findIndex((e) => e.i === idx)
+  const prev = sorted[pos - 1]?.v ?? val
+  const next = sorted[pos + 1]?.v ?? val
+  return Math.abs(val - prev) + Math.abs(next - val)
+}
+
 function tournamentSelect(
   population: Population[],
   prop: keyof Fitness,
@@ -126,8 +137,14 @@ function tournamentSelect(
   let bestIdx = initial
 
   for (const candidate of rest) {
-    if (population[candidate].fitness![prop] < population[bestIdx].fitness![prop]) {
+    const bestVal = population[bestIdx].fitness![prop] as number
+    const candidateVal = population[candidate].fitness![prop] as number
+    if (candidateVal < bestVal) {
       bestIdx = candidate
+    } else if (cfg.crowdingTieBreak && candidateVal === bestVal) {
+      const distBest = crowdingDistance(population, bestIdx, prop)
+      const distCandidate = crowdingDistance(population, candidate, prop)
+      if (distCandidate > distBest) bestIdx = candidate
     }
   }
 
@@ -157,6 +174,10 @@ export async function createPopulation(
     //   }
     // }
 
+    // if (i >= startingLayouts.length) {
+    //   mutateChild(ind, rand, cfg, cfg.mutate)
+    // }
+
     ind = fixOverlaps(ind, cfg)
 
     if (cfg.keepGroups) alignGroups(ind, groupPlan)
@@ -182,6 +203,97 @@ export async function createPopulation(
   await Promise.all(fitnessPromises)
 
   return individuals
+}
+
+let spare: number | null = null
+
+function randGaussian(mean = 0, stdDev = 1, rand = Math.random) {
+  if (spare !== null) {
+    const val = spare
+    spare = null
+    return val * stdDev + mean
+  }
+
+  let u, v, s
+  do {
+    u = rand() * 2 - 1
+    v = rand() * 2 - 1
+    s = u * u + v * v
+  } while (s === 0 || s >= 1)
+
+  const mul = Math.sqrt((-2.0 * Math.log(s)) / s)
+  spare = v * mul
+
+  return mean + stdDev * u * mul
+}
+
+function randInt(min: number, max: number, rand: () => number) {
+  return Math.floor(rand() * (max - min + 1)) + min
+}
+
+function randGausInt(min: number, max: number, rand: () => number) {
+  return randInt(min, max, () => Math.abs(randGaussian(0, 1, rand)))
+}
+
+function mutateChild(
+  child: Box[],
+  rand: () => number,
+  cfg: Required<Config>,
+  effectiveMutate: number,
+) {
+  const mutationTarget = child[Math.floor(rand() * child.length)]
+  const childMutatedBoxId = mutationTarget.id
+
+  const mutIdx = roulette(
+    [
+      cfg.mutWeightQuadrant,
+      cfg.mutWeightSingle,
+      cfg.mutWeightChildren,
+      cfg.mutWeightParents,
+      cfg.mutWeightSwapSibling,
+      cfg.mutWeightSwapRandom,
+      cfg.mutWeightSwapInRow,
+      cfg.mutWeightSwapInCol,
+      cfg.mutWeightShiftRow,
+      cfg.mutWeightShiftCol,
+    ],
+    rand,
+  )
+
+  const childMutation = MUTATION_NAMES[mutIdx]
+  const mxy = rand()
+  const [_x, _y, w, h] = getViewPort(child)
+  const mutateX = w * effectiveMutate
+  const mutateY = h * effectiveMutate
+  const maxX = Math.round((0.5 * mutateX) / cfg.gridX)
+  const maxY = Math.round((0.5 * mutateY) / cfg.gridY)
+
+  const x = mxy < 0.6 || mutIdx === 8 ? randGausInt(1, maxX, rand) * cfg.gridX : 0
+  const y = mxy > 0.4 || mutIdx === 9 ? randGausInt(1, maxY, rand) * cfg.gridY : 0
+
+  if (mutIdx === 0) {
+    const quadrant = Math.floor(rand() * 4)
+    child = mutateByQuadrant(mutationTarget, child, { x, y }, quadrant)
+  } else if (mutIdx === 1) {
+    child = mutateSingle(mutationTarget, child, { x, y })
+  } else if (mutIdx === 2) {
+    child = mutateWithChildren(mutationTarget, child, { x, y }, cfg.maxChildren)
+  } else if (mutIdx === 3) {
+    child = mutateWithParents(mutationTarget, child, { x, y }, cfg.maxParents)
+  } else if (mutIdx === 4) {
+    child = mutateSwapSibling(mutationTarget, child, rand)
+  } else if (mutIdx === 5) {
+    child = mutateSwapRandom(mutationTarget, child, rand)
+  } else if (mutIdx === 6) {
+    child = mutateSwapInRow(mutationTarget, child, rand, cfg)
+  } else if (mutIdx === 7) {
+    child = mutateSwapInCol(mutationTarget, child, rand, cfg)
+  } else if (mutIdx === 8) {
+    child = mutateShiftRow(mutationTarget, child, { x })
+  } else {
+    child = mutateShiftCol(mutationTarget, child, { y })
+  }
+  return { child, childMutatedBoxId, childMutation }
 }
 
 async function runGenetic(
@@ -300,14 +412,33 @@ async function runGenetic(
       }
     }
 
+    // --- diversity-aware effective mutation rate ---
+    const diversity = computePopulationDiversity(population)
+    let effectiveMutationRate = cfg.mutationRate
+    let effectiveMutate = cfg.mutate
+
+    if (cfg.diversityBoostFactor > 0) {
+      const boost = 1 + cfg.diversityBoostFactor * (1 - diversity)
+      effectiveMutate = cfg.mutate * Math.min(2, boost)
+      // effectiveMutationRate = Math.min(
+      //   1,
+      //   cfg.mutationRate + (1 - diversity) * cfg.diversityBoostFactor,
+      // )
+    }
+
+    if (cfg.stagnationResetThreshold > 0 && stagnation >= cfg.stagnationResetThreshold) {
+      effectiveMutationRate = Math.min(1, effectiveMutationRate * cfg.stagnationResetRate)
+    }
+
     // --- monitoring: build and store snapshot ---
-    const diversity = computePopulationDiversity(population, cfg)
     const snapshot = buildGenerationSnapshot(
       gen,
       fitnessValues.map((f) => f.score),
       diversity,
       stagnation,
       genMutStats,
+      effectiveMutationRate,
+      effectiveMutate,
     )
     monitor.snapshots.push(snapshot)
     accumulateMutStats(monitor.runTotals, genMutStats)
@@ -370,9 +501,18 @@ async function runGenetic(
     const props = <(keyof Fitness)[]>['score', 'view']
     // const props = <(keyof Fitness)[]>['score']
 
+    const selected = []
+
     while (newPopulation.length < cfg.popSize) {
-      const i1 = tournamentSelect(population, props[newPopulation.length % props.length], rand, cfg)
+      const i1 = tournamentSelect(
+        population,
+        props[newPopulation.length % props.length],
+        rand,
+        cfg,
+        selected,
+      )
       const p1 = population[i1]
+      selected.push(i1)
 
       let child: Box[]
       let childMutation: string = 'none'
@@ -399,64 +539,13 @@ async function runGenetic(
         }
       } else {
         child = cloneLayouts(p1.layouts)
+        // child = cloneLayouts(population[randInt(1, population.length - 1, rand)].layouts)
 
-        if (rand() < cfg.mutationRate) {
-          const mutationTarget = child[Math.floor(rand() * child.length)]
-          childMutatedBoxId = mutationTarget.id
-
-          const mutIdx = roulette(
-            [
-              cfg.mutWeightQuadrant,
-              cfg.mutWeightSingle,
-              cfg.mutWeightChildren,
-              cfg.mutWeightParents,
-              cfg.mutWeightSwapSibling,
-              cfg.mutWeightSwapRandom,
-              cfg.mutWeightSwapInRow,
-              cfg.mutWeightSwapInCol,
-              cfg.mutWeightShiftRow,
-              cfg.mutWeightShiftCol,
-            ],
-            rand,
-          )
-
-          childMutation = MUTATION_NAMES[mutIdx]
-
-          const mxy = rand()
-          const [_x, _y, w, h] = getViewPort(child)
-          const mutateX = w * cfg.mutate
-          const mutateY = h * cfg.mutate
-          const x =
-            mxy < 0.6 || mutIdx === 8
-              ? Math.round(((rand() - 0.5) * mutateX) / cfg.gridX) * cfg.gridX
-              : 0
-          const y =
-            mxy > 0.4 || mutIdx === 9
-              ? Math.round(((rand() - 0.5) * mutateY) / cfg.gridY) * cfg.gridY
-              : 0
-
-          if (mutIdx === 0) {
-            const quadrant = Math.floor(rand() * 4)
-            child = mutateByQuadrant(mutationTarget, child, { x, y }, quadrant)
-          } else if (mutIdx === 1) {
-            child = mutateSingle(mutationTarget, child, { x, y })
-          } else if (mutIdx === 2) {
-            child = mutateWithChildren(mutationTarget, child, { x, y }, cfg.maxChildren)
-          } else if (mutIdx === 3) {
-            child = mutateWithParents(mutationTarget, child, { x, y }, cfg.maxParents)
-          } else if (mutIdx === 4) {
-            child = mutateSwapSibling(mutationTarget, child, rand)
-          } else if (mutIdx === 5) {
-            child = mutateSwapRandom(mutationTarget, child, rand)
-          } else if (mutIdx === 6) {
-            child = mutateSwapInRow(mutationTarget, child, rand, cfg)
-          } else if (mutIdx === 7) {
-            child = mutateSwapInCol(mutationTarget, child, rand, cfg)
-          } else if (mutIdx === 8) {
-            child = mutateShiftRow(mutationTarget, child, { x })
-          } else {
-            child = mutateShiftCol(mutationTarget, child, { y })
-          }
+        if (rand() < effectiveMutationRate) {
+          const __ret = mutateChild(child, rand, cfg, effectiveMutate)
+          child = __ret.child
+          childMutatedBoxId = __ret.childMutatedBoxId
+          childMutation = __ret.childMutation
         }
       }
 

@@ -1,0 +1,9 @@
+{
+  "popSize": 25,
+  "crossWeightStruct": 10,
+  "tournamentSize": 1,
+  "diversityBoostFactor": 0.5,
+  "crowdingWeight": 0.01,
+  "stagnationResetThreshold": 50,
+  "stagnationResetRate": 1.1
+}

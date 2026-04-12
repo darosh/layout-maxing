@@ -17,6 +17,8 @@ export type GenerationSnapshot = {
   p75: number
   diversity: number // 0–1, higher = more diverse
   stagnation: number // generations without improvement
+  effectiveMutRate: number // actual mutationRate used this gen (after stagnation boost)
+  effectiveMutate: number // actual mutate value used this gen (after diversity boost)
   mutations: Record<string, MutationStat>
 }
 
@@ -151,21 +153,20 @@ function percentile(sorted: number[], p: number): number {
   return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo)
 }
 
-export function computePopulationDiversity(
-  population: { layouts: Box[] }[],
-  cfg: Pick<Required<Config>, 'gridX' | 'gridY'>,
-): number {
+export function computePopulationDiversity(population: { layouts: Box[] }[]): number {
   const n = population.length
   if (n <= 1) return 0
   const boxCount = population[0]?.layouts.length || 1
 
   // Discretize to grid
-  const disc = population.map((ind) =>
-    ind.layouts.map((b) => ({
-      x: Math.round(b.x / cfg.gridX),
-      y: Math.round(b.y / cfg.gridY),
-    })),
-  )
+  // const disc = population.map((ind) =>
+  //   ind.layouts.map((b) => ({
+  //     x: Math.round(b.x / cfg.gridX),
+  //     y: Math.round(b.y / cfg.gridY),
+  //   })),
+  // )
+
+  const disc = population.map((ind) => ind.layouts.map((b) => b))
 
   // Compute range for normalization
   let minX = Infinity,
@@ -209,8 +210,14 @@ export function buildGenerationSnapshot(
   diversity: number,
   stagnation: number,
   mutations: Record<string, MutationStat>,
+  effectiveMutRate: number,
+  effectiveMutate: number,
 ): GenerationSnapshot {
   const sorted = [...scores].sort((a, b) => a - b)
+  let totalAttempts = 0
+  for (const s of Object.values(mutations)) {
+    totalAttempts += s.attempts
+  }
   return {
     gen,
     best: sorted[0] ?? 0,
@@ -220,6 +227,8 @@ export function buildGenerationSnapshot(
     p75: percentile(sorted, 75),
     diversity,
     stagnation,
+    effectiveMutRate,
+    effectiveMutate,
     mutations,
   }
 }
