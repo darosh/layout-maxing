@@ -84,6 +84,7 @@ async function pasteFromClipboard() {
             :label="`${i + 1}`"
             size="small"
             severity="info"
+            style="min-width: 30px"
             @click="store.loadFile(example, `example-${i + 1}`, 'clipboard')" />
         </template>
         <template v-else>
