@@ -63,6 +63,7 @@ export interface Config {
   useDagre?: boolean
   useInput?: boolean
   useSimpleFlow?: boolean
+  initialMutation?: boolean
   // Logging / debug output
   logInfo?: boolean
   logProgress?: boolean
@@ -230,6 +231,13 @@ export const configMeta: ConfigMeta = {
     true,
     null,
     'Use simple flow for initial layout before GA optimization',
+  ],
+  initialMutation: [
+    false,
+    false,
+    true,
+    null,
+    'Mutate extra individuals in the initial population beyond the seed layouts',
   ],
   // Logging / debug output
   logInfo: [true, false, true, null, 'Log info messages to console'],

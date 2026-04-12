@@ -174,9 +174,9 @@ export async function createPopulation(
     //   }
     // }
 
-    // if (i >= startingLayouts.length) {
-    //   mutateChild(ind, rand, cfg, cfg.mutate)
-    // }
+    if (i >= startingLayouts.length && cfg.initialMutation) {
+      mutateChild(ind, rand, cfg, cfg.mutate)
+    }
 
     ind = fixOverlaps(ind, cfg)
 

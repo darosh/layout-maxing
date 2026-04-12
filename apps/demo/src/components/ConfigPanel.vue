@@ -194,7 +194,12 @@ const groups: GroupDef[] = [
   {
     key: 'initial',
     label: 'Initial Population',
-    fields: [{ key: 'useDagre' }, { key: 'useSimpleFlow' }, { key: 'useInput' }],
+    fields: [
+      { key: 'useDagre' },
+      { key: 'useSimpleFlow' },
+      { key: 'useInput' },
+      { key: 'initialMutation' },
+    ],
   },
   {
     key: 'run',
