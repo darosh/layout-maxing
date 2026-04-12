@@ -2,11 +2,11 @@
 
 ### Misc
 
-- [ ] split tests into files
+- [x] split tests into files
 - [ ] initial mutation optional
 - [ ] mutateChild x-y overlap
 - [x] ~~stable sort tournament~~
-- [ ] data driven config panel
+- [x] data driven config panel
 
 ### Mutation
 

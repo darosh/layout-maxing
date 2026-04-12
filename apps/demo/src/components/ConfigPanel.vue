@@ -85,73 +85,137 @@ function isNonDefault(key: keyof Config): boolean {
   return cfg.value[key] !== defaultConfig[key]
 }
 
-const groupKeys = {
-  grid: ['gridX', 'gridY', 'minDistX', 'minDistY', 'boxZone', 'letOffest', 'curveControl'],
-  penalties: [
-    'crossPenalty',
-    'overPenalty',
-    'reversePenalty',
-    'areaPenalty',
-    'totalDistPenalty',
-    'arPenalty',
-    'arMax',
-    'totalCrossPenalty',
-    'totalOverPenalty',
-    'totalCollisionPenalty',
-    'totalSSCPenalty',
-    'misalignedSSPenalty',
-    'misalignedFirstPenalty',
-  ],
-  mws: [
-    'mutate',
-    'mutWeightQuadrant',
-    'mutWeightSingle',
-    'mutWeightChildren',
-    'maxChildren',
-    'mutWeightParents',
-    'maxParents',
-    'mutWeightSwapSibling',
-    'mutWeightSwapRandom',
-    'mutWeightSwapInRow',
-    'mutWeightSwapInCol',
-    'mutWeightShiftRow',
-    'mutWeightShiftCol',
-  ],
-  ga: [
-    'deterministic',
-    'seed',
-    'popSize',
-    'generations',
-    'stop',
-    'mutationRate',
-    'crossoverRate',
-    'crossoverMix',
-    'crossWeightRandom',
-    'crossWeightStruct',
-    'tournamentSize',
-    'diversityBoostFactor',
-    'crowdingTieBreak',
-    'stagnationResetThreshold',
-    'stagnationResetRate',
-  ],
-  initial: ['useDagre', 'useSimpleFlow', 'useInput'],
-  run: [
-    'logProgressInterval',
-    'logProgress',
-    'logInfo',
-    'writeSvg',
-    'showStraightLines',
-    'writeJson',
-    'removeLineSegments',
-    'normalize',
-    'normalizeExport',
-    'ignoreOrphans',
-    'keepGroups',
-  ],
-} as const satisfies Record<string, (keyof Config)[]>
+function isBoolean(key: keyof Config): boolean {
+  return typeof configMeta[key][0] === 'boolean'
+}
 
-function isGroupNonDefault(keys: readonly (keyof Config)[]): boolean {
-  return keys.some((k) => isNonDefault(k))
+function cfgNum(key: keyof Config): number {
+  return cfg.value[key] as number
+}
+
+function cfgBool(key: keyof Config): boolean {
+  return cfg.value[key] as boolean
+}
+
+function setCfgNum(key: keyof Config, val: number) {
+  ;(cfg.value as Record<keyof Config, unknown>)[key] = val
+}
+
+function setCfgBool(key: keyof Config, val: boolean) {
+  ;(cfg.value as Record<keyof Config, unknown>)[key] = val
+}
+
+type FieldDef = {
+  key: keyof Config
+  wideRow?: true
+  disabled?: () => boolean
+}
+
+type GroupDef = {
+  key: string
+  label: string
+  fields: FieldDef[]
+}
+
+const groups: GroupDef[] = [
+  {
+    key: 'grid',
+    label: 'Geometry',
+    fields: [
+      { key: 'gridX' },
+      { key: 'gridY' },
+      { key: 'minDistX' },
+      { key: 'minDistY' },
+      { key: 'boxZone' },
+      { key: 'letOffest' },
+      { key: 'curveControl' },
+    ],
+  },
+  {
+    key: 'penalties',
+    label: 'Fitness Penalties',
+    fields: [
+      { key: 'crossPenalty' },
+      { key: 'overPenalty' },
+      { key: 'reversePenalty' },
+      { key: 'areaPenalty' },
+      { key: 'totalDistPenalty' },
+      { key: 'arPenalty' },
+      { key: 'arMax' },
+      { key: 'totalCrossPenalty' },
+      { key: 'totalOverPenalty' },
+      { key: 'totalCollisionPenalty' },
+      { key: 'totalSSCPenalty' },
+      { key: 'misalignedSSPenalty' },
+      { key: 'misalignedFirstPenalty' },
+    ],
+  },
+  {
+    key: 'mws',
+    label: 'Mutations',
+    fields: [
+      { key: 'mutate' },
+      { key: 'mutWeightQuadrant' },
+      { key: 'mutWeightSingle' },
+      { key: 'mutWeightChildren' },
+      { key: 'maxChildren' },
+      { key: 'mutWeightParents' },
+      { key: 'maxParents' },
+      { key: 'mutWeightSwapSibling' },
+      { key: 'mutWeightSwapRandom' },
+      { key: 'mutWeightSwapInRow' },
+      { key: 'mutWeightSwapInCol' },
+      { key: 'mutWeightShiftRow' },
+      { key: 'mutWeightShiftCol' },
+    ],
+  },
+  {
+    key: 'ga',
+    label: 'Genetic Algorithm',
+    fields: [
+      { key: 'deterministic' },
+      { key: 'seed', wideRow: true, disabled: () => !cfg.value.deterministic },
+      { key: 'popSize' },
+      { key: 'generations' },
+      { key: 'stop' },
+      { key: 'mutationRate' },
+      { key: 'crossoverRate' },
+      { key: 'crossoverMix' },
+      { key: 'crossWeightRandom' },
+      { key: 'crossWeightStruct' },
+      { key: 'tournamentSize' },
+      { key: 'diversityBoost' },
+      { key: 'stagnationThreshold' },
+      { key: 'stagnationRate' },
+      { key: 'crowdingTieBreak' },
+    ],
+  },
+  {
+    key: 'initial',
+    label: 'Initial Population',
+    fields: [{ key: 'useDagre' }, { key: 'useSimpleFlow' }, { key: 'useInput' }],
+  },
+  {
+    key: 'run',
+    label: 'Run Settings',
+    fields: [
+      { key: 'logProgressInterval' },
+      { key: 'logProgress' },
+      { key: 'logInfo' },
+      { key: 'writeSvg' },
+      { key: 'showStraightLines' },
+      { key: 'writeJson' },
+      { key: 'removeLineSegments' },
+      { key: 'normalize' },
+      { key: 'normalizeExport' },
+      { key: 'ignoreOrphans' },
+      { key: 'keepGroups' },
+    ],
+  },
+]
+
+function isGroupNonDefault(fields: FieldDef[]): boolean {
+  return fields.some((f) => isNonDefault(f.key))
 }
 
 function resetProp(key: keyof Config) {
@@ -226,764 +290,61 @@ function copyCli() {
     </div>
 
     <Accordion :value="[]" multiple class="accordion">
-      <AccordionPanel value="grid">
-        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.grid) }"
-          >Geometry</AccordionHeader
-        >
+      <AccordionPanel v-for="group in groups" :key="group.key" :value="group.key">
+        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(group.fields) }">
+          {{ group.label }}
+        </AccordionHeader>
         <AccordionContent>
           <div class="fields-grid">
-            <label
-              :class="{ 'non-default': isNonDefault('gridX') }"
-              @click="isNonDefault('gridX') && resetProp('gridX')"
-              >gridX</label
-            >
-            <InputNumber
-              v-model="cfg.gridX"
-              v-bind="numProps('gridX')"
-              size="small"
-              v-tip.right="configMeta.gridX[4]"
-              @keydown="handleShiftKey($event, 'gridX')" />
-            <label
-              :class="{ 'non-default': isNonDefault('gridY') }"
-              @click="isNonDefault('gridY') && resetProp('gridY')"
-              >gridY</label
-            >
-            <InputNumber
-              v-model="cfg.gridY"
-              v-bind="numProps('gridY')"
-              size="small"
-              v-tip.right="configMeta.gridY[4]"
-              @keydown="handleShiftKey($event, 'gridY')" />
-            <label
-              :class="{ 'non-default': isNonDefault('minDistX') }"
-              @click="isNonDefault('minDistX') && resetProp('minDistX')"
-              >minDistX</label
-            >
-            <InputNumber
-              v-model="cfg.minDistX"
-              v-bind="numProps('minDistX')"
-              size="small"
-              v-tip.right="configMeta.minDistX[4]"
-              @keydown="handleShiftKey($event, 'minDistX')" />
-            <label
-              :class="{ 'non-default': isNonDefault('minDistY') }"
-              @click="isNonDefault('minDistY') && resetProp('minDistY')"
-              >minDistY</label
-            >
-            <InputNumber
-              v-model="cfg.minDistY"
-              v-bind="numProps('minDistY')"
-              size="small"
-              v-tip.right="configMeta.minDistY[4]"
-              @keydown="handleShiftKey($event, 'minDistY')" />
-            <label
-              :class="{ 'non-default': isNonDefault('boxZone') }"
-              @click="isNonDefault('boxZone') && resetProp('boxZone')"
-              >boxZone</label
-            >
-            <InputNumber
-              v-model="cfg.boxZone"
-              v-bind="numProps('boxZone')"
-              size="small"
-              v-tip.right="configMeta.boxZone[4]"
-              @keydown="handleShiftKey($event, 'boxZone')" />
-            <label
-              :class="{ 'non-default': isNonDefault('letOffest') }"
-              @click="isNonDefault('letOffest') && resetProp('letOffest')"
-              >letOffset</label
-            >
-            <InputNumber
-              v-model="cfg.letOffest"
-              v-bind="numProps('letOffest')"
-              size="small"
-              v-tip.right="configMeta.letOffest[4]"
-              @keydown="handleShiftKey($event, 'letOffest')" />
-            <label
-              :class="{ 'non-default': isNonDefault('curveControl') }"
-              @click="isNonDefault('curveControl') && resetProp('curveControl')"
-              >curveControl</label
-            >
-            <InputNumber
-              v-model="cfg.curveControl"
-              v-bind="numProps('curveControl')"
-              size="small"
-              v-tip.right="configMeta.curveControl[4]"
-              @keydown="handleShiftKey($event, 'curveControl')" />
-          </div>
-        </AccordionContent>
-      </AccordionPanel>
-
-      <AccordionPanel value="penalties">
-        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.penalties) }"
-          >Fitness Penalties</AccordionHeader
-        >
-        <AccordionContent>
-          <div class="fields-grid">
-            <label
-              :class="{ 'non-default': isNonDefault('crossPenalty') }"
-              @click="isNonDefault('crossPenalty') && resetProp('crossPenalty')"
-              >crossPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.crossPenalty"
-              v-bind="numProps('crossPenalty')"
-              size="small"
-              v-tip.right="configMeta.crossPenalty[4]"
-              @keydown="handleShiftKey($event, 'crossPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('overPenalty') }"
-              @click="isNonDefault('overPenalty') && resetProp('overPenalty')"
-              >overPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.overPenalty"
-              v-bind="numProps('overPenalty')"
-              size="small"
-              v-tip.right="configMeta.overPenalty[4]"
-              @keydown="handleShiftKey($event, 'overPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('reversePenalty') }"
-              @click="isNonDefault('reversePenalty') && resetProp('reversePenalty')"
-              >reversePenalty</label
-            >
-            <InputNumber
-              v-model="cfg.reversePenalty"
-              v-bind="numProps('reversePenalty')"
-              size="small"
-              v-tip.right="configMeta.reversePenalty[4]"
-              @keydown="handleShiftKey($event, 'reversePenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('areaPenalty') }"
-              @click="isNonDefault('areaPenalty') && resetProp('areaPenalty')"
-              >areaPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.areaPenalty"
-              v-bind="numProps('areaPenalty')"
-              size="small"
-              v-tip.right="configMeta.areaPenalty[4]"
-              @keydown="handleShiftKey($event, 'areaPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('totalDistPenalty') }"
-              @click="isNonDefault('totalDistPenalty') && resetProp('totalDistPenalty')"
-              >totalDistPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.totalDistPenalty"
-              v-bind="numProps('totalDistPenalty')"
-              size="small"
-              v-tip.right="configMeta.totalDistPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalDistPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('arPenalty') }"
-              @click="isNonDefault('arPenalty') && resetProp('arPenalty')"
-              >arPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.arPenalty"
-              v-bind="numProps('arPenalty')"
-              size="small"
-              v-tip.right="configMeta.arPenalty[4]"
-              @keydown="handleShiftKey($event, 'arPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('arMax') }"
-              @click="isNonDefault('arMax') && resetProp('arMax')"
-              >arMax</label
-            >
-            <InputNumber
-              v-model="cfg.arMax"
-              v-bind="numProps('arMax')"
-              size="small"
-              v-tip.right="configMeta.arMax[4]"
-              @keydown="handleShiftKey($event, 'arMax')" />
-            <label
-              :class="{ 'non-default': isNonDefault('totalCrossPenalty') }"
-              @click="isNonDefault('totalCrossPenalty') && resetProp('totalCrossPenalty')"
-              >totalCrossPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.totalCrossPenalty"
-              v-bind="numProps('totalCrossPenalty')"
-              size="small"
-              v-tip.right="configMeta.totalCrossPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalCrossPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('totalOverPenalty') }"
-              @click="isNonDefault('totalOverPenalty') && resetProp('totalOverPenalty')"
-              >totalOverPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.totalOverPenalty"
-              v-bind="numProps('totalOverPenalty')"
-              size="small"
-              v-tip.right="configMeta.totalOverPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalOverPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('totalCollisionPenalty') }"
-              @click="isNonDefault('totalCollisionPenalty') && resetProp('totalCollisionPenalty')"
-              >totalCollisionPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.totalCollisionPenalty"
-              v-bind="numProps('totalCollisionPenalty')"
-              size="small"
-              v-tip.right="configMeta.totalCollisionPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalCollisionPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('totalSSCPenalty') }"
-              @click="isNonDefault('totalSSCPenalty') && resetProp('totalSSCPenalty')"
-              >totalSSCPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.totalSSCPenalty"
-              v-bind="numProps('totalSSCPenalty')"
-              size="small"
-              v-tip.right="configMeta.totalSSCPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalSSCPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('misalignedSSPenalty') }"
-              @click="isNonDefault('misalignedSSPenalty') && resetProp('misalignedSSPenalty')"
-              >misalignedSSPenalty</label
-            >
-            <InputNumber
-              v-model="cfg.misalignedSSPenalty"
-              v-bind="numProps('misalignedSSPenalty')"
-              size="small"
-              v-tip.right="configMeta.misalignedSSPenalty[4]"
-              @keydown="handleShiftKey($event, 'misalignedSSPenalty')" />
-            <label
-              :class="{ 'non-default': isNonDefault('misalignedFirstPenalty') }"
-              @click="isNonDefault('misalignedFirstPenalty') && resetProp('misalignedFirstPenalty')"
-              >misalignedFirstPen.</label
-            >
-            <InputNumber
-              v-model="cfg.misalignedFirstPenalty"
-              v-bind="numProps('misalignedFirstPenalty')"
-              size="small"
-              v-tip.right="configMeta.misalignedFirstPenalty[4]"
-              @keydown="handleShiftKey($event, 'misalignedFirstPenalty')" />
-          </div>
-        </AccordionContent>
-      </AccordionPanel>
-
-      <AccordionPanel value="mws">
-        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.mws) }"
-          >Mutations</AccordionHeader
-        >
-        <AccordionContent>
-          <div class="fields-grid">
-            <label
-              :class="{ 'non-default': isNonDefault('mutate') }"
-              @click="isNonDefault('mutate') && resetProp('mutate')"
-              >mutate</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutate"
-                v-bind="numProps('mutate')"
-                size="small"
-                v-tip.right="configTip('mutate')"
-                @keydown="handleShiftKey($event, 'mutate')" />
-              <span v-if="isHighlighted(configFeatureTags.mutate ?? [])" class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightQuadrant') }"
-              @click="isNonDefault('mutWeightQuadrant') && resetProp('mutWeightQuadrant')"
-              >mutWeightQuadrant</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightQuadrant"
-                v-bind="numProps('mutWeightQuadrant')"
-                size="small"
-                v-tip.right="configTip('mutWeightQuadrant')"
-                @keydown="handleShiftKey($event, 'mutWeightQuadrant')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.mutWeightQuadrant ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSingle') }"
-              @click="isNonDefault('mutWeightSingle') && resetProp('mutWeightSingle')"
-              >mutWeightSingle</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightSingle"
-                v-bind="numProps('mutWeightSingle')"
-                size="small"
-                v-tip.right="configTip('mutWeightSingle')"
-                @keydown="handleShiftKey($event, 'mutWeightSingle')" />
-              <span v-if="isHighlighted(configFeatureTags.mutWeightSingle ?? [])" class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightChildren') }"
-              @click="isNonDefault('mutWeightChildren') && resetProp('mutWeightChildren')"
-              >mutWeightChildren</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightChildren"
-                v-bind="numProps('mutWeightChildren')"
-                size="small"
-                v-tip.right="configTip('mutWeightChildren')"
-                @keydown="handleShiftKey($event, 'mutWeightChildren')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.mutWeightChildren ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('maxChildren') }"
-              @click="isNonDefault('maxChildren') && resetProp('maxChildren')"
-              >maxChildren</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.maxChildren"
-                v-bind="numProps('maxChildren')"
-                size="small"
-                v-tip.right="configTip('maxChildren')"
-                @keydown="handleShiftKey($event, 'maxChildren')" />
-              <span v-if="isHighlighted(configFeatureTags.maxChildren ?? [])" class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightParents') }"
-              @click="isNonDefault('mutWeightParents') && resetProp('mutWeightParents')"
-              >mutWeightParents</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightParents"
-                v-bind="numProps('mutWeightParents')"
-                size="small"
-                v-tip.right="configTip('mutWeightParents')"
-                @keydown="handleShiftKey($event, 'mutWeightParents')" />
-              <span v-if="isHighlighted(configFeatureTags.mutWeightParents ?? [])" class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('maxParents') }"
-              @click="isNonDefault('maxParents') && resetProp('maxParents')"
-              >maxParents</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.maxParents"
-                v-bind="numProps('maxParents')"
-                size="small"
-                v-tip.right="configTip('maxParents')"
-                @keydown="handleShiftKey($event, 'maxParents')" />
-              <span v-if="isHighlighted(configFeatureTags.maxParents ?? [])" class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSwapSibling') }"
-              @click="isNonDefault('mutWeightSwapSibling') && resetProp('mutWeightSwapSibling')"
-              >mutWeightSwapSibling</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightSwapSibling"
-                v-bind="numProps('mutWeightSwapSibling')"
-                size="small"
-                v-tip.right="configTip('mutWeightSwapSibling')"
-                @keydown="handleShiftKey($event, 'mutWeightSwapSibling')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.mutWeightSwapSibling ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSwapRandom') }"
-              @click="isNonDefault('mutWeightSwapRandom') && resetProp('mutWeightSwapRandom')"
-              >mutWeightSwapRandom</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightSwapRandom"
-                v-bind="numProps('mutWeightSwapRandom')"
-                size="small"
-                v-tip.right="configTip('mutWeightSwapRandom')"
-                @keydown="handleShiftKey($event, 'mutWeightSwapRandom')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.mutWeightSwapRandom ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSwapInRow') }"
-              @click="isNonDefault('mutWeightSwapInRow') && resetProp('mutWeightSwapInRow')"
-              >mutWeightSwapInRow</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightSwapInRow"
-                v-bind="numProps('mutWeightSwapInRow')"
-                size="small"
-                v-tip.right="configTip('mutWeightSwapInRow')"
-                @keydown="handleShiftKey($event, 'mutWeightSwapInRow')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.mutWeightSwapInRow ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightSwapInCol') }"
-              @click="isNonDefault('mutWeightSwapInCol') && resetProp('mutWeightSwapInCol')"
-              >mutWeightSwapInCol</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightSwapInCol"
-                v-bind="numProps('mutWeightSwapInCol')"
-                size="small"
-                v-tip.right="configTip('mutWeightSwapInCol')"
-                @keydown="handleShiftKey($event, 'mutWeightSwapInCol')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.mutWeightSwapInCol ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightShiftRow') }"
-              @click="isNonDefault('mutWeightShiftRow') && resetProp('mutWeightShiftRow')"
-              >mutWeightShiftRow</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightShiftRow"
-                v-bind="numProps('mutWeightShiftRow')"
-                size="small"
-                v-tip.right="configTip('mutWeightShiftRow')"
-                @keydown="handleShiftKey($event, 'mutWeightShiftRow')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.mutWeightShiftRow ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('mutWeightShiftCol') }"
-              @click="isNonDefault('mutWeightShiftCol') && resetProp('mutWeightShiftCol')"
-              >mutWeightShiftCol</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutWeightShiftCol"
-                v-bind="numProps('mutWeightShiftCol')"
-                size="small"
-                v-tip.right="configTip('mutWeightShiftCol')"
-                @keydown="handleShiftKey($event, 'mutWeightShiftCol')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.mutWeightShiftCol ?? [])"
-                class="hl-dot" />
-            </div>
-          </div>
-        </AccordionContent>
-      </AccordionPanel>
-
-      <AccordionPanel value="ga">
-        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.ga) }"
-          >Genetic Algorithm</AccordionHeader
-        >
-        <AccordionContent>
-          <div class="toggles-grid">
-            <label
-              :class="{ 'non-default': isNonDefault('deterministic') }"
-              @click="isNonDefault('deterministic') && resetProp('deterministic')"
-              >deterministic</label
-            >
-            <ToggleSwitch v-model="cfg.deterministic" v-tip.right="configMeta.deterministic[4]" />
-          </div>
-          <div class="fields-grid">
-            <div class="wide-row">
-              <label
-                :class="{ 'non-default': isNonDefault('seed') }"
-                @click="isNonDefault('seed') && resetProp('seed')"
-                >seed</label
-              >
-              <InputNumber
-                style="width: 120px"
-                v-model="cfg.seed"
-                v-bind="numProps('seed')"
-                :disabled="!cfg.deterministic"
-                size="small"
-                v-tip.right="configMeta.seed[4]"
-                @keydown="handleShiftKey($event, 'seed')" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('popSize') }"
-              @click="isNonDefault('popSize') && resetProp('popSize')"
-              >popSize</label
-            >
-            <InputNumber
-              v-model="cfg.popSize"
-              v-bind="numProps('popSize')"
-              size="small"
-              v-tip.right="configMeta.popSize[4]"
-              @keydown="handleShiftKey($event, 'popSize')" />
-            <label
-              :class="{ 'non-default': isNonDefault('generations') }"
-              @click="isNonDefault('generations') && resetProp('generations')"
-              >generations</label
-            >
-            <InputNumber
-              v-model="cfg.generations"
-              v-bind="numProps('generations')"
-              size="small"
-              v-tip.right="configMeta.generations[4]"
-              @keydown="handleShiftKey($event, 'generations')" />
-            <label
-              :class="{ 'non-default': isNonDefault('stop') }"
-              @click="isNonDefault('stop') && resetProp('stop')"
-              >stop</label
-            >
-            <InputNumber
-              v-model="cfg.stop"
-              v-bind="numProps('stop')"
-              size="small"
-              v-tip.right="configMeta.stop[4]"
-              @keydown="handleShiftKey($event, 'stop')" />
-            <label
-              :class="{ 'non-default': isNonDefault('mutationRate') }"
-              @click="isNonDefault('mutationRate') && resetProp('mutationRate')"
-              >mutationRate</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.mutationRate"
-                v-bind="numProps('mutationRate')"
-                size="small"
-                v-tip.right="configTip('mutationRate')"
-                @keydown="handleShiftKey($event, 'mutationRate')" />
-              <span v-if="isHighlighted(configFeatureTags.mutationRate ?? [])" class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('crossoverRate') }"
-              @click="isNonDefault('crossoverRate') && resetProp('crossoverRate')"
-              >crossoverRate</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.crossoverRate"
-                v-bind="numProps('crossoverRate')"
-                size="small"
-                v-tip.right="configTip('crossoverRate')"
-                @keydown="handleShiftKey($event, 'crossoverRate')" />
-              <span v-if="isHighlighted(configFeatureTags.crossoverRate ?? [])" class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('crossoverMix') }"
-              @click="isNonDefault('crossoverMix') && resetProp('crossoverMix')"
-              >crossoverMix</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.crossoverMix"
-                v-bind="numProps('crossoverMix')"
-                size="small"
-                v-tip.right="configTip('crossoverMix')"
-                @keydown="handleShiftKey($event, 'crossoverMix')" />
-              <span v-if="isHighlighted(configFeatureTags.crossoverMix ?? [])" class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('crossWeightRandom') }"
-              @click="isNonDefault('crossWeightRandom') && resetProp('crossWeightRandom')"
-              >crossWeightRandom</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.crossWeightRandom"
-                v-bind="numProps('crossWeightRandom')"
-                size="small"
-                v-tip.right="configTip('crossWeightRandom')"
-                @keydown="handleShiftKey($event, 'crossWeightRandom')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.crossWeightRandom ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('crossWeightStruct') }"
-              @click="isNonDefault('crossWeightStruct') && resetProp('crossWeightStruct')"
-              >crossWeightStruct</label
-            >
-            <div class="field-with-dot">
-              <InputNumber
-                v-model="cfg.crossWeightStruct"
-                v-bind="numProps('crossWeightStruct')"
-                size="small"
-                v-tip.right="configTip('crossWeightStruct')"
-                @keydown="handleShiftKey($event, 'crossWeightStruct')" />
-              <span
-                v-if="isHighlighted(configFeatureTags.crossWeightStruct ?? [])"
-                class="hl-dot" />
-            </div>
-            <label
-              :class="{ 'non-default': isNonDefault('tournamentSize') }"
-              @click="isNonDefault('tournamentSize') && resetProp('tournamentSize')"
-              >tournamentSize</label
-            >
-            <InputNumber
-              v-model="cfg.tournamentSize"
-              v-bind="numProps('tournamentSize')"
-              size="small"
-              v-tip.right="configMeta.tournamentSize[4]"
-              @keydown="handleShiftKey($event, 'tournamentSize')" />
-            <label
-              :class="{ 'non-default': isNonDefault('diversityBoost') }"
-              @click="isNonDefault('diversityBoost') && resetProp('diversityBoost')"
-              >diversityBoost</label
-            >
-            <InputNumber
-              v-model="cfg.diversityBoost"
-              v-bind="numProps('diversityBoost')"
-              size="small"
-              v-tip.right="configMeta.diversityBoost[4]"
-              @keydown="handleShiftKey($event, 'diversityBoost')" />
-            <label
-              :class="{ 'non-default': isNonDefault('stagnationThreshold') }"
-              @click="isNonDefault('stagnationThreshold') && resetProp('stagnationThreshold')"
-              >stagnationThreshold</label
-            >
-            <InputNumber
-              v-model="cfg.stagnationThreshold"
-              v-bind="numProps('stagnationThreshold')"
-              size="small"
-              v-tip.right="configMeta.stagnationThreshold[4]"
-              @keydown="handleShiftKey($event, 'stagnationThreshold')" />
-            <label
-              :class="{ 'non-default': isNonDefault('stagnationRate') }"
-              @click="isNonDefault('stagnationRate') && resetProp('stagnationRate')"
-              >stagnationRate</label
-            >
-            <InputNumber
-              v-model="cfg.stagnationRate"
-              v-bind="numProps('stagnationRate')"
-              size="small"
-              v-tip.right="configMeta.stagnationRate[4]"
-              @keydown="handleShiftKey($event, 'stagnationRate')" />
-          </div>
-          <div class="toggles-grid">
-            <label
-              :class="{ 'non-default': isNonDefault('crowdingTieBreak') }"
-              @click="isNonDefault('crowdingTieBreak') && resetProp('crowdingTieBreak')"
-              >crowdingTieBreak</label
-            >
-            <ToggleSwitch
-              v-model="cfg.crowdingTieBreak"
-              v-tip.right="configMeta.crowdingTieBreak[4]" />
-          </div>
-        </AccordionContent>
-      </AccordionPanel>
-
-      <AccordionPanel value="initial">
-        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.initial) }"
-          >Initial Population</AccordionHeader
-        >
-        <AccordionContent>
-          <div class="toggles-grid">
-            <label
-              :class="{ 'non-default': isNonDefault('useDagre') }"
-              @click="isNonDefault('useDagre') && resetProp('useDagre')"
-              >useDagre</label
-            >
-            <ToggleSwitch v-model="cfg.useDagre" v-tip.right="configMeta.useDagre[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('useSimpleFlow') }"
-              @click="isNonDefault('useSimpleFlow') && resetProp('useSimpleFlow')"
-              >useSimpleFlow</label
-            >
-            <ToggleSwitch v-model="cfg.useSimpleFlow" v-tip.right="configMeta.useSimpleFlow[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('useInput') }"
-              @click="isNonDefault('useInput') && resetProp('useInput')"
-              >useInput</label
-            >
-            <ToggleSwitch v-model="cfg.useInput" v-tip.right="configMeta.useInput[4]" />
-          </div>
-        </AccordionContent>
-      </AccordionPanel>
-
-      <!-- Run settings (part of Config) -->
-      <AccordionPanel value="run">
-        <AccordionHeader :class="{ 'non-default': isGroupNonDefault(groupKeys.run) }"
-          >Run Settings</AccordionHeader
-        >
-        <AccordionContent>
-          <div class="fields-grid">
-            <label
-              :class="{ 'non-default': isNonDefault('logProgressInterval') }"
-              @click="isNonDefault('logProgressInterval') && resetProp('logProgressInterval')"
-              >logProgressInterval</label
-            >
-            <InputNumber
-              v-model="cfg.logProgressInterval"
-              :min="200"
-              :max="60000"
-              :step="500"
-              size="small"
-              v-tip.right="configMeta.logProgressInterval[4]"
-              @keydown="handleShiftKey($event, 'logProgressInterval')" />
-          </div>
-          <div class="toggles-grid">
-            <label
-              :class="{ 'non-default': isNonDefault('logProgress') }"
-              @click="isNonDefault('logProgress') && resetProp('logProgress')"
-              >logProgress</label
-            >
-            <ToggleSwitch v-model="cfg.logProgress" v-tip.right="configMeta.logProgress[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('logInfo') }"
-              @click="isNonDefault('logInfo') && resetProp('logInfo')"
-              >logInfo</label
-            >
-            <ToggleSwitch v-model="cfg.logInfo" v-tip.right="configMeta.logInfo[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('writeSvg') }"
-              @click="isNonDefault('writeSvg') && resetProp('writeSvg')"
-              >writeSvg</label
-            >
-            <ToggleSwitch v-model="cfg.writeSvg" v-tip.right="configMeta.writeSvg[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('showStraightLines') }"
-              @click="isNonDefault('showStraightLines') && resetProp('showStraightLines')"
-              >showStraightLines</label
-            >
-            <ToggleSwitch
-              v-model="cfg.showStraightLines"
-              v-tip.right="configMeta.showStraightLines[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('writeJson') }"
-              @click="isNonDefault('writeJson') && resetProp('writeJson')"
-              >writeJson</label
-            >
-            <ToggleSwitch v-model="cfg.writeJson" v-tip.right="configMeta.writeJson[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('removeLineSegments') }"
-              @click="isNonDefault('removeLineSegments') && resetProp('removeLineSegments')"
-              >removeLineSegments</label
-            >
-            <ToggleSwitch
-              v-model="cfg.removeLineSegments"
-              v-tip.right="configMeta.removeLineSegments[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('normalize') }"
-              @click="isNonDefault('normalize') && resetProp('normalize')"
-              >normalize</label
-            >
-            <ToggleSwitch v-model="cfg.normalize" v-tip.right="configMeta.normalize[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('normalizeExport') }"
-              @click="isNonDefault('normalizeExport') && resetProp('normalizeExport')"
-              >normalizeExport</label
-            >
-            <ToggleSwitch
-              v-model="cfg.normalizeExport"
-              v-tip.right="configMeta.normalizeExport[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('ignoreOrphans') }"
-              @click="isNonDefault('ignoreOrphans') && resetProp('ignoreOrphans')"
-              >ignoreOrphans</label
-            >
-            <ToggleSwitch v-model="cfg.ignoreOrphans" v-tip.right="configMeta.ignoreOrphans[4]" />
-            <label
-              :class="{ 'non-default': isNonDefault('keepGroups') }"
-              @click="isNonDefault('keepGroups') && resetProp('keepGroups')"
-              >keepGroups</label
-            >
-            <ToggleSwitch v-model="cfg.keepGroups" v-tip.right="configMeta.keepGroups[4]" />
+            <template v-for="f in group.fields" :key="f.key">
+              <!-- wide-row special case (seed) -->
+              <div v-if="f.wideRow" class="wide-row">
+                <label
+                  :class="{ 'non-default': isNonDefault(f.key) }"
+                  @click="isNonDefault(f.key) && resetProp(f.key)"
+                  >{{ f.key }}</label
+                >
+                <InputNumber
+                  :model-value="cfgNum(f.key)"
+                  @update:model-value="setCfgNum(f.key, $event!)"
+                  v-bind="numProps(f.key)"
+                  style="width: 120px"
+                  size="small"
+                  :disabled="f.disabled?.()"
+                  v-tip.right="configTip(f.key)"
+                  @keydown="handleShiftKey($event, f.key)" />
+              </div>
+              <!-- boolean toggle -->
+              <template v-else-if="isBoolean(f.key)">
+                <label
+                  :class="{ 'non-default': isNonDefault(f.key) }"
+                  @click="isNonDefault(f.key) && resetProp(f.key)"
+                  >{{ f.key }}</label
+                >
+                <ToggleSwitch
+                  :model-value="cfgBool(f.key)"
+                  @update:model-value="setCfgBool(f.key, $event)"
+                  v-tip.right="configTip(f.key)" />
+              </template>
+              <!-- numeric input with optional hl-dot -->
+              <template v-else>
+                <label
+                  :class="{ 'non-default': isNonDefault(f.key) }"
+                  @click="isNonDefault(f.key) && resetProp(f.key)"
+                  >{{ f.key }}</label
+                >
+                <div class="field-with-dot">
+                  <InputNumber
+                    :model-value="cfgNum(f.key)"
+                    @update:model-value="setCfgNum(f.key, $event!)"
+                    v-bind="numProps(f.key)"
+                    size="small"
+                    v-tip.right="configTip(f.key)"
+                    @keydown="handleShiftKey($event, f.key)" />
+                  <span v-if="isHighlighted(configFeatureTags[f.key] ?? [])" class="hl-dot" />
+                </div>
+              </template>
+            </template>
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -1007,8 +368,6 @@ function copyCli() {
               :max="100"
               size="small"
               v-tip.right="'Number of top candidates to track and preview'" />
-          </div>
-          <div class="toggles-grid">
             <label>showStats</label>
             <ToggleSwitch v-model="store.showStats" />
           </div>
@@ -1056,7 +415,7 @@ function copyCli() {
 .fields-grid {
   display: grid;
   grid-template-columns: auto 80px;
-  gap: 0.4rem 0.75rem;
+  gap: 0.5rem 0.75rem;
   align-items: center;
   justify-items: right;
   font-size: 0.8rem;
@@ -1067,7 +426,7 @@ function copyCli() {
 .wide-row {
   display: grid;
   grid-template-columns: auto 120px;
-  grid-column: 1 / -1; /* span full width of parent grid */
+  grid-column: 1 / -1;
   gap: 0.4rem 0.75rem;
   align-items: center;
   justify-items: right;
@@ -1079,8 +438,7 @@ function copyCli() {
   font-family: monospace;
 }
 
-.fields-grid label.non-default,
-.toggles-grid label.non-default {
+.fields-grid label.non-default {
   color: var(--p-primary-400);
   cursor: pointer;
 }
@@ -1115,8 +473,7 @@ function copyCli() {
   margin-left: auto;
 }
 
-.fields-grid label.non-default::before,
-.toggles-grid label.non-default::before {
+.fields-grid label.non-default::before {
   content: '*';
   margin-right: 0.25rem;
 }
@@ -1127,22 +484,6 @@ function copyCli() {
 
 .fields-grid .field-with-dot {
   justify-self: right;
-}
-
-.toggles-grid {
-  display: grid;
-  grid-template-columns: auto 80px;
-  gap: 0.6rem 0.75rem;
-  align-items: center;
-  font-size: 0.8rem;
-  margin-top: 0.6rem;
-  margin-bottom: 0.6rem;
-  justify-items: right;
-}
-
-.toggles-grid label {
-  color: var(--p-surface-300);
-  font-family: monospace;
 }
 
 .accordion {
