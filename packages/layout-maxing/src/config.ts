@@ -35,7 +35,7 @@ export interface Config {
   crossWeightStruct?: number
   tournamentSize?: number
   diversityBoostFactor?: number
-  crowdingWeight?: number
+  crowdingTieBreak?: boolean
   stagnationResetThreshold?: number
   stagnationResetRate?: number
   mutate?: number
@@ -133,7 +133,7 @@ export const configMeta: ConfigMeta = {
   stop: [9999, 1, 100000, 1, 'Stop after this many generations without improvement'],
   popSize: [15, 10, 1000, 1, 'Number of individuals in the population'],
   generations: [100000, 100, 1000000, 1, 'Maximum total generations to run'],
-  mutationRate: [0.95, 0, 1, 0.001, 'Probability that a child is mutated after crossover'],
+  mutationRate: [0.95, 0, 1, 0.01, 'Probability that a child is mutated after crossover'],
   maxChildren: [9, 1, 20, 1, 'Maximum number of children mutated'],
   maxParents: [9, 1, 20, 1, 'Maximum number of parents mutated'],
   crossoverRate: [0.75, 0, 1, 0.01, 'Probability of performing crossover between two parents'],
@@ -160,12 +160,12 @@ export const configMeta: ConfigMeta = {
     0.01,
     'Scales up mutationRate when population diversity is low; 0 = disabled',
   ],
-  crowdingWeight: [
-    0,
-    0,
-    1,
-    0.01,
-    'Weight of crowding distance in tournament tie-breaking; 0 = disabled',
+  crowdingTieBreak: [
+    false,
+    false,
+    true,
+    null,
+    'Prefer less-crowded individuals when tournament fitness is tied',
   ],
   stagnationResetThreshold: [
     0,

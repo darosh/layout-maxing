@@ -57,13 +57,7 @@ export const fitnessMeta: FitnessMeta = {
   view: ['View', 'VIE', 'Viewport size'],
 }
 
-export function fitness(
-  layouts: Box[],
-  lines: Line[] | undefined,
-  cfg?: Config,
-  /** @deprecated groupIdx on Box is preferred; this param is ignored */
-  _groupMap?: Map<string, number>,
-): Fitness {
+export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config): Fitness {
   lines ??= []
   const c = { ...defaultConfig, ...cfg }
   const boxMap = new Map<BoxId, Box>()

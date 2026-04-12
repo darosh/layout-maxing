@@ -1,5 +1,12 @@
 # TODO
 
+### Misc
+
+- [ ] split tests into files
+- [ ] initial mutation optional
+- [ ] mutateChild x-y overlap
+- [ ] stable sort tournament
+
 ### Mutation
 
 - [ ] swap with children

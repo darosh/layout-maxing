@@ -130,7 +130,7 @@ const groupKeys = {
     'crossWeightStruct',
     'tournamentSize',
     'diversityBoostFactor',
-    'crowdingWeight',
+    'crowdingTieBreak',
     'stagnationResetThreshold',
     'stagnationResetRate',
   ],
@@ -833,17 +833,6 @@ function copyCli() {
               v-tip.right="configMeta.diversityBoostFactor[4]"
               @keydown="handleShiftKey($event, 'diversityBoostFactor')" />
             <label
-              :class="{ 'non-default': isNonDefault('crowdingWeight') }"
-              @click="isNonDefault('crowdingWeight') && resetProp('crowdingWeight')"
-              >crowdingWeight</label
-            >
-            <InputNumber
-              v-model="cfg.crowdingWeight"
-              v-bind="numProps('crowdingWeight')"
-              size="small"
-              v-tip.right="configMeta.crowdingWeight[4]"
-              @keydown="handleShiftKey($event, 'crowdingWeight')" />
-            <label
               :class="{ 'non-default': isNonDefault('stagnationResetThreshold') }"
               @click="
                 isNonDefault('stagnationResetThreshold') && resetProp('stagnationResetThreshold')
@@ -867,6 +856,16 @@ function copyCli() {
               size="small"
               v-tip.right="configMeta.stagnationResetRate[4]"
               @keydown="handleShiftKey($event, 'stagnationResetRate')" />
+          </div>
+          <div class="toggles-grid">
+            <label
+              :class="{ 'non-default': isNonDefault('crowdingTieBreak') }"
+              @click="isNonDefault('crowdingTieBreak') && resetProp('crowdingTieBreak')"
+              >crowdingTieBreak</label
+            >
+            <ToggleSwitch
+              v-model="cfg.crowdingTieBreak"
+              v-tip.right="configMeta.crowdingTieBreak[4]" />
           </div>
         </AccordionContent>
       </AccordionPanel>
