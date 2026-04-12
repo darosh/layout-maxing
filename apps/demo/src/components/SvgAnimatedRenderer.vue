@@ -409,7 +409,7 @@ svg rect {
 
 .line {
   fill: none;
-  stroke: #00ccff;
+  stroke: var(--p-sky-400);
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -429,7 +429,7 @@ svg rect {
 }
 
 .port {
-  stroke: #00ccff;
+  stroke: var(--p-sky-400);
   stroke-linejoin: round;
   stroke-linecap: round;
 }

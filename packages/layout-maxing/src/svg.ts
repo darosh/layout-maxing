@@ -90,14 +90,14 @@ export function toSvg(
     svg += `\n  <path
     d="M ${sx},${sy} C ${c1x},${c1y} ${c2x},${c2y} ${ex},${ey}"
     fill="none"
-    stroke="#00ccff"
+    stroke="#38bdf8"
     stroke-width="2.5"
     stroke-linecap="round"
     stroke-linejoin="round"/>`
 
     // Optional: small circles at connection points (ports)
-    svg += `\n  <circle cx="${sx}" cy="${sy}" r="3" fill="#00ccff"/>`
-    svg += `\n  <circle cx="${ex}" cy="${ey}" r="3" fill="#00ccff"/>`
+    svg += `\n  <circle cx="${sx}" cy="${sy}" r="3" fill="#38bdf8"/>`
+    svg += `\n  <circle cx="${ex}" cy="${ey}" r="3" fill="#38bdf8"/>`
   }
 
   if (c.showStraightLines) {
