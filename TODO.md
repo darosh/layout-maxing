@@ -7,6 +7,7 @@
 - [x] mutateChild x-y overlap
 - [x] ~~stable sort tournament~~
 - [x] data driven config panel
+- [x] best example
 
 ### Mutation
 

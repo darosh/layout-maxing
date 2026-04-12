@@ -24,6 +24,7 @@ type BoxId = string
 
 export interface RNBO {
   patcher: Patcher
+  best?: number
 }
 
 // Deterministic random (Mulberry32 - fixed seed guarantees identical runs)

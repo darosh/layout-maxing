@@ -24,13 +24,21 @@ const toast = useToast()
 watch(
   () => store.status,
   (status) => {
-    if (status === 'done')
+    if (status === 'done') {
+      const best = store.rnbo?.best
+      const score = store.progress.bestScore
+      let icon: string | null = null
+      if (best != null && score != null) {
+        if (Math.round(score) === best) icon = 'pi-check'
+        else if (Math.round(score) < best) icon = 'pi-arrow-down'
+      }
       toast.add({
         summary: 'Done',
         life: 2600,
-        detail: formatScore(store.progress.bestScore),
+        detail: { msg: formatScore(score), icon },
         severity: 'info',
       })
+    }
   },
 )
 
@@ -272,7 +280,10 @@ const btnPause = computed(() => store.status === 'running')
             justify-content: space-between;
           ">
           <div style="color: var(--p-primary-400)">{{ message.summary }}</div>
-          <div>{{ message.detail }}</div>
+          <div>
+            {{ message.detail.msg
+            }}<i v-if="message.detail.icon" :class="['pi', message.detail.icon]" />
+          </div>
         </section>
       </template>
     </Toast>
@@ -436,5 +447,14 @@ const btnPause = computed(() => store.status === 'running')
 
 .info-active {
   background: var(--p-button-outlined-info-active-background);
+}
+
+.pi {
+  font-size: 0.7rem;
+  margin: 0 0.5rem 0 0.5rem;
+  color: var(--p-primary-400);
+  display: inline-block;
+  position: relative;
+  top: -1px;
 }
 </style>

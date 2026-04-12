@@ -43,7 +43,15 @@ watch(
       </div>
       <div class="stat">
         <span class="stat-label">Best</span>
-        <span class="stat-value">{{ formatScore(store.progress.bestScore) }}</span>
+        <span class="stat-value"
+          >{{ formatScore(store.progress.bestScore)
+          }}<template v-if="store.rnbo?.best != null && store.progress.bestScore != null"
+            ><i
+              v-if="Math.round(store.progress.bestScore) === store.rnbo.best"
+              class="pi pi-check" /><i
+              v-else-if="Math.round(store.progress.bestScore) < store.rnbo.best"
+              class="pi pi-arrow-down" /></template
+        ></span>
       </div>
       <div class="stat">
         <span class="stat-label">Gen 1st</span>
@@ -132,6 +140,15 @@ watch(
   font-size: 0.875rem;
   font-family: monospace;
   color: var(--p-surface-200);
+}
+
+.stat-value .pi {
+  font-size: 0.7rem;
+  margin: 0 0.5rem 0 0.5rem;
+  color: var(--p-primary-400);
+  display: inline-block;
+  position: relative;
+  top: -1px;
 }
 
 .stat-value.done {
