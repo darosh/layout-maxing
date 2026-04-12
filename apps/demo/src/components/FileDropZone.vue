@@ -65,8 +65,7 @@ async function pasteFromClipboard() {
       :class="{ dragging: isDragging }"
       @dragover="onDragOver"
       @dragleave="onDragLeave"
-      @drop="onDrop"
-    >
+      @drop="onDrop">
       <p v-if="store.fileName" class="loaded-file">
         <i class="pi pi-file" />
         <span>{{ store.fileName }} </span>
@@ -85,8 +84,7 @@ async function pasteFromClipboard() {
             :label="`${i + 1}`"
             size="small"
             severity="info"
-            @click="store.loadFile(example, `example-${i + 1}`, 'clipboard')"
-          />
+            @click="store.loadFile(example, `example-${i + 1}`, 'clipboard')" />
         </template>
         <template v-else>
           <Button variant="outlined" label="Select file" size="small" @click="openPicker" />
@@ -96,8 +94,7 @@ async function pasteFromClipboard() {
             size="small"
             variant="outlined"
             severity="info"
-            @click="pasteFromClipboard()"
-          />
+            @click="pasteFromClipboard()" />
         </template>
       </div>
       <Button
@@ -106,15 +103,13 @@ async function pasteFromClipboard() {
         size="small"
         variant="outlined"
         @click="showExamples = !showExamples"
-        :severity="showExamples ? 'info' : 'secondary'"
-      />
+        :severity="showExamples ? 'info' : 'secondary'" />
       <input
         ref="fileInput"
         type="file"
         accept=".maxpat,.json,.rnbopat,.gendsp"
         class="hidden-input"
-        @change="onFileChange"
-      />
+        @change="onFileChange" />
     </div>
     <div v-if="store.error" class="file-error">
       <i class="pi pi-exclamation-triangle" />

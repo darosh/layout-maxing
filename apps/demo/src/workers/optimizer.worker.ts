@@ -183,6 +183,8 @@ self.onmessage = async (e: MessageEvent) => {
     fitness: Fitness
     popId?: number
     popGen?: number
+    prevId?: number
+    prevGen?: number
   }[] = []
   // Sliding window of current population (last popSize evaluations)
   const currentPop: {
@@ -191,6 +193,8 @@ self.onmessage = async (e: MessageEvent) => {
     fitness: Fitness
     popId?: number
     popGen?: number
+    prevId?: number
+    prevGen?: number
   }[] = []
 
   function updateTop(
@@ -199,13 +203,15 @@ self.onmessage = async (e: MessageEvent) => {
     fitness: Fitness,
     popId?: number,
     popGen?: number,
+    prevId?: number,
+    prevGen?: number,
   ) {
     const worst = top.length >= topN ? top[top.length - 1]!.score : Infinity
     if (score < worst || top.length < topN) {
       // Avoid near-duplicate scores (within 0.01%)
       const dup = top.some((t) => Math.abs(t.score - score) / score < 0.0001)
       if (!dup) {
-        top.push({ score, layouts: cloneForSvg(layouts), fitness, popId, popGen })
+        top.push({ score, layouts: cloneForSvg(layouts), fitness, popId, popGen, prevId, prevGen })
         top.sort((a, b) => a.score - b.score)
         if (top.length > topN) top.pop()
       }
@@ -232,6 +238,8 @@ self.onmessage = async (e: MessageEvent) => {
       mutations: aggregateMutations(t.layouts),
       popId: t.popId,
       popGen: t.popGen,
+      prevId: t.prevId,
+      prevGen: t.prevGen,
     }))
   }
 
@@ -247,6 +255,8 @@ self.onmessage = async (e: MessageEvent) => {
         mutations: aggregateMutations(t.layouts),
         popId: t.popId,
         popGen: t.popGen,
+        prevId: t.prevId,
+        prevGen: t.prevGen,
       }))
   }
 
@@ -302,7 +312,9 @@ self.onmessage = async (e: MessageEvent) => {
         // Track top-N
         const popId: number | undefined = (layouts as any)._popId
         const popGen: number | undefined = (layouts as any)._popGen
-        updateTop(result.score, layouts, result, popId, popGen)
+        const prevId: number | undefined = (layouts as any)._popPrevId
+        const prevGen: number | undefined = (layouts as any)._popPrevGen
+        updateTop(result.score, layouts, result, popId, popGen, prevId, prevGen)
         // Sliding window for current population
         currentPop.push({
           score: result.score,
@@ -310,6 +322,8 @@ self.onmessage = async (e: MessageEvent) => {
           fitness: result,
           popId,
           popGen,
+          prevId,
+          prevGen,
         })
         if (currentPop.length > c.popSize) currentPop.shift()
         const now = Date.now()

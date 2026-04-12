@@ -49,8 +49,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         )
       "
       @mouseleave="tooltip?.hide()"
-      @click="store.selection = { kind: 'original' }"
-    >
+      @click="store.selection = { kind: 'original' }">
       <div class="thumb-svg" v-html="store.originalSvg" />
       <span class="thumb-label">Input</span>
       <span v-if="store.originalFitness" class="thumb-score">
@@ -67,8 +66,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         tooltip?.show($event, () => `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)
       "
       @mouseleave="tooltip?.hide()"
-      @click="store.selection = { kind: 'allTime', index: 0 }"
-    >
+      @click="store.selection = { kind: 'allTime', index: 0 }">
       <div class="thumb-svg" v-html="store.top[0]!.svg" />
       <span class="thumb-label">Best</span>
       <span class="thumb-score">{{ formatScore(store.top[0]!.score) }}</span>
@@ -86,8 +84,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         )
       "
       @mouseleave="tooltip?.hide()"
-      @click="store.selection = { kind: 'current', index: 0 }"
-    >
+      @click="store.selection = { kind: 'current', index: 0 }">
       <div class="thumb-svg" v-html="store.currentGenTop[0]!.svg" />
       <span class="thumb-label">Current</span>
       <span class="thumb-score">{{ formatScore(store.currentGenTop[0]!.score) }}</span>
@@ -100,15 +97,13 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         size="small"
         :severity="store.allTimeTop ? 'info' : 'secondary'"
         variant="outlined"
-        @click="store.switchMode(true)"
-      />
+        @click="store.switchMode(true)" />
       <Button
         label="Current"
         size="small"
         :severity="!store.allTimeTop ? 'info' : 'secondary'"
         variant="outlined"
-        @click="store.switchMode(false)"
-      />
+        @click="store.switchMode(false)" />
     </div>
 
     <!-- 2…N entries -->
@@ -122,8 +117,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
           tooltip?.show($event, () => `Top #${i + 2}\nScore: ${formatFullScore(entry.score)}`)
         "
         @mouseleave="tooltip?.hide()"
-        @click="store.selection = { kind: 'allTime', index: i + 1 }"
-      >
+        @click="store.selection = { kind: 'allTime', index: i + 1 }">
         <div class="thumb-svg" v-html="entry.svg" />
         <span class="thumb-label">#{{ i + 2 }}</span>
         <span class="thumb-score">{{ formatScore(entry.score) }}</span>
@@ -142,8 +136,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
           )
         "
         @mouseleave="tooltip?.hide()"
-        @click="store.selection = { kind: 'current', index: i + 1 }"
-      >
+        @click="store.selection = { kind: 'current', index: i + 1 }">
         <div class="thumb-svg" v-html="entry.svg" />
         <span class="thumb-label"
           >{{ void (o = ordinal(i + 2)) }}{{ o.slice(0, o.length - 2)

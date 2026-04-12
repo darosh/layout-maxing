@@ -39,8 +39,7 @@ watch(
         <ProgressBar
           :value="Math.round((store.progress.stopIn / store.config.stop!) * 1000) / 10"
           :show-value="false"
-          class="progress-bar progress-bar-small"
-        />
+          class="progress-bar progress-bar-small" />
       </div>
       <div class="stat">
         <span class="stat-label">Best</span>
@@ -74,8 +73,7 @@ watch(
     <ProgressBar
       :value="Math.round(store.progressPercent * 10) / 10"
       :show-value="false"
-      class="progress-bar"
-    />
+      class="progress-bar" />
   </div>
 </template>
 

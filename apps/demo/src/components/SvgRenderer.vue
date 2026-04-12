@@ -19,8 +19,7 @@ const selectionKey = computed(() => {
       v-if="store.displayedSvg"
       class="svg-canvas"
       :key="selectionKey"
-      v-html="store.displayedSvg"
-    />
+      v-html="store.displayedSvg" />
   </div>
 </template>
 

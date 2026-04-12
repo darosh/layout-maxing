@@ -97,8 +97,7 @@ defineExpose({ show, hide })
         width: props.maxWidth ? props.maxWidth + 'px' : undefined,
         whiteSpace: props.maxWidth ? 'normal' : undefined,
       }"
-      v-html="state.text.replace(/\n/g, '<br>')"
-    />
+      v-html="state.text.replace(/\n/g, '<br>')" />
   </Teleport>
 </template>
 

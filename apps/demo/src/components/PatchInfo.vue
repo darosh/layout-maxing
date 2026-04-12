@@ -46,7 +46,7 @@ const fullScore = computed(() => {
     </div>
 
     <div class="overlay overlay-tl">
-      <span v-if="selectionLabel" class="selection-label">
+      <div v-if="selectionLabel" class="selection-label">
         <template v-if="store.selection.kind === 'current'">
           <template v-if="store.selection?.index === 0">{{ CURRENT_LABEL }}</template>
           {{ selectionLabel.slice(0, selectionLabel.length - 2)
@@ -56,18 +56,27 @@ const fullScore = computed(() => {
         </template>
         <template v-else-if="store.selection.kind === 'allTime'">
           <template v-if="store.selection?.index === 0">{{ BEST_LABEL }}</template>
-          {{ selectionLabel }}</template
-        >
+          {{ selectionLabel }}
+        </template>
         <template v-else>{{ INPUT_LABEL }}</template>
-      </span>
+      </div>
     </div>
-    <div class="overlay overlay-tl-2">
-      <template v-if="store.displayedEntry?.popId != null"
-        ><br /><span class="selection-label">ID: {{ store.displayedEntry.popId }}</span></template
-      >
-      <template v-if="store.displayedEntry?.popGen != null"
-        ><br /><span class="selection-label">GEN: {{ store.displayedEntry.popGen }}</span></template
-      >
+    <div class="overlay overlay-tl-2 selection-label">
+      <template
+        v-if="
+          store.displayedEntry?.popId != null &&
+          store.displayedEntry?.popGen != null &&
+          store.displayedEntry?.prevGen != null
+        ">
+        <br />
+        THIS: ID-{{ store.displayedEntry.popId }} GEN-{{ store.displayedEntry.popGen }} ({{
+          store.displayedEntry.popGen - store.progress.generation
+        }})
+        <br />
+        PREV: ID-{{ store.displayedEntry.prevId }} GEN-{{ store.displayedEntry.prevGen }} ({{
+          store.displayedEntry.prevGen - store.progress.generation
+        }})
+      </template>
     </div>
 
     <div
@@ -79,8 +88,7 @@ const fullScore = computed(() => {
         display: flex;
         flex-direction: column;
         align-items: flex-end;
-      "
-    >
+      ">
       <div class="stat-bg">
         <GenerationChart :snapshots="store.snapshots" />
       </div>
@@ -91,8 +99,7 @@ const fullScore = computed(() => {
         <div class="stat-bg">
           <SelectionStats
             :selected-entry="store.displayedEntry"
-            :mutation-order="Object.keys(mutationMeta)"
-          />
+            :mutation-order="Object.keys(mutationMeta)" />
         </div>
       </div>
     </div>

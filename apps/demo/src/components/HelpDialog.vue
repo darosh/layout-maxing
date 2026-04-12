@@ -30,8 +30,7 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
     :closeButtonProps="{ text: true, size: 'small' }"
     :style="{ naxWidth: '100%', maxHeight: '80vh' }"
     :draggable="false"
-    @update:visible="$emit('update:visible', $event)"
-  >
+    @update:visible="$emit('update:visible', $event)">
     <h4>Hot keys</h4>
     <table class="help-table">
       <thead>

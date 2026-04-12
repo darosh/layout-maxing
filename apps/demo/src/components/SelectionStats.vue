@@ -80,8 +80,7 @@ function onMouseLeave() {
           <td
             class="td-name th-interactive"
             @mouseenter="onMouseEnter($event, row)"
-            @mouseleave="onMouseLeave"
-          >
+            @mouseleave="onMouseLeave">
             <span v-if="isHighlighted([row.shortName])" class="hl-dot" />{{ row.shortName }}
           </td>
           <td>

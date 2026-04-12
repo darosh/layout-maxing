@@ -7,6 +7,9 @@ export default defineConfig({
     semi: false,
     singleQuote: true,
     ignorePatterns: ['docs/'],
+    bracketSameLine: true,
+    singleAttributePerLine: false,
+    htmlWhitespaceSensitivity: 'strict',
   },
   lint: {
     plugins: ['eslint', 'typescript', 'unicorn', 'oxc', 'vue', 'vitest'],

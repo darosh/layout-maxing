@@ -138,16 +138,14 @@ const btnPause = computed(() => store.status === 'running')
                     ? store.startReOptimization()
                     : store.startOptimization()
                   : store.stopOptimization()
-              "
-            />
+              " />
             <Button
               v-if="btnPauseResume"
               :label="btnPause ? 'Pause' : 'Resume'"
               variant="outlined"
               size="small"
               severity="secondary"
-              @click="btnPause ? store.pauseOptimization() : store.resumeOptimization()"
-            />
+              @click="btnPause ? store.pauseOptimization() : store.resumeOptimization()" />
             <Button v-else style="visibility: hidden" variant="outlined" size="small" disabled />
             <Button
               :label="
@@ -168,8 +166,7 @@ const btnPause = computed(() => store.status === 'running')
                 store.inputSource === 'clipboard' || optionDown || copyKeyDown
                   ? copyRnbo()
                   : downloadRnbo()
-              "
-            />
+              " />
           </div>
           <div class="section-divider"></div>
           <ProgressPanel />
@@ -193,16 +190,14 @@ const btnPause = computed(() => store.status === 'running')
                   helpVisible = true
                   return false
                 }
-              "
-            >
+              ">
               <i class="pi pi-question-circle" />
             </a>
             <a
               href="https://github.com/darosh/layout-maxing"
               target="_blank"
               rel="noopener"
-              class="gh-link"
-            >
+              class="gh-link">
               <i class="pi pi-github" />
             </a>
           </template>
@@ -216,7 +211,11 @@ const btnPause = computed(() => store.status === 'running')
         </div>
         <TopResultsBar />
         <div
-          @click="store.showStats = !store.showStats"
+          @click="
+            () => {
+              if (hasEverRendered) store.showStats = !store.showStats
+            }
+          "
           style="
             position: absolute;
             flex: 1;
@@ -225,8 +224,7 @@ const btnPause = computed(() => store.status === 'running')
             display: flex;
             align-items: center;
             justify-content: center;
-          "
-        >
+          ">
           <SvgPlaceholder v-if="!hasEverRendered" :paste-key="pasteKey" :copy-key="copyKey" />
           <PatchInfo v-else />
         </div>

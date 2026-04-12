@@ -119,30 +119,26 @@ function onMouseLeave() {
           <th
             class="th-interactive"
             @mouseenter="tooltip?.show($event, colTooltip('att'))"
-            @mouseleave="tooltip?.hide()"
-          >
+            @mouseleave="tooltip?.hide()">
             att
           </th>
           <th
             class="th-interactive"
             @mouseenter="tooltip?.show($event, colTooltip('imp'))"
-            @mouseleave="tooltip?.hide()"
-          >
+            @mouseleave="tooltip?.hide()">
             imp %
           </th>
           <th
             class="th-interactive"
             @mouseenter="tooltip?.show($event, colTooltip('davg'))"
-            @mouseleave="tooltip?.hide()"
-          >
+            @mouseleave="tooltip?.hide()">
             Δ avg
           </th>
           <th
             v-if="hasBestData"
             class="th-interactive th-best"
             @mouseenter="tooltip?.show($event, colTooltip('best'))"
-            @mouseleave="tooltip?.hide()"
-          >
+            @mouseleave="tooltip?.hide()">
             best
           </th>
         </tr>
@@ -152,8 +148,7 @@ function onMouseLeave() {
           <td
             class="td-name th-interactive"
             @mouseenter="onMouseEnter($event, row)"
-            @mouseleave="onMouseLeave"
-          >
+            @mouseleave="onMouseLeave">
             <span v-if="isHighlighted([row.shortName])" class="hl-dot" />{{ row.shortName }}
           </td>
           <td>

@@ -24,6 +24,8 @@ export interface TopEntry {
   mutations: Record<string, number> // summed _mutations counts across all boxes
   popId?: number
   popGen?: number
+  prevId?: number
+  prevGen?: number
 }
 
 export type Selection =

@@ -196,32 +196,28 @@ function copyCli() {
           severity="secondary"
           text
           v-tip.top="'Copy config JSON'"
-          @click="copyConfig"
-        />
+          @click="copyConfig" />
         <Button
           icon="pi pi-clipboard"
           size="small"
           severity="secondary"
           text
           v-tip.top="'Paste config JSON'"
-          @click="pasteConfig"
-        />
+          @click="pasteConfig" />
         <Button
           icon="pi pi-chevron-right"
           size="small"
           severity="secondary"
           text
           v-tip.top="'Copy CLI command'"
-          @click="copyCli"
-        />
+          @click="copyCli" />
         <Button
           label="Reset"
           icon="pi pi-refresh"
           size="small"
           :severity="isConfigDefault ? 'secondary' : 'warning'"
           text
-          @click="store.resetConfig()"
-        />
+          @click="store.resetConfig()" />
       </div>
     </div>
 
@@ -242,8 +238,7 @@ function copyCli() {
               v-bind="numProps('gridX')"
               size="small"
               v-tip.right="configMeta.gridX[4]"
-              @keydown="handleShiftKey($event, 'gridX')"
-            />
+              @keydown="handleShiftKey($event, 'gridX')" />
             <label
               :class="{ 'non-default': isNonDefault('gridY') }"
               @click="isNonDefault('gridY') && resetProp('gridY')"
@@ -254,8 +249,7 @@ function copyCli() {
               v-bind="numProps('gridY')"
               size="small"
               v-tip.right="configMeta.gridY[4]"
-              @keydown="handleShiftKey($event, 'gridY')"
-            />
+              @keydown="handleShiftKey($event, 'gridY')" />
             <label
               :class="{ 'non-default': isNonDefault('minDistX') }"
               @click="isNonDefault('minDistX') && resetProp('minDistX')"
@@ -266,8 +260,7 @@ function copyCli() {
               v-bind="numProps('minDistX')"
               size="small"
               v-tip.right="configMeta.minDistX[4]"
-              @keydown="handleShiftKey($event, 'minDistX')"
-            />
+              @keydown="handleShiftKey($event, 'minDistX')" />
             <label
               :class="{ 'non-default': isNonDefault('minDistY') }"
               @click="isNonDefault('minDistY') && resetProp('minDistY')"
@@ -278,8 +271,7 @@ function copyCli() {
               v-bind="numProps('minDistY')"
               size="small"
               v-tip.right="configMeta.minDistY[4]"
-              @keydown="handleShiftKey($event, 'minDistY')"
-            />
+              @keydown="handleShiftKey($event, 'minDistY')" />
             <label
               :class="{ 'non-default': isNonDefault('boxZone') }"
               @click="isNonDefault('boxZone') && resetProp('boxZone')"
@@ -290,8 +282,7 @@ function copyCli() {
               v-bind="numProps('boxZone')"
               size="small"
               v-tip.right="configMeta.boxZone[4]"
-              @keydown="handleShiftKey($event, 'boxZone')"
-            />
+              @keydown="handleShiftKey($event, 'boxZone')" />
             <label
               :class="{ 'non-default': isNonDefault('letOffest') }"
               @click="isNonDefault('letOffest') && resetProp('letOffest')"
@@ -302,8 +293,7 @@ function copyCli() {
               v-bind="numProps('letOffest')"
               size="small"
               v-tip.right="configMeta.letOffest[4]"
-              @keydown="handleShiftKey($event, 'letOffest')"
-            />
+              @keydown="handleShiftKey($event, 'letOffest')" />
             <label
               :class="{ 'non-default': isNonDefault('curveControl') }"
               @click="isNonDefault('curveControl') && resetProp('curveControl')"
@@ -314,8 +304,7 @@ function copyCli() {
               v-bind="numProps('curveControl')"
               size="small"
               v-tip.right="configMeta.curveControl[4]"
-              @keydown="handleShiftKey($event, 'curveControl')"
-            />
+              @keydown="handleShiftKey($event, 'curveControl')" />
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -336,8 +325,7 @@ function copyCli() {
               v-bind="numProps('crossPenalty')"
               size="small"
               v-tip.right="configMeta.crossPenalty[4]"
-              @keydown="handleShiftKey($event, 'crossPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'crossPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('overPenalty') }"
               @click="isNonDefault('overPenalty') && resetProp('overPenalty')"
@@ -348,8 +336,7 @@ function copyCli() {
               v-bind="numProps('overPenalty')"
               size="small"
               v-tip.right="configMeta.overPenalty[4]"
-              @keydown="handleShiftKey($event, 'overPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'overPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('reversePenalty') }"
               @click="isNonDefault('reversePenalty') && resetProp('reversePenalty')"
@@ -360,8 +347,7 @@ function copyCli() {
               v-bind="numProps('reversePenalty')"
               size="small"
               v-tip.right="configMeta.reversePenalty[4]"
-              @keydown="handleShiftKey($event, 'reversePenalty')"
-            />
+              @keydown="handleShiftKey($event, 'reversePenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('areaPenalty') }"
               @click="isNonDefault('areaPenalty') && resetProp('areaPenalty')"
@@ -372,8 +358,7 @@ function copyCli() {
               v-bind="numProps('areaPenalty')"
               size="small"
               v-tip.right="configMeta.areaPenalty[4]"
-              @keydown="handleShiftKey($event, 'areaPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'areaPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('totalDistPenalty') }"
               @click="isNonDefault('totalDistPenalty') && resetProp('totalDistPenalty')"
@@ -384,8 +369,7 @@ function copyCli() {
               v-bind="numProps('totalDistPenalty')"
               size="small"
               v-tip.right="configMeta.totalDistPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalDistPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'totalDistPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('arPenalty') }"
               @click="isNonDefault('arPenalty') && resetProp('arPenalty')"
@@ -396,8 +380,7 @@ function copyCli() {
               v-bind="numProps('arPenalty')"
               size="small"
               v-tip.right="configMeta.arPenalty[4]"
-              @keydown="handleShiftKey($event, 'arPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'arPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('arMax') }"
               @click="isNonDefault('arMax') && resetProp('arMax')"
@@ -408,8 +391,7 @@ function copyCli() {
               v-bind="numProps('arMax')"
               size="small"
               v-tip.right="configMeta.arMax[4]"
-              @keydown="handleShiftKey($event, 'arMax')"
-            />
+              @keydown="handleShiftKey($event, 'arMax')" />
             <label
               :class="{ 'non-default': isNonDefault('totalCrossPenalty') }"
               @click="isNonDefault('totalCrossPenalty') && resetProp('totalCrossPenalty')"
@@ -420,8 +402,7 @@ function copyCli() {
               v-bind="numProps('totalCrossPenalty')"
               size="small"
               v-tip.right="configMeta.totalCrossPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalCrossPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'totalCrossPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('totalOverPenalty') }"
               @click="isNonDefault('totalOverPenalty') && resetProp('totalOverPenalty')"
@@ -432,8 +413,7 @@ function copyCli() {
               v-bind="numProps('totalOverPenalty')"
               size="small"
               v-tip.right="configMeta.totalOverPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalOverPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'totalOverPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('totalCollisionPenalty') }"
               @click="isNonDefault('totalCollisionPenalty') && resetProp('totalCollisionPenalty')"
@@ -444,8 +424,7 @@ function copyCli() {
               v-bind="numProps('totalCollisionPenalty')"
               size="small"
               v-tip.right="configMeta.totalCollisionPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalCollisionPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'totalCollisionPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('totalSSCPenalty') }"
               @click="isNonDefault('totalSSCPenalty') && resetProp('totalSSCPenalty')"
@@ -456,8 +435,7 @@ function copyCli() {
               v-bind="numProps('totalSSCPenalty')"
               size="small"
               v-tip.right="configMeta.totalSSCPenalty[4]"
-              @keydown="handleShiftKey($event, 'totalSSCPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'totalSSCPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('misalignedSSPenalty') }"
               @click="isNonDefault('misalignedSSPenalty') && resetProp('misalignedSSPenalty')"
@@ -468,8 +446,7 @@ function copyCli() {
               v-bind="numProps('misalignedSSPenalty')"
               size="small"
               v-tip.right="configMeta.misalignedSSPenalty[4]"
-              @keydown="handleShiftKey($event, 'misalignedSSPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'misalignedSSPenalty')" />
             <label
               :class="{ 'non-default': isNonDefault('misalignedFirstPenalty') }"
               @click="isNonDefault('misalignedFirstPenalty') && resetProp('misalignedFirstPenalty')"
@@ -480,8 +457,7 @@ function copyCli() {
               v-bind="numProps('misalignedFirstPenalty')"
               size="small"
               v-tip.right="configMeta.misalignedFirstPenalty[4]"
-              @keydown="handleShiftKey($event, 'misalignedFirstPenalty')"
-            />
+              @keydown="handleShiftKey($event, 'misalignedFirstPenalty')" />
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -503,8 +479,7 @@ function copyCli() {
                 v-bind="numProps('mutate')"
                 size="small"
                 v-tip.right="configTip('mutate')"
-                @keydown="handleShiftKey($event, 'mutate')"
-              />
+                @keydown="handleShiftKey($event, 'mutate')" />
               <span v-if="isHighlighted(configFeatureTags.mutate ?? [])" class="hl-dot" />
             </div>
             <label
@@ -518,12 +493,10 @@ function copyCli() {
                 v-bind="numProps('mutWeightQuadrant')"
                 size="small"
                 v-tip.right="configTip('mutWeightQuadrant')"
-                @keydown="handleShiftKey($event, 'mutWeightQuadrant')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightQuadrant')" />
               <span
                 v-if="isHighlighted(configFeatureTags.mutWeightQuadrant ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSingle') }"
@@ -536,8 +509,7 @@ function copyCli() {
                 v-bind="numProps('mutWeightSingle')"
                 size="small"
                 v-tip.right="configTip('mutWeightSingle')"
-                @keydown="handleShiftKey($event, 'mutWeightSingle')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightSingle')" />
               <span v-if="isHighlighted(configFeatureTags.mutWeightSingle ?? [])" class="hl-dot" />
             </div>
             <label
@@ -551,12 +523,10 @@ function copyCli() {
                 v-bind="numProps('mutWeightChildren')"
                 size="small"
                 v-tip.right="configTip('mutWeightChildren')"
-                @keydown="handleShiftKey($event, 'mutWeightChildren')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightChildren')" />
               <span
                 v-if="isHighlighted(configFeatureTags.mutWeightChildren ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('maxChildren') }"
@@ -569,8 +539,7 @@ function copyCli() {
                 v-bind="numProps('maxChildren')"
                 size="small"
                 v-tip.right="configTip('maxChildren')"
-                @keydown="handleShiftKey($event, 'maxChildren')"
-              />
+                @keydown="handleShiftKey($event, 'maxChildren')" />
               <span v-if="isHighlighted(configFeatureTags.maxChildren ?? [])" class="hl-dot" />
             </div>
             <label
@@ -584,8 +553,7 @@ function copyCli() {
                 v-bind="numProps('mutWeightParents')"
                 size="small"
                 v-tip.right="configTip('mutWeightParents')"
-                @keydown="handleShiftKey($event, 'mutWeightParents')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightParents')" />
               <span v-if="isHighlighted(configFeatureTags.mutWeightParents ?? [])" class="hl-dot" />
             </div>
             <label
@@ -599,8 +567,7 @@ function copyCli() {
                 v-bind="numProps('maxParents')"
                 size="small"
                 v-tip.right="configTip('maxParents')"
-                @keydown="handleShiftKey($event, 'maxParents')"
-              />
+                @keydown="handleShiftKey($event, 'maxParents')" />
               <span v-if="isHighlighted(configFeatureTags.maxParents ?? [])" class="hl-dot" />
             </div>
             <label
@@ -614,12 +581,10 @@ function copyCli() {
                 v-bind="numProps('mutWeightSwapSibling')"
                 size="small"
                 v-tip.right="configTip('mutWeightSwapSibling')"
-                @keydown="handleShiftKey($event, 'mutWeightSwapSibling')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightSwapSibling')" />
               <span
                 v-if="isHighlighted(configFeatureTags.mutWeightSwapSibling ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSwapRandom') }"
@@ -632,12 +597,10 @@ function copyCli() {
                 v-bind="numProps('mutWeightSwapRandom')"
                 size="small"
                 v-tip.right="configTip('mutWeightSwapRandom')"
-                @keydown="handleShiftKey($event, 'mutWeightSwapRandom')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightSwapRandom')" />
               <span
                 v-if="isHighlighted(configFeatureTags.mutWeightSwapRandom ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSwapInRow') }"
@@ -650,12 +613,10 @@ function copyCli() {
                 v-bind="numProps('mutWeightSwapInRow')"
                 size="small"
                 v-tip.right="configTip('mutWeightSwapInRow')"
-                @keydown="handleShiftKey($event, 'mutWeightSwapInRow')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightSwapInRow')" />
               <span
                 v-if="isHighlighted(configFeatureTags.mutWeightSwapInRow ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSwapInCol') }"
@@ -668,12 +629,10 @@ function copyCli() {
                 v-bind="numProps('mutWeightSwapInCol')"
                 size="small"
                 v-tip.right="configTip('mutWeightSwapInCol')"
-                @keydown="handleShiftKey($event, 'mutWeightSwapInCol')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightSwapInCol')" />
               <span
                 v-if="isHighlighted(configFeatureTags.mutWeightSwapInCol ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightShiftRow') }"
@@ -686,12 +645,10 @@ function copyCli() {
                 v-bind="numProps('mutWeightShiftRow')"
                 size="small"
                 v-tip.right="configTip('mutWeightShiftRow')"
-                @keydown="handleShiftKey($event, 'mutWeightShiftRow')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightShiftRow')" />
               <span
                 v-if="isHighlighted(configFeatureTags.mutWeightShiftRow ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightShiftCol') }"
@@ -704,12 +661,10 @@ function copyCli() {
                 v-bind="numProps('mutWeightShiftCol')"
                 size="small"
                 v-tip.right="configTip('mutWeightShiftCol')"
-                @keydown="handleShiftKey($event, 'mutWeightShiftCol')"
-              />
+                @keydown="handleShiftKey($event, 'mutWeightShiftCol')" />
               <span
                 v-if="isHighlighted(configFeatureTags.mutWeightShiftCol ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
           </div>
         </AccordionContent>
@@ -742,8 +697,7 @@ function copyCli() {
                 :disabled="!cfg.deterministic"
                 size="small"
                 v-tip.right="configMeta.seed[4]"
-                @keydown="handleShiftKey($event, 'seed')"
-              />
+                @keydown="handleShiftKey($event, 'seed')" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('popSize') }"
@@ -755,8 +709,7 @@ function copyCli() {
               v-bind="numProps('popSize')"
               size="small"
               v-tip.right="configMeta.popSize[4]"
-              @keydown="handleShiftKey($event, 'popSize')"
-            />
+              @keydown="handleShiftKey($event, 'popSize')" />
             <label
               :class="{ 'non-default': isNonDefault('generations') }"
               @click="isNonDefault('generations') && resetProp('generations')"
@@ -767,8 +720,7 @@ function copyCli() {
               v-bind="numProps('generations')"
               size="small"
               v-tip.right="configMeta.generations[4]"
-              @keydown="handleShiftKey($event, 'generations')"
-            />
+              @keydown="handleShiftKey($event, 'generations')" />
             <label
               :class="{ 'non-default': isNonDefault('stop') }"
               @click="isNonDefault('stop') && resetProp('stop')"
@@ -779,8 +731,7 @@ function copyCli() {
               v-bind="numProps('stop')"
               size="small"
               v-tip.right="configMeta.stop[4]"
-              @keydown="handleShiftKey($event, 'stop')"
-            />
+              @keydown="handleShiftKey($event, 'stop')" />
             <label
               :class="{ 'non-default': isNonDefault('mutationRate') }"
               @click="isNonDefault('mutationRate') && resetProp('mutationRate')"
@@ -792,8 +743,7 @@ function copyCli() {
                 v-bind="numProps('mutationRate')"
                 size="small"
                 v-tip.right="configTip('mutationRate')"
-                @keydown="handleShiftKey($event, 'mutationRate')"
-              />
+                @keydown="handleShiftKey($event, 'mutationRate')" />
               <span v-if="isHighlighted(configFeatureTags.mutationRate ?? [])" class="hl-dot" />
             </div>
             <label
@@ -807,8 +757,7 @@ function copyCli() {
                 v-bind="numProps('crossoverRate')"
                 size="small"
                 v-tip.right="configTip('crossoverRate')"
-                @keydown="handleShiftKey($event, 'crossoverRate')"
-              />
+                @keydown="handleShiftKey($event, 'crossoverRate')" />
               <span v-if="isHighlighted(configFeatureTags.crossoverRate ?? [])" class="hl-dot" />
             </div>
             <label
@@ -822,8 +771,7 @@ function copyCli() {
                 v-bind="numProps('crossoverMix')"
                 size="small"
                 v-tip.right="configTip('crossoverMix')"
-                @keydown="handleShiftKey($event, 'crossoverMix')"
-              />
+                @keydown="handleShiftKey($event, 'crossoverMix')" />
               <span v-if="isHighlighted(configFeatureTags.crossoverMix ?? [])" class="hl-dot" />
             </div>
             <label
@@ -837,12 +785,10 @@ function copyCli() {
                 v-bind="numProps('crossWeightRandom')"
                 size="small"
                 v-tip.right="configTip('crossWeightRandom')"
-                @keydown="handleShiftKey($event, 'crossWeightRandom')"
-              />
+                @keydown="handleShiftKey($event, 'crossWeightRandom')" />
               <span
                 v-if="isHighlighted(configFeatureTags.crossWeightRandom ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('crossWeightStruct') }"
@@ -855,12 +801,10 @@ function copyCli() {
                 v-bind="numProps('crossWeightStruct')"
                 size="small"
                 v-tip.right="configTip('crossWeightStruct')"
-                @keydown="handleShiftKey($event, 'crossWeightStruct')"
-              />
+                @keydown="handleShiftKey($event, 'crossWeightStruct')" />
               <span
                 v-if="isHighlighted(configFeatureTags.crossWeightStruct ?? [])"
-                class="hl-dot"
-              />
+                class="hl-dot" />
             </div>
             <label
               :class="{ 'non-default': isNonDefault('tournamentSize') }"
@@ -872,8 +816,7 @@ function copyCli() {
               v-bind="numProps('tournamentSize')"
               size="small"
               v-tip.right="configMeta.tournamentSize[4]"
-              @keydown="handleShiftKey($event, 'tournamentSize')"
-            />
+              @keydown="handleShiftKey($event, 'tournamentSize')" />
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -925,8 +868,7 @@ function copyCli() {
               :step="500"
               size="small"
               v-tip.right="configMeta.logProgressInterval[4]"
-              @keydown="handleShiftKey($event, 'logProgressInterval')"
-            />
+              @keydown="handleShiftKey($event, 'logProgressInterval')" />
           </div>
           <div class="toggles-grid">
             <label
@@ -954,8 +896,7 @@ function copyCli() {
             >
             <ToggleSwitch
               v-model="cfg.showStraightLines"
-              v-tip.right="configMeta.showStraightLines[4]"
-            />
+              v-tip.right="configMeta.showStraightLines[4]" />
             <label
               :class="{ 'non-default': isNonDefault('writeJson') }"
               @click="isNonDefault('writeJson') && resetProp('writeJson')"
@@ -969,8 +910,7 @@ function copyCli() {
             >
             <ToggleSwitch
               v-model="cfg.removeLineSegments"
-              v-tip.right="configMeta.removeLineSegments[4]"
-            />
+              v-tip.right="configMeta.removeLineSegments[4]" />
             <label
               :class="{ 'non-default': isNonDefault('normalize') }"
               @click="isNonDefault('normalize') && resetProp('normalize')"
@@ -984,8 +924,7 @@ function copyCli() {
             >
             <ToggleSwitch
               v-model="cfg.normalizeExport"
-              v-tip.right="configMeta.normalizeExport[4]"
-            />
+              v-tip.right="configMeta.normalizeExport[4]" />
             <label
               :class="{ 'non-default': isNonDefault('ignoreOrphans') }"
               @click="isNonDefault('ignoreOrphans') && resetProp('ignoreOrphans')"
@@ -1013,16 +952,14 @@ function copyCli() {
               :min="200"
               :max="10000"
               size="small"
-              v-tip.right="'Post stats every N evaluations'"
-            />
+              v-tip.right="'Post stats every N evaluations'" />
             <label>topN</label>
             <InputNumber
               v-model="topN"
               :min="1"
               :max="100"
               size="small"
-              v-tip.right="'Number of top candidates to track and preview'"
-            />
+              v-tip.right="'Number of top candidates to track and preview'" />
           </div>
           <div class="toggles-grid">
             <label>showStats</label>

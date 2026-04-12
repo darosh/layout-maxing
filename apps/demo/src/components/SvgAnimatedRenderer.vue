@@ -296,12 +296,10 @@ const portDots = computed<DotItem[]>(() => {
       v-if="layouts.length"
       :viewBox="viewBox"
       xmlns="http://www.w3.org/2000/svg"
-      class="svg-canvas"
-    >
+      class="svg-canvas">
       <g
         :class="['layout-root', { 'layout-root--jump': skipRootTransition || skipAllTransitions }]"
-        :style="{ transform: rootTransform }"
-      >
+        :style="{ transform: rootTransform }">
         <!-- Group bounding boxes -->
         <rect
           v-for="gr in groupRects"
@@ -311,16 +309,14 @@ const portDots = computed<DotItem[]>(() => {
           :width="gr.width"
           :height="gr.height"
           rx="6"
-          :class="['group-bbox', { 'group-bbox--jump': skipAllTransitions }]"
-        />
+          :class="['group-bbox', { 'group-bbox--jump': skipAllTransitions }]" />
 
         <!-- Boxes: animate position via CSS transform on the group -->
         <g
           v-for="box in layouts"
           :key="box.id"
           :style="{ transform: `translate(${box.x}px, ${box.y}px)` }"
-          :class="['box-group', { 'box-group--jump': skipAllTransitions }]"
-        >
+          :class="['box-group', { 'box-group--jump': skipAllTransitions }]">
           <rect :width="box.width" :height="box.height" rx="4" class="box" />
         </g>
 
@@ -329,17 +325,15 @@ const portDots = computed<DotItem[]>(() => {
           v-for="item in pathData"
           :key="item.key"
           :d="item.d"
-          :class="['line', { 'line--jump': skipAllTransitions }]"
-        />
+          :class="['line', { 'line--jump': skipAllTransitions }]" />
 
         <!-- Port dots -->
         <g
           v-for="dot in portDots"
           :key="dot.key"
           :style="{ transform: `translate(${dot.cx}px, ${dot.cy}px)` }"
-          :class="['port-group', { 'port-group--jump': skipAllTransitions }]"
-        >
-          <circle r="3" class="port" />
+          :class="['port-group', { 'port-group--jump': skipAllTransitions }]">
+          <path d="m 0 0 l 0 0" stroke-width="6" class="port" />
         </g>
       </g>
     </svg>
@@ -362,6 +356,11 @@ const portDots = computed<DotItem[]>(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+svg path,
+svg rect {
+  vector-effect: non-scaling-stroke;
 }
 
 .svg-canvas {
@@ -430,6 +429,8 @@ const portDots = computed<DotItem[]>(() => {
 }
 
 .port {
-  fill: #00ccff;
+  stroke: #00ccff;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 </style>

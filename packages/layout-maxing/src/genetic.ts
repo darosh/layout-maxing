@@ -63,6 +63,8 @@ interface Population {
   gen: number
   layouts: Box[]
   fitness?: Fitness
+  prevId?: number
+  prevGen?: number
   // monitoring fields — do not affect algorithm behavior
   _mutation?: string
   _mutatedBoxId?: string
@@ -235,6 +237,8 @@ async function runGenetic(
       if (ind.fitness === undefined) {
         ;(ind.layouts as any)._popId = ind.id
         ;(ind.layouts as any)._popGen = ind.gen
+        ;(ind.layouts as any)._popPrevId = ind.prevId
+        ;(ind.layouts as any)._popPrevGen = ind.prevGen
         ind.fitness = getFitness
           ? await getFitness(ind.layouts, lines, cfg)
           : fitness(ind.layouts, lines, cfg)
@@ -480,6 +484,8 @@ async function runGenetic(
       newPopulation.push({
         id: nextPopId++,
         gen: gen + 1,
+        prevId: p1.id,
+        prevGen: p1.gen,
         layouts: child,
         _mutation: childMutation,
         _mutatedBoxId: childMutatedBoxId,

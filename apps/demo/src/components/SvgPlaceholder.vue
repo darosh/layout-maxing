@@ -37,8 +37,7 @@ const props = defineProps<{
             :label="`${i + 1}`"
             size="small"
             severity="info"
-            @click="store.loadFile(example, `example-${i + 1}`, 'clipboard')"
-          />
+            @click="store.loadFile(example, `example-${i + 1}`, 'clipboard')" />
         </span>
       </li>
     </ul>

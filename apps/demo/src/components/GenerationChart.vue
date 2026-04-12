@@ -102,8 +102,7 @@ const chart = computed(() => {
         :x2="PAD.left + innerW"
         :y2="PAD.top + innerH"
         stroke="var(--p-surface-700)"
-        stroke-width="1"
-      />
+        stroke-width="1" />
 
       <g clip-path="url(#chart-clip)">
         <!-- area fill best→p75 -->
@@ -118,8 +117,7 @@ const chart = computed(() => {
           fill="none"
           stroke="var(--p-surface-400)"
           stroke-width="1"
-          stroke-opacity=".75"
-        />
+          stroke-opacity=".75" />
 
         <!-- diversity line -->
         <path
@@ -127,8 +125,7 @@ const chart = computed(() => {
           fill="none"
           stroke="var(--p-cyan-600)"
           stroke-width="1"
-          stroke-opacity=".75"
-        />
+          stroke-opacity=".75" />
 
         <!-- best line -->
         <path :d="chart!.bestPath" fill="none" stroke="var(--p-primary-400)" stroke-width="1" />
@@ -143,8 +140,7 @@ const chart = computed(() => {
         :y="H - PAD.bottom + M"
         alignment-baseline="hanging"
         text-anchor="end"
-        class="axis-label"
-      >
+        class="axis-label">
         GEN: {{ chart!.lastGen }}
       </text>
       <!-- score labels -->
@@ -153,8 +149,7 @@ const chart = computed(() => {
         :y="H - PAD.bottom - M / 2"
         text-anchor="end"
         class="axis-label"
-        style="fill: var(--p-primary-400)"
-      >
+        style="fill: var(--p-primary-400)">
         {{ chart!.maxScore }}
       </text>
       <text
@@ -163,8 +158,7 @@ const chart = computed(() => {
         text-anchor="end"
         alignment-baseline="hanging"
         class="axis-label"
-        style="fill: var(--p-primary-400)"
-      >
+        style="fill: var(--p-primary-400)">
         {{ chart!.minScore }}
       </text>
       <!-- div labels -->
@@ -173,8 +167,7 @@ const chart = computed(() => {
         :y="H - PAD.bottom - M / 2"
         text-anchor="start"
         class="axis-label"
-        style="fill: var(--p-cyan-600)"
-      >
+        style="fill: var(--p-cyan-600)">
         {{ chart!.minDiv }}
       </text>
       <text
@@ -183,8 +176,7 @@ const chart = computed(() => {
         text-anchor="start"
         alignment-baseline="hanging"
         class="axis-label"
-        style="fill: var(--p-cyan-600)"
-      >
+        style="fill: var(--p-cyan-600)">
         {{ chart!.maxDiv }}
       </text>
     </svg>
