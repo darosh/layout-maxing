@@ -282,7 +282,7 @@ const btnPause = computed(() => store.status === 'running')
           <div style="color: var(--p-primary-400)">{{ message.summary }}</div>
           <div>
             {{ message.detail.msg
-            }}<i v-if="message.detail.icon" :class="['pi', message.detail.icon]" />
+            }}<i v-if="message.detail.icon" :class="['pi', 'icon', message.detail.icon]" />
           </div>
         </section>
       </template>
@@ -449,7 +449,7 @@ const btnPause = computed(() => store.status === 'running')
   background: var(--p-button-outlined-info-active-background);
 }
 
-.pi {
+.icon {
   font-size: 0.7rem;
   margin: 0 0.5rem 0 0.5rem;
   color: var(--p-primary-400);

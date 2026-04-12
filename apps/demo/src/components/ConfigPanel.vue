@@ -189,6 +189,9 @@ const groups: GroupDef[] = [
       { key: 'stagnationThreshold' },
       { key: 'stagnationRate' },
       { key: 'crowdingTieBreak' },
+      { key: 'nichingEnabled' },
+      { key: 'nichingRadius', disabled: () => !cfg.value.nichingEnabled },
+      { key: 'nichingExponent', disabled: () => !cfg.value.nichingEnabled },
     ],
   },
   {
@@ -344,6 +347,7 @@ function copyCli() {
                     :model-value="cfgNum(f.key)"
                     @update:model-value="setCfgNum(f.key, $event!)"
                     v-bind="numProps(f.key)"
+                    :disabled="f.disabled?.()"
                     size="small"
                     v-tip.right="configTip(f.key)"
                     @keydown="handleShiftKey($event, f.key)" />

@@ -35,6 +35,7 @@ import {
   accumulateMutStats,
   computeDeadWeightMutations,
 } from './monitor.ts'
+import { applyFitnessSharing } from './niching.ts'
 
 export type { GenerationSnapshot, RunMonitor }
 
@@ -127,6 +128,13 @@ function tournamentSelect(
   cfg: Required<Config>,
   exclude?: number[],
 ): number {
+  const getVal = (ind: Population): number => {
+    if (prop === 'score' && cfg.nichingEnabled && ind.fitness!.sharedFitness !== undefined) {
+      return ind.fitness!.sharedFitness
+    }
+    return ind.fitness![prop] as number
+  }
+
   const [initial, ...rest] = uniqueIndexes(
     Math.round(cfg.tournamentSize * population.length),
     0,
@@ -137,8 +145,8 @@ function tournamentSelect(
   let bestIdx = initial
 
   for (const candidate of rest) {
-    const bestVal = population[bestIdx].fitness![prop] as number
-    const candidateVal = population[candidate].fitness![prop] as number
+    const bestVal = getVal(population[bestIdx])
+    const candidateVal = getVal(population[candidate])
     if (candidateVal < bestVal) {
       bestIdx = candidate
     } else if (cfg.crowdingTieBreak && candidateVal === bestVal) {
@@ -361,6 +369,10 @@ async function runGenetic(
     })
 
     const fitnessValues = await Promise.all(fitnessPromises)
+
+    if (cfg.nichingEnabled) {
+      applyFitnessSharing(population, cfg.nichingRadius, cfg.nichingExponent)
+    }
 
     // Track global best
     const minScore = Math.min(...fitnessValues.map(({ score }) => score))

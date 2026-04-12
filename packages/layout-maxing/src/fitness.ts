@@ -24,6 +24,7 @@ export interface Fitness {
   area: number
   minDist: number
   view: number
+  sharedFitness?: number
 }
 
 // Tuple: [label, shortcut, description]

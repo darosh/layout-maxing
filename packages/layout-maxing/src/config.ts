@@ -36,6 +36,9 @@ export interface Config {
   tournamentSize?: number
   diversityBoost?: number
   crowdingTieBreak?: boolean
+  nichingEnabled?: boolean
+  nichingRadius?: number
+  nichingExponent?: number
   stagnationThreshold?: number
   stagnationRate?: number
   mutate?: number
@@ -169,6 +172,21 @@ export const configMeta: ConfigMeta = {
     null,
     'Prefer less-crowded individuals when tournament fitness is tied',
   ],
+  nichingEnabled: [
+    false,
+    false,
+    true,
+    null,
+    'Enable fitness sharing (niching) to maintain population diversity',
+  ],
+  nichingRadius: [
+    5000,
+    0,
+    1e9,
+    1,
+    'Sigma: fitness-space distance threshold for niching neighbourhood',
+  ],
+  nichingExponent: [1, 0.1, 5, 0.1, 'Alpha: shape of the sharing function (1 = linear)'],
   stagnationThreshold: [
     50,
     0,
