@@ -42,7 +42,9 @@ const props = defineProps<{
         </span>
       </li>
     </ul>
-    <div class="footnote">All processing happens locally in the browser.<br>Your patch is not sent over the internet.</div>
+    <div class="footnote">
+      All processing happens locally in the browser.<br />Your patch is not sent over the internet.
+    </div>
   </div>
 </template>
 

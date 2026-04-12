@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { GenerationSnapshot, RunMonitor } from 'layout-maxing'
-import { mutationMeta, statMeta } from 'layout-maxing'
+import { mutationMeta, crossoverMeta, mutationConfigMap, statMeta } from 'layout-maxing'
 import { computed, ref } from 'vue'
 import FlyingTooltip from './FlyingTooltip.vue'
 import { formatScore } from '@/utils/formatScore.ts'
+import { useHighlight } from '@/composables/useHighlight.ts'
 
 const props = defineProps<{
   snapshots: GenerationSnapshot[]
@@ -11,6 +12,7 @@ const props = defineProps<{
 }>()
 
 const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
+const { setHighlight, clearHighlight, isHighlighted } = useHighlight()
 
 type MutRow = {
   name: string
@@ -48,49 +50,64 @@ const rows = computed((): MutRow[] => {
   const known = ['crossover', ...Object.keys(mutationMeta)]
   const mutationOrder = [...known, ...Object.keys(totals).filter((n) => !known.includes(n))]
 
-  return mutationOrder
-    .map((name): MutRow => {
-      const t = totals[name]
-      const meta = mutationMeta[name]
+  return mutationOrder.map((name): MutRow => {
+    const t = totals[name]
+    const meta =
+      mutationMeta[name] ??
+      crossoverMeta[name] ??
+      (name === 'crossover' ? crossoverMeta['uniform']! : undefined)
 
-      if (!t) {
-        return {
-          shortName: meta?.[1] ?? name.slice(0, 4).toUpperCase(),
-          label: meta?.[0] ?? name,
-          description: meta?.[2] ?? '',
-          attempts: 0,
-          impPct: 0,
-          avgDelta: 0,
-        bestCount: 0,
-          deadWeight: true
-        }
-      }
-
-      const bestCount = bestCounts[name] ?? 0
+    if (!t) {
       return {
         name,
         shortName: meta?.[1] ?? name.slice(0, 4).toUpperCase(),
         label: meta?.[0] ?? name,
         description: meta?.[2] ?? '',
-        attempts: t.attempts,
-        impPct: t.attempts > 0 ? (t.improvements / t.attempts) * 100 : 0,
-        avgDelta: t.attempts > 0 ? t.totalDelta / t.attempts : 0,
-        bestCount,
-        deadWeight: props.runMonitor !== null && bestCount === 0,
+        attempts: 0,
+        impPct: 0,
+        avgDelta: 0,
+        bestCount: 0,
+        deadWeight: true,
       }
-    })
+    }
+
+    const bestCount = bestCounts[name] ?? 0
+    return {
+      name,
+      shortName: meta?.[1] ?? name.slice(0, 4).toUpperCase(),
+      label: meta?.[0] ?? name,
+      description: meta?.[2] ?? '',
+      attempts: t.attempts,
+      impPct: t.attempts > 0 ? (t.improvements / t.attempts) * 100 : 0,
+      avgDelta: t.attempts > 0 ? t.totalDelta / t.attempts : 0,
+      bestCount,
+      deadWeight: props.runMonitor !== null && bestCount === 0,
+    }
+  })
 })
 
 const hasBestData = computed(() => props.runMonitor !== null)
 
-function mutTooltip(row: { shortName: string; label: string; description: string }): string {
-  return `${row.shortName}: ${row.label}\n${row.description}`
+function mutTooltip(row: MutRow): string {
+  const configKey = mutationConfigMap[row.name]
+  const suffix = configKey ? ` [${configKey}]` : ''
+  return `${row.shortName}: ${row.label}\n${row.description}${suffix}`
 }
 
 function colTooltip(key: string): string {
   const meta = statMeta[key]
   if (!meta) return ''
   return `${meta[1]}: ${meta[0]}\n${meta[2]}`
+}
+
+function onMouseEnter($event: Event, row: MutRow) {
+  setHighlight([row.shortName])
+  tooltip.value?.show($event, mutTooltip(row))
+}
+
+function onMouseLeave() {
+  clearHighlight()
+  tooltip.value?.hide()
 }
 </script>
 
@@ -137,22 +154,32 @@ function colTooltip(key: string): string {
         <tr v-for="row in rows" :key="row.name" :class="{ 'dead-weight': row.deadWeight }">
           <td
             class="td-name th-interactive"
-            @mouseenter="tooltip?.show($event, mutTooltip(row))"
-            @mouseleave="tooltip?.hide()"
+            @mouseenter="onMouseEnter($event, row)"
+            @mouseleave="onMouseLeave"
           >
-            {{ row.shortName }}
+            <span v-if="isHighlighted([row.shortName])" class="hl-dot" />{{ row.shortName }}
           </td>
-          <td><template v-if="row.attempts">{{ row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</template></td>
-          <td><template v-if="row.attempts">{{ row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</template></td>
-          <td :class="row.avgDelta < 0 ? 'good' : 'neutral'"><template v-if="row.attempts">
-            {{ row.avgDelta < 0 ? '−' : '' }}{{ formatScore(Math.abs(row.avgDelta)) }}</template>
+          <td>
+            <template v-if="row.attempts">{{
+              row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 })
+            }}</template>
+          </td>
+          <td>
+            <template v-if="row.attempts">{{
+              row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 })
+            }}</template>
+          </td>
+          <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">
+            <template v-if="row.attempts">
+              {{ row.avgDelta < 0 ? '−' : '' }}{{ formatScore(Math.abs(row.avgDelta)) }}</template
+            >
           </td>
           <td v-if="hasBestData" class="td-best">
             <template v-if="row.attempts">
-            <span v-if="row.bestCount > 0" class="best-count">{{
-              row.bestCount.toLocaleString('en-US', { maximumFractionDigits: 0 })
-            }}</span>
-            <span v-else class="empty">—</span>
+              <span v-if="row.bestCount > 0" class="best-count">{{
+                row.bestCount.toLocaleString('en-US', { maximumFractionDigits: 0 })
+              }}</span>
+              <span v-else class="empty">—</span>
             </template>
           </td>
         </tr>
@@ -245,5 +272,18 @@ tr.dead-weight td {
 tr.dead-weight td.td-name {
   text-decoration: none;
   color: var(--p-surface-600);
+}
+
+.hl-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--p-primary-400);
+  vertical-align: middle;
+  position: relative;
+  margin-right: -5px;
+  top: -1.5px;
+  left: -8px;
 }
 </style>

@@ -63,6 +63,49 @@ export const mutationMeta: Record<string, MutationMetaEntry> = {
   shiftCol: ['Shift Col', 'SHCL', 'Shift an entire column of boxes vertically'],
 }
 
+export const crossoverMeta: Record<string, MutationMetaEntry> = {
+  uniform: [
+    'Uniform',
+    'CROSS',
+    'Randomly mix genes from two parents based on crossoverMix probability',
+  ],
+}
+
+// Maps config key → shortcut strings it relates to (for cross-highlighting)
+export const configFeatureTags: Partial<Record<keyof Config, string[]>> = {
+  mutWeightQuadrant: ['QUAD'],
+  mutWeightSingle: ['SNGL'],
+  mutWeightChildren: ['CHLD'],
+  mutWeightParents: ['PRNT'],
+  mutWeightSwapSibling: ['SWSB'],
+  mutWeightSwapRandom: ['SWRN'],
+  mutWeightSwapInRow: ['SWRW'],
+  mutWeightSwapInCol: ['SWCL'],
+  mutWeightShiftRow: ['SHRW'],
+  mutWeightShiftCol: ['SHCL'],
+  maxChildren: ['CHLD'],
+  maxParents: ['PRNT'],
+  mutate: ['QUAD', 'SNGL', 'CHLD', 'PRNT', 'SHRW', 'SHCL'],
+  mutationRate: ['QUAD', 'SNGL', 'CHLD', 'PRNT', 'SWSB', 'SWRN', 'SWRW', 'SWCL', 'SHRW', 'SHCL'],
+  crossoverRate: ['CROSS'],
+  crossoverMix: ['CROSS'],
+}
+
+// Maps mutation/crossover key → primary config weight key
+export const mutationConfigMap: Record<string, string> = {
+  quadrant: 'mutWeightQuadrant',
+  single: 'mutWeightSingle',
+  children: 'mutWeightChildren',
+  parents: 'mutWeightParents',
+  swapSibling: 'mutWeightSwapSibling',
+  swapRandom: 'mutWeightSwapRandom',
+  swapInRow: 'mutWeightSwapInRow',
+  swapInCol: 'mutWeightSwapInCol',
+  shiftRow: 'mutWeightShiftRow',
+  shiftCol: 'mutWeightShiftCol',
+  crossover: 'crossoverRate',
+}
+
 export const statMeta: Record<string, MutationMetaEntry> = {
   att: ['Attempts', 'ATT', 'How many times this mutation was selected by roulette wheel'],
   imp: [

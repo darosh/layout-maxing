@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { mutationMeta } from 'layout-maxing'
+import { mutationMeta, crossoverMeta, mutationConfigMap } from 'layout-maxing'
 import { computed, ref } from 'vue'
 import FlyingTooltip from './FlyingTooltip.vue'
+import { useHighlight } from '@/composables/useHighlight.ts'
 import type { TopEntry } from '@/stores/optimizer'
 import { formatScore } from '@/utils/formatScore.ts'
 
@@ -11,6 +12,7 @@ const props = defineProps<{
 }>()
 
 const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
+const { setHighlight, clearHighlight, isHighlighted } = useHighlight()
 
 type SelRow = {
   name: string
@@ -29,7 +31,10 @@ const selRows = computed((): SelRow[] => {
   const known = ['crossover', ...props.mutationOrder]
   const order = [...known, ...Object.keys(counts).filter((n) => !known.includes(n))]
   return order.map((name): SelRow => {
-    const meta = mutationMeta[name]
+    const meta =
+      mutationMeta[name] ??
+      crossoverMeta[name] ??
+      (name === 'crossover' ? crossoverMeta['uniform']! : undefined)
     const count = counts[name] ?? 0
     return {
       name,
@@ -42,8 +47,20 @@ const selRows = computed((): SelRow[] => {
   })
 })
 
-function mutTooltip(row: { shortName: string; label: string; description: string }): string {
-  return `${row.shortName}: ${row.label}\n${row.description}`
+function mutTooltip(row: SelRow): string {
+  const configKey = mutationConfigMap[row.name]
+  const suffix = configKey ? ` [${configKey}]` : ''
+  return `${row.shortName}: ${row.label}\n${row.description}${suffix}`
+}
+
+function onMouseEnter($event: Event, row: SelRow) {
+  setHighlight([row.shortName])
+  tooltip.value?.show($event, mutTooltip(row))
+}
+
+function onMouseLeave() {
+  clearHighlight()
+  tooltip.value?.hide()
 }
 </script>
 
@@ -62,10 +79,10 @@ function mutTooltip(row: { shortName: string; label: string; description: string
         <tr v-for="row in selRows" :key="row.name" :class="{ 'empty-row': !row.count }">
           <td
             class="td-name th-interactive"
-            @mouseenter="tooltip?.show($event, mutTooltip(row))"
-            @mouseleave="tooltip?.hide()"
+            @mouseenter="onMouseEnter($event, row)"
+            @mouseleave="onMouseLeave"
           >
-            {{ row.shortName }}
+            <span v-if="isHighlighted([row.shortName])" class="hl-dot" />{{ row.shortName }}
           </td>
           <td>
             <template v-if="row.count">{{ formatScore(row.count) }}</template
@@ -131,5 +148,18 @@ td.td-pct {
 
 tr.empty-row td {
   opacity: 0.33 !important;
+}
+
+.hl-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--p-primary-400);
+  vertical-align: middle;
+  position: relative;
+  margin-right: -5px;
+  top: -1.5px;
+  left: -8px;
 }
 </style>

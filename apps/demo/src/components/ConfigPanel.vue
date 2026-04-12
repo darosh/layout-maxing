@@ -11,19 +11,45 @@ import ToggleSwitch from 'primevue/toggleswitch'
 import Button from 'primevue/button'
 import FlyingTooltip from './FlyingTooltip.vue'
 import { useOptimizerStore } from '@/stores/optimizer'
-import { configMeta, defaultConfig } from 'layout-maxing'
+import { configMeta, configFeatureTags, defaultConfig } from 'layout-maxing'
 import type { Config } from 'layout-maxing'
+import { useHighlight } from '@/composables/useHighlight.ts'
 
 const ft = ref<InstanceType<typeof FlyingTooltip>>()
+const { setHighlight, clearHighlight, isHighlighted } = useHighlight()
+
+type TipBinding = string | { text: string; features?: string[] }
 
 const vTip = {
-  mounted(el: HTMLElement, binding: DirectiveBinding<string>) {
+  mounted(el: HTMLElement, binding: DirectiveBinding<TipBinding>) {
     const pos = binding.modifiers.right ? 'right' : 'top'
-    el.addEventListener('mouseenter', (e) => ft.value?.show(e, binding.value, pos))
-    el.addEventListener('mouseleave', () => ft.value?.hide())
-    el.addEventListener('focusin', (e) => ft.value?.show(e, binding.value, pos))
-    el.addEventListener('focusout', () => ft.value?.hide())
+    const getText = () => (typeof binding.value === 'string' ? binding.value : binding.value.text)
+    const getFeatures = () =>
+      typeof binding.value === 'string' ? [] : (binding.value.features ?? [])
+    el.addEventListener('mouseenter', (e) => {
+      setHighlight(getFeatures())
+      ft.value?.show(e, getText(), pos)
+    })
+    el.addEventListener('mouseleave', () => {
+      clearHighlight()
+      ft.value?.hide()
+    })
+    el.addEventListener('focusin', (e) => {
+      setHighlight(getFeatures())
+      ft.value?.show(e, getText(), pos)
+    })
+    el.addEventListener('focusout', () => {
+      clearHighlight()
+      ft.value?.hide()
+    })
   },
+}
+
+function configTip(key: keyof Config): TipBinding {
+  const desc = configMeta[key][4]
+  const tags = configFeatureTags[key]
+  if (!tags?.length) return desc
+  return { text: `${desc} [${tags.join(', ')}]`, features: tags }
 }
 
 const store = useOptimizerStore()
@@ -469,157 +495,220 @@ function copyCli() {
               @click="isNonDefault('mutate') && resetProp('mutate')"
               >mutate</label
             >
-            <InputNumber
-              v-model="cfg.mutate"
-              v-bind="numProps('mutate')"
-              size="small"
-              v-tip.right="configMeta.mutate[4]"
-              @keydown="handleShiftKey($event, 'mutate')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutate"
+                v-bind="numProps('mutate')"
+                size="small"
+                v-tip.right="configTip('mutate')"
+                @keydown="handleShiftKey($event, 'mutate')"
+              />
+              <span v-if="isHighlighted(configFeatureTags.mutate ?? [])" class="hl-dot" />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightQuadrant') }"
               @click="isNonDefault('mutWeightQuadrant') && resetProp('mutWeightQuadrant')"
               >mutWeightQuadrant</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightQuadrant"
-              v-bind="numProps('mutWeightQuadrant')"
-              size="small"
-              v-tip.right="configMeta.mutWeightQuadrant[4]"
-              @keydown="handleShiftKey($event, 'mutWeightQuadrant')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightQuadrant"
+                v-bind="numProps('mutWeightQuadrant')"
+                size="small"
+                v-tip.right="configTip('mutWeightQuadrant')"
+                @keydown="handleShiftKey($event, 'mutWeightQuadrant')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.mutWeightQuadrant ?? [])"
+                class="hl-dot"
+              />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSingle') }"
               @click="isNonDefault('mutWeightSingle') && resetProp('mutWeightSingle')"
               >mutWeightSingle</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightSingle"
-              v-bind="numProps('mutWeightSingle')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSingle[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSingle')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightSingle"
+                v-bind="numProps('mutWeightSingle')"
+                size="small"
+                v-tip.right="configTip('mutWeightSingle')"
+                @keydown="handleShiftKey($event, 'mutWeightSingle')"
+              />
+              <span v-if="isHighlighted(configFeatureTags.mutWeightSingle ?? [])" class="hl-dot" />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightChildren') }"
               @click="isNonDefault('mutWeightChildren') && resetProp('mutWeightChildren')"
               >mutWeightChildren</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightChildren"
-              v-bind="numProps('mutWeightChildren')"
-              size="small"
-              v-tip.right="configMeta.mutWeightChildren[4]"
-              @keydown="handleShiftKey($event, 'mutWeightChildren')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightChildren"
+                v-bind="numProps('mutWeightChildren')"
+                size="small"
+                v-tip.right="configTip('mutWeightChildren')"
+                @keydown="handleShiftKey($event, 'mutWeightChildren')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.mutWeightChildren ?? [])"
+                class="hl-dot"
+              />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('maxChildren') }"
               @click="isNonDefault('maxChildren') && resetProp('maxChildren')"
               >maxChildren</label
             >
-            <InputNumber
-              v-model="cfg.maxChildren"
-              v-bind="numProps('maxChildren')"
-              size="small"
-              v-tip.right="configMeta.maxChildren[4]"
-              @keydown="handleShiftKey($event, 'maxChildren')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.maxChildren"
+                v-bind="numProps('maxChildren')"
+                size="small"
+                v-tip.right="configTip('maxChildren')"
+                @keydown="handleShiftKey($event, 'maxChildren')"
+              />
+              <span v-if="isHighlighted(configFeatureTags.maxChildren ?? [])" class="hl-dot" />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightParents') }"
               @click="isNonDefault('mutWeightParents') && resetProp('mutWeightParents')"
               >mutWeightParents</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightParents"
-              v-bind="numProps('mutWeightParents')"
-              size="small"
-              v-tip.right="configMeta.mutWeightParents[4]"
-              @keydown="handleShiftKey($event, 'mutWeightParents')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightParents"
+                v-bind="numProps('mutWeightParents')"
+                size="small"
+                v-tip.right="configTip('mutWeightParents')"
+                @keydown="handleShiftKey($event, 'mutWeightParents')"
+              />
+              <span v-if="isHighlighted(configFeatureTags.mutWeightParents ?? [])" class="hl-dot" />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('maxParents') }"
               @click="isNonDefault('maxParents') && resetProp('maxParents')"
               >maxParents</label
             >
-            <InputNumber
-              v-model="cfg.maxParents"
-              v-bind="numProps('maxParents')"
-              size="small"
-              v-tip.right="configMeta.maxParents[4]"
-              @keydown="handleShiftKey($event, 'maxParents')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.maxParents"
+                v-bind="numProps('maxParents')"
+                size="small"
+                v-tip.right="configTip('maxParents')"
+                @keydown="handleShiftKey($event, 'maxParents')"
+              />
+              <span v-if="isHighlighted(configFeatureTags.maxParents ?? [])" class="hl-dot" />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSwapSibling') }"
               @click="isNonDefault('mutWeightSwapSibling') && resetProp('mutWeightSwapSibling')"
               >mutWeightSwapSibling</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightSwapSibling"
-              v-bind="numProps('mutWeightSwapSibling')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSwapSibling[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSwapSibling')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightSwapSibling"
+                v-bind="numProps('mutWeightSwapSibling')"
+                size="small"
+                v-tip.right="configTip('mutWeightSwapSibling')"
+                @keydown="handleShiftKey($event, 'mutWeightSwapSibling')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.mutWeightSwapSibling ?? [])"
+                class="hl-dot"
+              />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSwapRandom') }"
               @click="isNonDefault('mutWeightSwapRandom') && resetProp('mutWeightSwapRandom')"
               >mutWeightSwapRandom</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightSwapRandom"
-              v-bind="numProps('mutWeightSwapRandom')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSwapRandom[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSwapRandom')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightSwapRandom"
+                v-bind="numProps('mutWeightSwapRandom')"
+                size="small"
+                v-tip.right="configTip('mutWeightSwapRandom')"
+                @keydown="handleShiftKey($event, 'mutWeightSwapRandom')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.mutWeightSwapRandom ?? [])"
+                class="hl-dot"
+              />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSwapInRow') }"
               @click="isNonDefault('mutWeightSwapInRow') && resetProp('mutWeightSwapInRow')"
               >mutWeightSwapInRow</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightSwapInRow"
-              v-bind="numProps('mutWeightSwapInRow')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSwapInRow[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSwapInRow')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightSwapInRow"
+                v-bind="numProps('mutWeightSwapInRow')"
+                size="small"
+                v-tip.right="configTip('mutWeightSwapInRow')"
+                @keydown="handleShiftKey($event, 'mutWeightSwapInRow')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.mutWeightSwapInRow ?? [])"
+                class="hl-dot"
+              />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightSwapInCol') }"
               @click="isNonDefault('mutWeightSwapInCol') && resetProp('mutWeightSwapInCol')"
               >mutWeightSwapInCol</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightSwapInCol"
-              v-bind="numProps('mutWeightSwapInCol')"
-              size="small"
-              v-tip.right="configMeta.mutWeightSwapInCol[4]"
-              @keydown="handleShiftKey($event, 'mutWeightSwapInCol')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightSwapInCol"
+                v-bind="numProps('mutWeightSwapInCol')"
+                size="small"
+                v-tip.right="configTip('mutWeightSwapInCol')"
+                @keydown="handleShiftKey($event, 'mutWeightSwapInCol')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.mutWeightSwapInCol ?? [])"
+                class="hl-dot"
+              />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightShiftRow') }"
               @click="isNonDefault('mutWeightShiftRow') && resetProp('mutWeightShiftRow')"
               >mutWeightShiftRow</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightShiftRow"
-              v-bind="numProps('mutWeightShiftRow')"
-              size="small"
-              v-tip.right="configMeta.mutWeightShiftRow[4]"
-              @keydown="handleShiftKey($event, 'mutWeightShiftRow')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightShiftRow"
+                v-bind="numProps('mutWeightShiftRow')"
+                size="small"
+                v-tip.right="configTip('mutWeightShiftRow')"
+                @keydown="handleShiftKey($event, 'mutWeightShiftRow')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.mutWeightShiftRow ?? [])"
+                class="hl-dot"
+              />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('mutWeightShiftCol') }"
               @click="isNonDefault('mutWeightShiftCol') && resetProp('mutWeightShiftCol')"
               >mutWeightShiftCol</label
             >
-            <InputNumber
-              v-model="cfg.mutWeightShiftCol"
-              v-bind="numProps('mutWeightShiftCol')"
-              size="small"
-              v-tip.right="configMeta.mutWeightShiftCol[4]"
-              @keydown="handleShiftKey($event, 'mutWeightShiftCol')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutWeightShiftCol"
+                v-bind="numProps('mutWeightShiftCol')"
+                size="small"
+                v-tip.right="configTip('mutWeightShiftCol')"
+                @keydown="handleShiftKey($event, 'mutWeightShiftCol')"
+              />
+              <span
+                v-if="isHighlighted(configFeatureTags.mutWeightShiftCol ?? [])"
+                class="hl-dot"
+              />
+            </div>
           </div>
         </AccordionContent>
       </AccordionPanel>
@@ -695,37 +784,46 @@ function copyCli() {
               @click="isNonDefault('mutationRate') && resetProp('mutationRate')"
               >mutationRate</label
             >
-            <InputNumber
-              v-model="cfg.mutationRate"
-              v-bind="numProps('mutationRate')"
-              size="small"
-              v-tip.right="configMeta.mutationRate[4]"
-              @keydown="handleShiftKey($event, 'mutationRate')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.mutationRate"
+                v-bind="numProps('mutationRate')"
+                size="small"
+                v-tip.right="configTip('mutationRate')"
+                @keydown="handleShiftKey($event, 'mutationRate')"
+              />
+              <span v-if="isHighlighted(configFeatureTags.mutationRate ?? [])" class="hl-dot" />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('crossoverRate') }"
               @click="isNonDefault('crossoverRate') && resetProp('crossoverRate')"
               >crossoverRate</label
             >
-            <InputNumber
-              v-model="cfg.crossoverRate"
-              v-bind="numProps('crossoverRate')"
-              size="small"
-              v-tip.right="configMeta.crossoverRate[4]"
-              @keydown="handleShiftKey($event, 'crossoverRate')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.crossoverRate"
+                v-bind="numProps('crossoverRate')"
+                size="small"
+                v-tip.right="configTip('crossoverRate')"
+                @keydown="handleShiftKey($event, 'crossoverRate')"
+              />
+              <span v-if="isHighlighted(configFeatureTags.crossoverRate ?? [])" class="hl-dot" />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('crossoverMix') }"
               @click="isNonDefault('crossoverMix') && resetProp('crossoverMix')"
               >crossoverMix</label
             >
-            <InputNumber
-              v-model="cfg.crossoverMix"
-              v-bind="numProps('crossoverMix')"
-              size="small"
-              v-tip.right="configMeta.crossoverMix[4]"
-              @keydown="handleShiftKey($event, 'crossoverMix')"
-            />
+            <div class="field-with-dot">
+              <InputNumber
+                v-model="cfg.crossoverMix"
+                v-bind="numProps('crossoverMix')"
+                size="small"
+                v-tip.right="configTip('crossoverMix')"
+                @keydown="handleShiftKey($event, 'crossoverMix')"
+              />
+              <span v-if="isHighlighted(configFeatureTags.crossoverMix ?? [])" class="hl-dot" />
+            </div>
             <label
               :class="{ 'non-default': isNonDefault('tournamentSize') }"
               @click="isNonDefault('tournamentSize') && resetProp('tournamentSize')"
@@ -1005,6 +1103,10 @@ function copyCli() {
   width: 80px;
 }
 
+.fields-grid .field-with-dot {
+  justify-self: right;
+}
+
 .toggles-grid {
   display: grid;
   grid-template-columns: auto 80px;
@@ -1024,5 +1126,24 @@ function copyCli() {
 .accordion {
   --p-accordion-header-font-weight: initial;
   font-size: 15px;
+}
+
+.field-with-dot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hl-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--p-primary-400);
+  flex-shrink: 0;
+  position: relative;
+  margin-left: -9px;
+  top: -1.5px;
+  left: 12px;
 }
 </style>
