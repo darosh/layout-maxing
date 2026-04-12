@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Button from 'primevue/button'
 import Toolbar from 'primevue/toolbar'
+import Toast from 'primevue/toast'
 import FileDropZone from '@/components/FileDropZone.vue'
 import ConfigPanel from '@/components/ConfigPanel.vue'
 import HelpDialog from '@/components/HelpDialog.vue'
@@ -12,9 +13,26 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import SvgAnimatedRenderer from '@/components/SvgAnimatedRenderer.vue'
 import PatchInfo from '@/components/PatchInfo.vue'
 import SvgPlaceholder from '@/components/SvgPlaceholder.vue'
+import { useToast } from 'primevue/usetoast'
+import { formatScore } from '@/utils/formatScore.ts'
 
 const animateSvg = true
 const store = useOptimizerStore()
+
+const toast = useToast()
+
+watch(
+  () => store.status,
+  (status) => {
+    if (status === 'done')
+      toast.add({
+        summary: 'Done',
+        life: 2600,
+        detail: formatScore(store.progress.bestScore),
+        severity: 'info',
+      })
+  },
+)
 
 const hasEverRendered = ref(false)
 watch(
@@ -231,6 +249,33 @@ const btnPause = computed(() => store.status === 'running')
       </section>
     </main>
     <HelpDialog v-model:visible="helpVisible" :is-mac="isMac" />
+    <Toast
+      position="center"
+      style="
+        --p-toast-width: 120px;
+        --p-toast-info-background: rgba(33, 33, 33, 0.16);
+        --p-toast-info-border-color: rgba(99, 99, 99, 0.24);
+        --p-toast-info-color: #fff;
+      ">
+      <template #container="{ message, closeCallback }">
+        <section
+          @click="closeCallback"
+          class="rounded-sm"
+          style="
+            padding: 2rem;
+            height: 7rem;
+            text-align: center;
+            font-family: monospace;
+            gap: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          ">
+          <div style="color: var(--p-primary-400)">{{ message.summary }}</div>
+          <div>{{ message.detail }}</div>
+        </section>
+      </template>
+    </Toast>
   </div>
 </template>
 
