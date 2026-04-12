@@ -1,0 +1,16 @@
+{
+  "mutationRate": 0.5,
+  "maxParents": 3,
+  "crossWeightRandom": 5,
+  "crossWeightStruct": 10,
+  "tournamentSize": 0.7,
+  "diversityBoostFactor": 0.25,
+  "crowdingWeight": 0.3,
+  "stagnationResetThreshold": 50,
+  "stagnationResetRate": 1.1,
+  "mutWeightParents": 10,
+  "mutWeightSwapInRow": 20,
+  "mutWeightSwapInCol": 20,
+  "mutWeightShiftRow": 10,
+  "mutWeightShiftCol": 10
+}
