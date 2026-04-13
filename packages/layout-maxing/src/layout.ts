@@ -25,6 +25,8 @@ export type Box = {
   children?: number[]
   parents?: number[]
   groupIdx?: number
+  _groupDx?: number // original x offset from group entity top-left (set once by stampGroupOffsets)
+  _groupDy?: number // original y offset from group entity top-left
   _mutations?: Record<string, number> // monitoring: count of each mutation type that moved this box
 }
 
@@ -79,6 +81,28 @@ export function stampGroupIdx(
   })
 }
 
+// Capture each group member's original offset from the group bounding-box top-left.
+// Must be called on baseLayouts BEFORE any layout algorithm (dagre etc.) shifts positions.
+// These offsets are preserved through cloneLayouts and used by toEntities so that all
+// mutations and fixOverlaps enforce the original group structure.
+export function stampGroupOffsets(
+  layouts: Box[],
+  boxgroups: Array<{ boxes: BoxId[] }> | undefined,
+): void {
+  if (!boxgroups?.length) return
+  const byId = new Map(layouts.map((l) => [l.id, l]))
+  for (const g of boxgroups) {
+    const present = g.boxes.map((id) => byId.get(id)).filter(Boolean) as Box[]
+    if (present.length < 2) continue
+    const minX = Math.min(...present.map((m) => m.x))
+    const minY = Math.min(...present.map((m) => m.y))
+    for (const m of present) {
+      m._groupDx = m.x - minX
+      m._groupDy = m.y - minY
+    }
+  }
+}
+
 // If a group has any connected member (depth ≥ 0), mark all its members as
 // connected so stripOrphans won't remove them.
 export function preserveGroupMembers(
@@ -103,51 +127,122 @@ export function stripOrphans(layouts: Box[]): Box[] {
   return kept
 }
 
-export type GroupPlan = Array<{
-  leaderId: BoxId
-  members: Array<{ id: BoxId; dx: number; dy: number }>
-}>
-
-// Capture relative offsets of each group member to its leader (first box).
-// Uses stable BoxId so callers don't have to worry about array reordering
-// (e.g. fixOverlaps sorts the array and breaks positional indexing).
-export function buildGroupPlan(
-  layouts: Box[],
-  boxgroups: Array<{ boxes: BoxId[] }> | undefined,
-): GroupPlan {
-  if (!boxgroups?.length) return []
-  const byId = new Map(layouts.map((l) => [l.id, l]))
-  const plan: GroupPlan = []
-  for (const g of boxgroups) {
-    const present = g.boxes.map((id) => byId.get(id)).filter(Boolean) as Box[]
-    if (present.length < 2) continue
-    const leader = present[0]
-    plan.push({
-      leaderId: leader.id,
-      members: present.slice(1).map((m) => ({
-        id: m.id,
-        dx: m.x - leader.x,
-        dy: m.y - leader.y,
-      })),
-    })
-  }
-  return plan
+// Atomic layout unit: either a standalone box (members.length === 1, groupIdx undefined)
+// or a group's bounding box (groupIdx set, members has all group members with relative offsets).
+// Moving the entity updates all member box coordinates via syncEntity.
+export type LayoutEntity = {
+  x: number // top-left of bounding box
+  y: number
+  width: number // bounding box dimensions
+  height: number
+  groupIdx?: number
+  members: Array<{ box: Box; dx: number; dy: number }>
 }
 
-// Snap each group member's position to leader + captured offset.
-export function alignGroups(layouts: Box[], plan: GroupPlan): void {
-  if (plan.length === 0) return
-  const byId = new Map(layouts.map((l) => [l.id, l]))
-  for (const g of plan) {
-    const leader = byId.get(g.leaderId)
-    if (!leader) continue
-    for (const m of g.members) {
-      const member = byId.get(m.id)
-      if (!member) continue
-      member.x = leader.x + m.dx
-      member.y = leader.y + m.dy
+// Write entity x/y back to member boxes (member.box.x = entity.x + m.dx).
+export function syncEntity(entity: LayoutEntity): void {
+  for (const m of entity.members) {
+    m.box.x = entity.x + m.dx
+    m.box.y = entity.y + m.dy
+  }
+}
+
+// Move entity to (x, y) and sync all members.
+export function moveEntityTo(entity: LayoutEntity, x: number, y: number): void {
+  entity.x = x
+  entity.y = y
+  syncEntity(entity)
+}
+
+// Swap positions of two entities, preserving each entity's internal member offsets.
+export function swapEntities(a: LayoutEntity, b: LayoutEntity): void {
+  const ax = a.x
+  const ay = a.y
+  moveEntityTo(a, b.x, b.y)
+  moveEntityTo(b, ax, ay)
+}
+
+// Build entity list from current layouts.
+// Groups (2+ members with same groupIdx) → one entity per groupIdx.
+// Standalone boxes → trivial one-member entity.
+export function toEntities(layouts: Box[]): LayoutEntity[] {
+  const groupMap = new Map<number, Box[]>()
+  const standalone: Box[] = []
+
+  for (const box of layouts) {
+    if (box.groupIdx !== undefined) {
+      if (!groupMap.has(box.groupIdx)) groupMap.set(box.groupIdx, [])
+      groupMap.get(box.groupIdx)!.push(box)
+    } else {
+      standalone.push(box)
     }
   }
+
+  const entities: LayoutEntity[] = []
+
+  for (const [groupIdx, members] of groupMap) {
+    if (members.length < 2) {
+      for (const box of members) standalone.push(box)
+      continue
+    }
+
+    // Use stored offsets (set by stampGroupOffsets) when available.
+    // The anchor is the member with _groupDx=0, _groupDy=0 (original top-left).
+    // entity.x = anchor.x so that member.x = entity.x + _groupDx = anchor.x + _groupDx.
+    // This enforces original relative positions regardless of where dagre/mutations placed boxes.
+    const hasStoredOffsets = members.every((m) => m._groupDx !== undefined)
+    if (hasStoredOffsets) {
+      const anchor = members.find((m) => m._groupDx === 0 && m._groupDy === 0) ?? members[0]
+      const entityX = anchor.x - (anchor._groupDx ?? 0)
+      const entityY = anchor.y - (anchor._groupDy ?? 0)
+      const entityW = Math.max(...members.map((m) => m._groupDx! + m.width))
+      const entityH = Math.max(...members.map((m) => m._groupDy! + m.height))
+      entities.push({
+        x: entityX,
+        y: entityY,
+        width: entityW,
+        height: entityH,
+        groupIdx,
+        members: members.map((m) => ({ box: m, dx: m._groupDx!, dy: m._groupDy! })),
+      })
+    } else {
+      const minX = Math.min(...members.map((m) => m.x))
+      const minY = Math.min(...members.map((m) => m.y))
+      const maxX = Math.max(...members.map((m) => m.x + m.width))
+      const maxY = Math.max(...members.map((m) => m.y + m.height))
+      entities.push({
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+        groupIdx,
+        members: members.map((m) => ({ box: m, dx: m.x - minX, dy: m.y - minY })),
+      })
+    }
+  }
+
+  for (const box of standalone) {
+    entities.push({
+      x: box.x,
+      y: box.y,
+      width: box.width,
+      height: box.height,
+      members: [{ box, dx: 0, dy: 0 }],
+    })
+  }
+
+  return entities
+}
+
+// Build a map from box.index → LayoutEntity for fast lookup.
+export function buildBoxEntityIndex(entities: LayoutEntity[]): Map<number, LayoutEntity> {
+  const m = new Map<number, LayoutEntity>()
+  for (const e of entities) {
+    for (const { box } of e.members) {
+      m.set(box.index, e)
+    }
+  }
+  return m
 }
 
 export function fillDepths(layouts: Box[], lines: Line[] | undefined): void {
@@ -239,43 +334,35 @@ export function fillDepths(layouts: Box[], lines: Line[] | undefined): void {
   }
 }
 
-export function layoutShrink(layouts: Box[], stepY: number) {
-  const rows = new Map<number, Box[]>()
+function entitiesOverlap(a: LayoutEntity, b: LayoutEntity): boolean {
+  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+}
 
-  for (const l of layouts) {
-    if (rows.has(l.y)) {
-      rows.get(l.y)!.push(l)
-    } else {
-      rows.set(l.y, [l])
-    }
+function layoutShrinkEntities(entities: LayoutEntity[], stepY: number): void {
+  const rows = new Map<number, LayoutEntity[]>()
+  for (const e of entities) {
+    if (!rows.has(e.y)) rows.set(e.y, [])
+    rows.get(e.y)!.push(e)
   }
-
   let y = 0
-
-  for (const [, ls] of rows
-    .entries()
-    .toArray()
-    .toSorted(([a], [b]) => a - b)) {
-    for (const l of ls) {
-      l.y = y
-    }
-
+  for (const [, rowEntities] of [...rows.entries()].sort(([a], [b]) => a - b)) {
+    for (const e of rowEntities) moveEntityTo(e, e.x, y)
     y += stepY
   }
 }
 
-function boxesOverlap(a: Box, b: Box): boolean {
-  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
-}
-
 export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
   const fixed = layouts.map((l) => ({ ...l }))
+  const entities = toEntities(fixed)
 
-  // Initial grid snap
-  fixed.forEach((b) => {
-    b.x = Math.round(b.x / cfg.gridX) * cfg.gridX
-    b.y = Math.round(b.y / cfg.gridY) * cfg.gridY
-  })
+  // Initial grid snap (entity top-left)
+  for (const e of entities) {
+    moveEntityTo(
+      e,
+      Math.round(e.x / cfg.gridX) * cfg.gridX,
+      Math.round(e.y / cfg.gridY) * cfg.gridY,
+    )
+  }
 
   let changed = true
   let iterations = 0
@@ -285,15 +372,14 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
     changed = false
     iterations++
 
-    // Sort by row (Y) then column (X) as requested
-    fixed.sort((a, b) => a.y - b.y || a.x - b.x)
+    entities.sort((a, b) => a.y - b.y || a.x - b.x)
 
-    for (let i = 0; i < fixed.length; i++) {
+    for (let i = 0; i < entities.length; i++) {
       for (let j = 0; j < i; j++) {
-        const curr = fixed[i]
-        const prev = fixed[j]
+        const curr = entities[i]
+        const prev = entities[j]
 
-        if (boxesOverlap(curr, prev)) {
+        if (entitiesOverlap(curr, prev)) {
           const overlapX = Math.max(
             0,
             Math.min(curr.x + curr.width, prev.x + prev.width) - Math.max(curr.x, prev.x),
@@ -303,11 +389,10 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
             Math.min(curr.y + curr.height, prev.y + prev.height) - Math.max(curr.y, prev.y),
           )
 
-          // Prefer shifting right when X-overlap is smaller or equal; otherwise down (follows "right/bottom" heuristic)
           if (overlapX <= overlapY || overlapY === 0) {
-            curr.x = prev.x + prev.width + cfg.minDistX
+            moveEntityTo(curr, prev.x + prev.width + cfg.minDistX, curr.y)
           } else {
-            curr.y = prev.y + prev.height + cfg.minDistY
+            moveEntityTo(curr, curr.x, prev.y + prev.height + cfg.minDistY)
           }
           changed = true
         }
@@ -315,13 +400,12 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
     }
   }
 
-  // Final grid snap (no shrinking implemented - boxes keep original size)
-  fixed.forEach((b) => {
-    b.x = Math.ceil(b.x / cfg.gridX) * cfg.gridX
-    b.y = Math.round(b.y / cfg.gridY) * cfg.gridY
-  })
+  // Final grid snap
+  for (const e of entities) {
+    moveEntityTo(e, Math.ceil(e.x / cfg.gridX) * cfg.gridX, Math.round(e.y / cfg.gridY) * cfg.gridY)
+  }
 
-  layoutShrink(fixed, cfg.gridY)
+  layoutShrinkEntities(entities, cfg.gridY)
 
   return fixed
 }

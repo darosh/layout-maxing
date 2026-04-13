@@ -2,10 +2,10 @@ import { type Config } from './config.ts'
 import {
   type Box,
   type Line,
-  type GroupPlan,
+  type LayoutEntity,
   fixOverlaps,
   normalizeLayouts,
-  alignGroups,
+  toEntities,
 } from './layout.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import {
@@ -164,7 +164,6 @@ export async function createPopulation(
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
-  groupPlan: GroupPlan,
   getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
 ) {
   const individuals: Population[] = []
@@ -188,7 +187,6 @@ export async function createPopulation(
 
     ind = fixOverlaps(ind, cfg)
 
-    if (cfg.keepGroups) alignGroups(ind, groupPlan)
     if (cfg.normalize) normalizeLayouts(ind)
 
     individuals.push({ id: i, gen: 0, layouts: ind, fitness: undefined as any })
@@ -249,8 +247,10 @@ function mutateChild(
   cfg: Required<Config>,
   effectiveMutate: number,
 ) {
-  const mutationTarget = child[Math.floor(rand() * child.length)]
-  const childMutatedBoxId = mutationTarget.id
+  const entities = toEntities(child)
+  const targetEntity: LayoutEntity =
+    entities[Math.floor(rand() * entities.length) % entities.length]
+  const childMutatedBoxId = targetEntity.members[0].box.id
 
   const mutIdx = roulette(
     [
@@ -282,25 +282,25 @@ function mutateChild(
 
   if (mutIdx === 0) {
     const quadrant = Math.floor(rand() * 4)
-    child = mutateByQuadrant(mutationTarget, child, { x, y }, quadrant)
+    mutateByQuadrant(targetEntity, entities, { x, y }, quadrant)
   } else if (mutIdx === 1) {
-    child = mutateSingle(mutationTarget, child, { x, y })
+    mutateSingle(targetEntity, { x, y })
   } else if (mutIdx === 2) {
-    child = mutateWithChildren(mutationTarget, child, { x, y }, cfg.maxChildren)
+    mutateWithChildren(targetEntity, entities, { x, y }, cfg.maxChildren)
   } else if (mutIdx === 3) {
-    child = mutateWithParents(mutationTarget, child, { x, y }, cfg.maxParents)
+    mutateWithParents(targetEntity, entities, { x, y }, cfg.maxParents)
   } else if (mutIdx === 4) {
-    child = mutateSwapSibling(mutationTarget, child, rand)
+    mutateSwapSibling(targetEntity, entities, rand)
   } else if (mutIdx === 5) {
-    child = mutateSwapRandom(mutationTarget, child, rand)
+    mutateSwapRandom(targetEntity, entities, rand)
   } else if (mutIdx === 6) {
-    child = mutateSwapInRow(mutationTarget, child, rand, cfg)
+    mutateSwapInRow(targetEntity, entities, rand, cfg)
   } else if (mutIdx === 7) {
-    child = mutateSwapInCol(mutationTarget, child, rand, cfg)
+    mutateSwapInCol(targetEntity, entities, rand, cfg)
   } else if (mutIdx === 8) {
-    child = mutateShiftRow(mutationTarget, child, { x })
+    mutateShiftRow(targetEntity, entities, { x })
   } else {
-    child = mutateShiftCol(mutationTarget, child, { y })
+    mutateShiftCol(targetEntity, entities, { y })
   }
   return { child, childMutatedBoxId, childMutation }
 }
@@ -310,7 +310,6 @@ async function runGenetic(
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
-  groupPlan: GroupPlan,
   getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: Box[]) => void,
   onGenerationEnd?: (stop: number, snapshot?: GenerationSnapshot) => void,
@@ -319,7 +318,7 @@ async function runGenetic(
   onMonitorEnd?: (monitor: RunMonitor) => void,
 ): Promise<Box[]> {
   // Create population
-  let population = await createPopulation(startingLayouts, lines, rand, cfg, groupPlan, getFitness)
+  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
 
   // If all boxes were stripped (e.g. ignoreOrphans + no lines), return empty
   if (population[0].layouts.length === 0) {
@@ -580,7 +579,6 @@ async function runGenetic(
 
       // child = fixOverlaps(child, cfg)
 
-      if (cfg.keepGroups) alignGroups(child, groupPlan)
       if (cfg.normalize) normalizeLayouts(child)
 
       newPopulation.push({

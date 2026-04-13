@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { expect, test } from 'vite-plus/test'
-import { fitness, createInitialLayouts, buildGroupPlan, type RNBO } from '../src/index.ts'
+import { fitness, createInitialLayouts, stampGroupIdx, type RNBO } from '../src/index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -27,15 +27,7 @@ test('grouped boxes do not contribute to minDist violations', () => {
   expect(withoutGroup.minDist, 'should detect minDist violations without groupMap').toBe(3)
 
   // With groupIdx stamped on layouts: grouped pairs are excluded
-  const groupPlan = buildGroupPlan(layouts, patcher.boxgroups)
-  const byId = new Map(layouts.map((l) => [l.id, l]))
-  groupPlan.forEach((g, i) => {
-    byId.get(g.leaderId)!.groupIdx = i
-    g.members.forEach((m) => {
-      const l = byId.get(m.id)
-      if (l) l.groupIdx = i
-    })
-  })
+  stampGroupIdx(layouts, patcher.boxgroups)
 
   const withGroup = fitness(layouts, lines, { minDistY: 15 })
   expect(withGroup.minDist, 'grouped boxes should not be counted as minDist violations').toBe(0)

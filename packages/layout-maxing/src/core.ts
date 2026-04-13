@@ -3,7 +3,6 @@ import {
   type Box,
   type Line,
   type Patcher,
-  type GroupPlan,
   createInitialLayouts,
   fillDepths,
   dagreFlow,
@@ -12,8 +11,7 @@ import {
   stripOrphans,
   preserveGroupMembers,
   stampGroupIdx,
-  buildGroupPlan,
-  alignGroups,
+  stampGroupOffsets,
 } from './layout.ts'
 import { cloneLayouts } from './mutation.ts'
 import { type Fitness, fitness } from './fitness.ts'
@@ -98,8 +96,13 @@ export async function main(
 
   // Build initial layouts
   let baseLayouts = createInitialLayouts(patcher)
-  // Stamp groupIdx early so input fitness correctly skips same-group pairs
-  if (c.keepGroups) stampGroupIdx(baseLayouts, patcher.boxgroups)
+  // Stamp groupIdx and original offsets before any layout algorithm moves boxes.
+  // stampGroupOffsets must come before dagreFlow so _groupDx/_groupDy reflect the
+  // original patcher positions, which are the ones the test (and user) expects preserved.
+  if (c.keepGroups) {
+    stampGroupIdx(baseLayouts, patcher.boxgroups)
+    stampGroupOffsets(baseLayouts, patcher.boxgroups)
+  }
   const inputFitness = getFitness
     ? await getFitness(baseLayouts, lines, c)
     : fitness(baseLayouts, lines, c)
@@ -118,8 +121,6 @@ export async function main(
     // fillDepths pass would now point to the wrong boxes.
     fillDepths(baseLayouts, lines)
   }
-
-  const groupPlan: GroupPlan = c.keepGroups ? buildGroupPlan(baseLayouts, patcher.boxgroups) : []
 
   let startingLayouts: Box[][] = []
 
@@ -144,10 +145,8 @@ export async function main(
     startingLayouts.push(clone)
   }
 
-  // Normalize + group-align starting layouts so they satisfy the same
-  // invariants the GA enforces each generation.
+  // Normalize starting layouts so they satisfy the same invariants the GA enforces each generation.
   for (const sl of startingLayouts) {
-    if (c.keepGroups) alignGroups(sl, groupPlan)
     if (c.normalize) normalizeLayouts(sl)
   }
 
@@ -160,7 +159,6 @@ export async function main(
     lines,
     rand,
     c,
-    groupPlan,
     getFitness,
     onIntermediate,
     onGenerationEnd,

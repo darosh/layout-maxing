@@ -1,204 +1,202 @@
 import { type Config } from './config.ts'
-import { type Box } from './layout.ts'
+import {
+  type Box,
+  type LayoutEntity,
+  toEntities,
+  moveEntityTo,
+  swapEntities,
+  buildBoxEntityIndex,
+} from './layout.ts'
 
 export function cloneLayouts(layouts: Box[]): Box[] {
   return layouts.map((l) => ({ ...l }))
 }
 
-export function hasSiblings(box: Box, layouts: Box[]): boolean {
-  if (!box.parents || box.parents.length === 0) return false
-
-  const byIndex = new Map(layouts.map((l) => [l.index, l]))
-  return box.parents.some((parentIndex) => {
-    const parent = byIndex.get(parentIndex)
-    return parent?.children?.some((childIndex) => childIndex !== box.index)
-  })
-}
-
-export function getRandomSibling(
-  box: Box,
-  layouts: Box[],
-  rand: () => number = Math.random,
-): number | undefined {
-  if (!box.parents || box.parents.length === 0) return undefined
-
-  const byIndex = new Map(layouts.map((l) => [l.index, l]))
-  const siblings: number[] = []
-
-  for (const parentIndex of box.parents) {
-    const parent = byIndex.get(parentIndex)
-    for (const childIndex of parent?.children ?? []) {
-      if (childIndex !== box.index) siblings.push(childIndex)
-    }
-  }
-
-  if (siblings.length === 0) return undefined
-
-  return siblings[Math.floor(rand() * siblings.length)]
-}
-
-export function mutateSingle(target: Box, layouts: Box[], delta: { x: number; y: number }): Box[] {
-  target.x += delta.x
-  target.y += delta.y
-  return layouts
+export function mutateSingle(target: LayoutEntity, delta: { x: number; y: number }): void {
+  moveEntityTo(target, target.x + delta.x, target.y + delta.y)
 }
 
 export function mutateWithChildren(
-  target: Box,
-  layouts: Box[],
+  target: LayoutEntity,
+  entities: LayoutEntity[],
   delta: { x: number; y: number },
   maxDepth: number,
-): Box[] {
-  const byIndex = new Map(layouts.map((l) => [l.index, l]))
-  const visited = new Set<number>()
+): void {
+  const boxEntityMap = buildBoxEntityIndex(entities)
+  const visited = new Set<LayoutEntity>()
 
-  function apply(box: Box, depth: number) {
-    if (depth <= 0 || visited.has(box.index)) return
-    visited.add(box.index)
-    box.x += delta.x
-    box.y += delta.y
-    for (const index of box.children ?? []) {
-      apply(byIndex.get(index)!, depth - 1)
+  function apply(entity: LayoutEntity, depth: number) {
+    if (depth <= 0 || visited.has(entity)) return
+    visited.add(entity)
+    moveEntityTo(entity, entity.x + delta.x, entity.y + delta.y)
+    for (const { box } of entity.members) {
+      for (const childIdx of box.children ?? []) {
+        const childEntity = boxEntityMap.get(childIdx)
+        if (childEntity) apply(childEntity, depth - 1)
+      }
     }
   }
 
   apply(target, maxDepth + 1)
-  return layouts
 }
 
 export function mutateWithParents(
-  target: Box,
-  layouts: Box[],
+  target: LayoutEntity,
+  entities: LayoutEntity[],
   delta: { x: number; y: number },
   maxDepth: number,
-): Box[] {
-  const byIndex = new Map(layouts.map((l) => [l.index, l]))
-  const visited = new Set<number>()
+): void {
+  const boxEntityMap = buildBoxEntityIndex(entities)
+  const visited = new Set<LayoutEntity>()
 
-  function apply(box: Box, depth: number) {
-    if (depth <= 0 || visited.has(box.index)) return
-    visited.add(box.index)
-    box.x += delta.x
-    box.y += delta.y
-    for (const index of box.parents ?? []) {
-      apply(byIndex.get(index)!, depth - 1)
+  function apply(entity: LayoutEntity, depth: number) {
+    if (depth <= 0 || visited.has(entity)) return
+    visited.add(entity)
+    moveEntityTo(entity, entity.x + delta.x, entity.y + delta.y)
+    for (const { box } of entity.members) {
+      for (const parentIdx of box.parents ?? []) {
+        const parentEntity = boxEntityMap.get(parentIdx)
+        if (parentEntity) apply(parentEntity, depth - 1)
+      }
     }
   }
 
   apply(target, maxDepth + 1)
-  return layouts
 }
 
 export function mutateByQuadrant(
-  target: Box,
-  layouts: Box[],
+  target: LayoutEntity,
+  entities: LayoutEntity[],
   delta: { x: number; y: number },
   quadrant: number,
-): Box[] {
+): void {
   const left = quadrant === 0 || quadrant === 2
   const top = quadrant === 0 || quadrant === 1
 
-  for (const box of layouts) {
-    const inX = left ? box.x <= target.x : box.x >= target.x
-    const inY = top ? box.y <= target.y : box.y >= target.y
-    if (inX && inY) {
-      box.x += delta.x
-      box.y += delta.y
+  for (const e of entities) {
+    const inX = left ? e.x <= target.x : e.x >= target.x
+    const inY = top ? e.y <= target.y : e.y >= target.y
+    if (inX && inY) moveEntityTo(e, e.x + delta.x, e.y + delta.y)
+  }
+}
+
+export function mutateSwapRandom(
+  target: LayoutEntity,
+  entities: LayoutEntity[],
+  rand: () => number,
+): void {
+  const idx = Math.floor(rand() * entities.length) % entities.length
+  const other = entities[idx]
+  if (other !== target) swapEntities(target, other)
+}
+
+export function mutateSwapSibling(
+  target: LayoutEntity,
+  entities: LayoutEntity[],
+  rand: () => number,
+): void {
+  const boxEntityMap = buildBoxEntityIndex(entities)
+  const siblingEntities = new Set<LayoutEntity>()
+
+  for (const { box } of target.members) {
+    for (const parentIdx of box.parents ?? []) {
+      const parentEntity = boxEntityMap.get(parentIdx)
+      if (!parentEntity) continue
+      for (const { box: parentBox } of parentEntity.members) {
+        for (const childIdx of parentBox.children ?? []) {
+          const sibEntity = boxEntityMap.get(childIdx)
+          if (sibEntity && sibEntity !== target) siblingEntities.add(sibEntity)
+        }
+      }
     }
   }
 
-  return layouts
-}
-
-export function swap(box: Box, src: Box) {
-  const x = box.x
-  const y = box.y
-  box.x = src.x
-  box.y = src.y
-  src.x = x
-  src.y = y
-}
-
-export function mutateSwapRandom(target: Box, layouts: Box[], rand) {
-  const ind = Math.floor(rand() * layouts.length) % layouts.length
-  const src = layouts[ind]
-  swap(target, src)
-  return layouts
-}
-
-export function mutateSwapSibling(target: Box, layouts: Box[], rand) {
-  if (!hasSiblings(target, layouts)) return layouts
-
-  const is = getRandomSibling(target, layouts, rand)!
-  const src = layouts.find((v) => v.index === is)!
-  swap(target, src)
-  return layouts
-}
-
-export function getRow(box: Box, layouts: Box[]): Box[] {
-  return layouts.filter((l) => l.y === box.y).sort((a, b) => a.x - b.x)
-}
-
-export function getCol(box: Box, layouts: Box[]): Box[] {
-  return layouts.filter((l) => l.x === box.x).sort((a, b) => a.y - b.y)
+  const siblings = [...siblingEntities]
+  if (siblings.length === 0) return
+  const sibling = siblings[Math.floor(rand() * siblings.length) % siblings.length]
+  swapEntities(target, sibling)
 }
 
 export function mutateSwapInRow(
-  target: Box,
-  layouts: Box[],
+  target: LayoutEntity,
+  entities: LayoutEntity[],
   rand: () => number,
   cfg: Required<Config>,
-): Box[] {
-  const row = getRow(target, layouts)
-  const idx = row.findIndex((b) => b.index === target.index)
-  const neighbors: Box[] = []
+): void {
+  const row = entities.filter((e) => e.y === target.y).sort((a, b) => a.x - b.x)
+  const idx = row.findIndex((e) => e === target)
+  const neighbors: LayoutEntity[] = []
   if (idx > 0) neighbors.push(row[idx - 1])
   if (idx < row.length - 1) neighbors.push(row[idx + 1])
-  if (neighbors.length === 0) return layouts
+  if (neighbors.length === 0) return
 
   const other = neighbors[Math.floor(rand() * neighbors.length) % neighbors.length]
   const [left, right] = target.x < other.x ? [target, other] : [other, target]
   const leftX = left.x
   const rightX = right.x
-  right.x = leftX
-  left.x = Math.round((rightX + right.width - left.width) / cfg.gridX) * cfg.gridX
-  return layouts
+  moveEntityTo(right, leftX, right.y)
+  moveEntityTo(
+    left,
+    Math.round((rightX + right.width - left.width) / cfg.gridX) * cfg.gridX,
+    left.y,
+  )
 }
 
 export function mutateSwapInCol(
-  target: Box,
-  layouts: Box[],
+  target: LayoutEntity,
+  entities: LayoutEntity[],
   rand: () => number,
   cfg: Required<Config>,
-): Box[] {
-  const col = getCol(target, layouts)
-  const idx = col.findIndex((b) => b.index === target.index)
-  const neighbors: Box[] = []
+): void {
+  const col = entities.filter((e) => e.x === target.x).sort((a, b) => a.y - b.y)
+  const idx = col.findIndex((e) => e === target)
+  const neighbors: LayoutEntity[] = []
   if (idx > 0) neighbors.push(col[idx - 1])
   if (idx < col.length - 1) neighbors.push(col[idx + 1])
-  if (neighbors.length === 0) return layouts
+  if (neighbors.length === 0) return
 
   const other = neighbors[Math.floor(rand() * neighbors.length) % neighbors.length]
   const [top, bottom] = target.y < other.y ? [target, other] : [other, target]
   const topY = top.y
   const bottomY = bottom.y
-  bottom.y = topY
-  top.y = Math.round((bottomY + bottom.height - top.height) / cfg.gridY) * cfg.gridY
-  return layouts
+  moveEntityTo(bottom, bottom.x, topY)
+  moveEntityTo(
+    top,
+    top.x,
+    Math.round((bottomY + bottom.height - top.height) / cfg.gridY) * cfg.gridY,
+  )
 }
 
-export function mutateShiftRow(target: Box, layouts: Box[], delta: { x: number }): Box[] {
-  for (const box of getRow(target, layouts)) {
-    box.x += delta.x
+export function mutateShiftRow(
+  target: LayoutEntity,
+  entities: LayoutEntity[],
+  delta: { x: number },
+): void {
+  for (const e of entities.filter((e) => e.y === target.y)) {
+    moveEntityTo(e, e.x + delta.x, e.y)
   }
-  return layouts
 }
 
-export function mutateShiftCol(target: Box, layouts: Box[], delta: { y: number }): Box[] {
-  for (const box of getCol(target, layouts)) {
-    box.y += delta.y
+export function mutateShiftCol(
+  target: LayoutEntity,
+  entities: LayoutEntity[],
+  delta: { y: number },
+): void {
+  for (const e of entities.filter((e) => e.x === target.x)) {
+    moveEntityTo(e, e.x, e.y + delta.y)
   }
-  return layouts
+}
+
+// Find entity in otherEntities that matches the given entity (by groupIdx or box.index).
+function matchEntity(
+  entity: LayoutEntity,
+  otherEntities: LayoutEntity[],
+): LayoutEntity | undefined {
+  if (entity.groupIdx !== undefined) {
+    return otherEntities.find((e) => e.groupIdx === entity.groupIdx)
+  }
+  const myIdx = entity.members[0].box.index
+  return otherEntities.find((e) => e.groupIdx === undefined && e.members[0].box.index === myIdx)
 }
 
 export function crossover(
@@ -208,57 +206,75 @@ export function crossover(
   cfg: Required<Config>,
 ): Box[] {
   const child = cloneLayouts(parent1)
-  for (let i = 0; i < child.length; i++) {
+  const childEntities = toEntities(child)
+  const p2Entities = toEntities(parent2)
+
+  for (const e of childEntities) {
     if (rand() < cfg.crossoverMix) {
-      child[i].x = parent2[i].x
-      child[i].y = parent2[i].y
-      // Merge both parents' histories; crossover itself counts as 1
-      const merged: Record<string, number> = { ...parent2[i]._mutations }
-      for (const [k, v] of Object.entries(parent1[i]._mutations ?? {})) {
-        merged[k] = (merged[k] ?? 0) + v
+      const p2e = matchEntity(e, p2Entities)
+      if (!p2e) continue
+      moveEntityTo(e, p2e.x, p2e.y)
+
+      // Merge mutation histories per member
+      for (const { box: childBox } of e.members) {
+        const p2Box = p2e.members.find((m) => m.box.index === childBox.index)?.box
+        if (!p2Box) continue
+        const merged: Record<string, number> = { ...p2Box._mutations }
+        for (const [k, v] of Object.entries(childBox._mutations ?? {})) {
+          merged[k] = (merged[k] ?? 0) + v
+        }
+        merged['crossover'] = (merged['crossover'] ?? 0) + 1
+        childBox._mutations = merged
       }
-      merged['crossover'] = (merged['crossover'] ?? 0) + 1
-      child[i]._mutations = merged
     }
-    // else: child already cloned parent1's _mutations via cloneLayouts
   }
-  // return fixOverlaps(child)
+
   return child
 }
 
 export function crossoverStructural(parent1: Box[], parent2: Box[], rand: () => number): Box[] {
   const child = cloneLayouts(parent1)
-  // Pick one random box; copy its position + all descendants' positions from parent2
-  const targetIdx = Math.floor(rand() * child.length)
-  const byIndex = new Map(parent2.map((b) => [b.index, b]))
+  const childEntities = toEntities(child)
+  const p2Entities = toEntities(parent2)
 
-  // Collect target + all descendants via BFS
-  const toTransplant = new Set<number>()
-  const queue = [child[targetIdx].index]
+  // Pick random entity as structural transplant root
+  const targetEntityIdx = Math.floor(rand() * childEntities.length)
+  const targetEntity = childEntities[targetEntityIdx]
+
+  const boxEntityMap = buildBoxEntityIndex(childEntities)
+
+  // BFS: collect target entity + all descendant entities
+  const toTransplant = new Set<LayoutEntity>()
+  const queue = [targetEntity]
+
   while (queue.length > 0) {
-    const idx = queue.shift()!
-    toTransplant.add(idx)
-    const p2box = byIndex.get(idx)
-    if (p2box?.children) {
-      for (const c of p2box.children) {
-        if (!toTransplant.has(c)) queue.push(c)
+    const entity = queue.shift()!
+    if (toTransplant.has(entity)) continue
+    toTransplant.add(entity)
+    for (const { box } of entity.members) {
+      for (const childIdx of box.children ?? []) {
+        const childEntity = boxEntityMap.get(childIdx)
+        if (childEntity && !toTransplant.has(childEntity)) queue.push(childEntity)
       }
     }
   }
 
-  const childByIndex = new Map(child.map((b) => [b.index, b]))
-  for (const idx of toTransplant) {
-    const src = byIndex.get(idx)
-    const dst = childByIndex.get(idx)
-    if (!src || !dst) continue
-    dst.x = src.x
-    dst.y = src.y
-    const merged: Record<string, number> = { ...src._mutations }
-    for (const [k, v] of Object.entries(dst._mutations ?? {})) {
-      merged[k] = (merged[k] ?? 0) + v
+  // Copy positions from parent2 for all transplanted entities
+  for (const entity of toTransplant) {
+    const p2e = matchEntity(entity, p2Entities)
+    if (!p2e) continue
+    moveEntityTo(entity, p2e.x, p2e.y)
+
+    for (const { box: childBox } of entity.members) {
+      const p2Box = p2e.members.find((m) => m.box.index === childBox.index)?.box
+      if (!p2Box) continue
+      const merged: Record<string, number> = { ...p2Box._mutations }
+      for (const [k, v] of Object.entries(childBox._mutations ?? {})) {
+        merged[k] = (merged[k] ?? 0) + v
+      }
+      merged['crossoverStructural'] = (merged['crossoverStructural'] ?? 0) + 1
+      childBox._mutations = merged
     }
-    merged['crossoverStructural'] = (merged['crossoverStructural'] ?? 0) + 1
-    dst._mutations = merged
   }
 
   return child
