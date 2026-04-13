@@ -136,8 +136,8 @@ export const configMeta: ConfigMeta = {
   // GA parameters
   svgAtStop: [9995, 0, 100000, 1, 'Generation count at which to write final SVG snapshot'],
   stop: [5000, 1, 100000, 1, 'Stop after this many generations without improvement'],
-  popSize: [25, 10, 1000, 1, 'Number of individuals in the population'],
-  generations: [100000, 100, 1000000, 1, 'Maximum total generations to run'],
+  popSize: [25, 1, 1000, 1, 'Number of individuals in the population'],
+  generations: [100000, 1, 1000000, 1, 'Maximum total generations to run'],
   mutationRate: [0.95, 0, 1, 0.01, 'Probability that a child is mutated after crossover'],
   maxChildren: [9, 1, 20, 1, 'Maximum number of children mutated'],
   maxParents: [9, 1, 20, 1, 'Maximum number of parents mutated'],
