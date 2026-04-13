@@ -2,9 +2,9 @@
 
 ### Misc
 
-- [ ] cli bench deno/bun/node
 - [ ] automate best setting search
-- [ ] fix main layout
+- [x] cli bench deno/bun/node (bun is 50% slower, workers = perf cores)
+- [x] fix main layout
 - [x] multi-pass
 - [x] max-workers
 - [x] sub-patchers note
