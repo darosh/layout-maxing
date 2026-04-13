@@ -231,7 +231,7 @@ export const configMeta: ConfigMeta = {
     1,
     'Seed for deterministic random (ignored unless deterministic=true)',
   ],
-  normalize: [false, false, true, null, 'Normalize layouts to origin [0,0] after each generation'],
+  normalize: [true, false, true, null, 'Normalize layouts to origin [0,0] after each generation'],
   normalizeExport: [
     true,
     false,
@@ -251,7 +251,7 @@ export const configMeta: ConfigMeta = {
     'Use simple flow for initial layout before GA optimization',
   ],
   initialMutation: [
-    false,
+    true,
     false,
     true,
     null,
