@@ -2,8 +2,9 @@
 
 ### Misc
 
+- [ ] cli bench deno/bun/node
 - [x] split tests into files
-- [ ] initial mutation optional
+- [x] initial mutation optional
 - [x] mutateChild x-y overlap
 - [x] ~~stable sort tournament~~
 - [x] data driven config panel
@@ -14,7 +15,7 @@
 - [ ] swap with children
 - [ ] top level swap fix
 - [ ] mirror
-- [ ] structural cross-over
+- [x] structural cross-over
 - [x] row/col shift
 - [x] swap in row/col
 
@@ -37,7 +38,7 @@
 
 ### Lib + Structure
 
-- [ ] mutation history
+- [x] mutation history
 - [x] ~~sub-patchers?~~
 - [x] group support
 - [x] add seed
