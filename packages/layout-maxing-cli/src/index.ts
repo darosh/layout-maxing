@@ -65,8 +65,8 @@ function parseArgs(args: string[]): { positional: string[]; cfg: Config } {
   return { positional, cfg: { ...fileCfg, ...cliCfg } }
 }
 
-function getWorkers() {
-  const CPUS = Math.max(2, cpus().length - 1)
+function getWorkers(workers = 0) {
+  const CPUS = workers > 0 ? workers : Math.max(2, cpus().length - 1)
 
   const fitnessWorkers = Array.from({ length: CPUS }).map(() => {
     const worker = new Worker(new URL('./worker.js', import.meta.url).href, {
@@ -138,9 +138,8 @@ async function cli() {
 
     if (command === 'layout' || command === 'layout-clipboard') {
       const start = Date.now()
-      const { CPUS, getFitness, terminateWorkers } = getWorkers()
-
       const c = { ...defaultConfig, ...cfg }
+      const { CPUS, getFitness, terminateWorkers } = getWorkers(c.workers)
 
       if (c.logInfo) console.log(`Using ${CPUS} workers.`)
 

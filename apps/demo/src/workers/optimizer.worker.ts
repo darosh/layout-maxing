@@ -81,8 +81,8 @@ function waitUntilResumed(): Promise<void> {
   })
 }
 
-function createFitnessWorkerPool() {
-  const count = Math.max(2, (navigator.hardwareConcurrency || 4) - 1)
+function createFitnessWorkerPool(workers = 0) {
+  const count = workers > 0 ? workers : Math.max(2, (navigator.hardwareConcurrency || 4) - 1)
   const fitnessWorkers = Array.from({ length: count }).map(() => {
     const w = new Worker(new URL('./fitness.worker.ts', import.meta.url), { type: 'module' })
     const info: { worker: Worker; resolve?: (f: Fitness) => void } = { worker: w }
@@ -162,7 +162,7 @@ self.onmessage = async (e: MessageEvent) => {
 
   const c = { ...defaultConfig, ...cfg }
   const lines = rnbo.patcher.lines
-  const pool = createFitnessWorkerPool()
+  const pool = createFitnessWorkerPool(cfg.workers)
 
   let evalCount = 0
   let bestScore: number | null = null

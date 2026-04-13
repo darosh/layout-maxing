@@ -43,7 +43,7 @@
     "npx-local": "npx layout-maxing",
     "bun-local": "bun ./dist-npm/esm/index.js",
     "deno-local": "deno run -A ./dist-npm/esm/index.js",
-    "npx-local:test": "npx layout-maxing layout ./tests/fixtures/the-synth.rnbopat ./tests/output/the-synth.rnbopat",
+    "npx-local:test": "npx layout-maxing layout ./tests/fixtures/the-synth.rnbopat ./tests/output/the-synth.rnbopat --workers 6",
     "bun-local:test": "bun ./dist-npm/esm/index.js layout ./tests/fixtures/the-synth.rnbopat ./tests/output/the-synth.rnbopat",
     "deno-local:test": "deno run -A ./dist-npm/esm/index.js layout ./tests/fixtures/the-synth.rnbopat ./tests/output/the-synth.rnbopat"
   },

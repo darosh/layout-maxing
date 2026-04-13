@@ -73,6 +73,7 @@ export interface Config {
   logProgressInterval?: number
   writeSvg?: boolean
   writeJson?: boolean
+  workers?: number
 }
 
 // Tuple: [default, min, max, step | null, description]
@@ -263,6 +264,7 @@ export const configMeta: ConfigMeta = {
   logProgressInterval: [2000, 200, 60000, 500, 'Min ms between progress log lines'],
   writeSvg: [false, false, true, null, 'Write SVG visualization file (CLI only)'],
   writeJson: [false, false, true, null, 'Write JSON data file with layouts and lines (CLI only)'],
+  workers: [0, 0, 128, 1, 'Number of fitness workers (0 = auto: cpu count - 1), using number of performance CPU cores recommended'],
 }
 
 export const defaultConfig: Required<Config> = Object.fromEntries(
