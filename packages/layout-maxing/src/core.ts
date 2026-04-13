@@ -140,10 +140,10 @@ export async function main(
   if (c.useSimpleFlow) {
     const clone = cloneLayouts(baseLayouts)
     simpleFlow(clone, c)
-    startingLayouts.push(baseLayouts)
+    startingLayouts.push(clone)
   }
 
-  if (c.useInput || !(c.useSimpleFlow || c.useDagre)) {
+  if (c.useInput || !startingLayouts.length) {
     const clone = cloneLayouts(baseLayouts)
     startingLayouts.push(clone)
   }
