@@ -25,7 +25,7 @@
   },
   "scripts": {
     "build:node": "vp pack",
-    "build:npm": "deno run -A ./scripts/build-npm.ts",
+    "build:npm": "deno run -A ./build-npm.ts",
     "dev:vp": "vp pack --watch",
     "test:node": "vp test",
     "test:cli": "deno run -A ./src/index.ts",
@@ -38,7 +38,11 @@
     "test:cli:calibrate": "deno run -A ./src/index.ts calibrate ./tests/fixtures/the-synth.maxpat --depth 1000",
     "test:cli:group": "deno run -A ./src/index.ts layout-clipboard ./tests/fixtures/single-group.json ./tests/fixtures/single-group-updated.json",
     "check": "vp check",
-    "prepublishOnly": "vp run build"
+    "prepublishOnly": "vp run build",
+    "link-local": "npm link ../layout-maxing && chmod +x ./dist-npm/esm/index.js && npm link ./dist-npm/ && cd ./dist-npm && npm link layout-maxing",
+    "npx-local": "npx layout-maxing",
+    "bun-local": "bun ./dist-npm/esm/index.js",
+    "deno-local": "deno run -A ./dist-npm/esm/index.js"
   },
   "dependencies": {
     "layout-maxing": "0.0.0"

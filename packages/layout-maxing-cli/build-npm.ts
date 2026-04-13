@@ -4,7 +4,13 @@ import { build, emptyDir } from '@deno/dnt'
 await emptyDir('./dist-npm')
 
 await build({
-  entryPoints: ['./src/index.ts'],
+  entryPoints: [
+    {
+      kind: 'bin',
+      name: 'layout-maxing', // command name
+      path: './src/index.ts',
+    },
+  ],
   outDir: './dist-npm',
   shims: {
     deno: true,
@@ -22,15 +28,18 @@ await build({
     // package.json properties
     name: 'layout-maxing-cli',
     version: Deno.args[0],
-    description: 'Your package.',
+    description: 'A Max patch layout utility',
     license: 'MIT',
     repository: {
       type: 'git',
-      url: 'git+https://github.com/username/repo.git',
+      url: 'git+https://github.com/darosh/layout-maxing.git',
     },
     bugs: {
-      url: 'https://github.com/username/repo/issues',
+      url: 'https://github.com/darosh/layout-maxing/issues',
     },
+    // "bin": {
+    //   "layout-maxing": "./esm/index.js",
+    // },
   },
   postBuild() {
     Deno.copyFileSync('README.md', 'dist-npm/README.md')

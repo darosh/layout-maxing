@@ -3,6 +3,7 @@
 ### Misc
 
 - [ ] cli bench deno/bun/node
+- [ ] automate best setting search
 - [x] split tests into files
 - [x] initial mutation optional
 - [x] mutateChild x-y overlap

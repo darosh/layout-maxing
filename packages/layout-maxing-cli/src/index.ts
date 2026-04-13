@@ -13,7 +13,9 @@ import { runCalibrate, getNumericParams, printCalibrateResults } from './calibra
 import { cpus } from 'node:os'
 import { dirname, parse, format } from 'jsr:@std/path'
 
-declare const Deno: typeof globalThis.Deno
+// declare const Deno: typeof globalThis.Deno
+
+console.log('layout-maxing')
 
 function parseArgs(args: string[]): { positional: string[]; cfg: Config } {
   const flags = new Map<string, string | true>()
