@@ -380,6 +380,8 @@ function copyCli() {
               v-tip.right="'Number of top candidates to track and preview'" />
             <label>showStats</label>
             <ToggleSwitch v-model="store.showStats" />
+            <label>showGrid</label>
+            <ToggleSwitch v-model="store.showGrid" />
           </div>
         </AccordionContent>
       </AccordionPanel>

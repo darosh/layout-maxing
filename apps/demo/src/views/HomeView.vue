@@ -34,7 +34,7 @@ watch(
       }
       toast.add({
         summary: 'Done',
-        life: 2600,
+        life: 2800,
         detail: { msg: formatScore(score), icon },
         severity: 'info',
       })
@@ -261,8 +261,8 @@ const btnPause = computed(() => store.status === 'running')
       position="center"
       style="
         --p-toast-width: 120px;
-        --p-toast-info-background: rgba(33, 33, 33, 0.16);
-        --p-toast-info-border-color: rgba(99, 99, 99, 0.24);
+        --p-toast-info-background: rgba(66, 66, 66, 0.4);
+        --p-toast-info-border-color: rgba(88, 88, 88, 0.5);
         --p-toast-info-color: #fff;
       ">
       <template #container="{ message, closeCallback }">
@@ -271,9 +271,10 @@ const btnPause = computed(() => store.status === 'running')
           class="rounded-sm"
           style="
             padding: 2rem;
-            height: 7rem;
+            height: 8rem;
             text-align: center;
             font-family: monospace;
+            font-size: 1.2rem;
             gap: 1rem;
             display: flex;
             flex-direction: column;
@@ -437,7 +438,6 @@ const btnPause = computed(() => store.status === 'running')
 .canvas {
   flex: 1;
   overflow: hidden;
-  padding: 0.75rem;
   display: flex;
 }
 
@@ -450,11 +450,11 @@ const btnPause = computed(() => store.status === 'running')
 }
 
 .icon {
-  font-size: 0.7rem;
-  margin: 0 0.5rem 0 0.5rem;
+  font-size: 0.84rem;
+  margin: 0 0.8rem 0 0.8rem;
   color: var(--p-primary-400);
   display: inline-block;
   position: relative;
-  top: -1px;
+  top: -1.2px;
 }
 </style>

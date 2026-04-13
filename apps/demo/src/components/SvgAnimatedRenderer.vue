@@ -163,6 +163,12 @@ const viewBox = computed(() => {
 // Scale so the real layout fills the stable viewport (which now has the
 // container's true proportions), then center + offset to origin.
 const PADDING = 0.95
+const rootScale = computed(() => {
+  const { width, height } = viewport.value
+  const svp = stableVP.value
+  if (!svp) return 1
+  return Math.min(svp.w / width, svp.h / height) * PADDING
+})
 const rootTransform = computed(() => {
   const { x, y, width, height } = viewport.value
   const svp = stableVP.value
@@ -175,6 +181,7 @@ const rootTransform = computed(() => {
   const ty = cy - y * scale
   return `translate(${tx}px, ${ty}px) scale(${scale})`
 })
+const gridStrokeWidth = computed(() => 1 / rootScale.value)
 
 const boxMap = computed(() => {
   const m = new Map<string, (typeof layouts.value)[number]>()
@@ -297,9 +304,31 @@ const portDots = computed<DotItem[]>(() => {
       :viewBox="viewBox"
       xmlns="http://www.w3.org/2000/svg"
       class="svg-canvas">
+      <defs>
+        <pattern
+          id="grid-pattern"
+          :width="cfg.gridX"
+          :height="cfg.gridY"
+          patternUnits="userSpaceOnUse">
+          <path
+            :d="`M ${cfg.gridX} 0 L 0 0 0 ${cfg.gridY}`"
+            fill="none"
+            stroke="rgba(144,144,144,0.3)"
+            :stroke-width="gridStrokeWidth" />
+        </pattern>
+      </defs>
       <g
         :class="['layout-root', { 'layout-root--jump': skipRootTransition || skipAllTransitions }]"
         :style="{ transform: rootTransform }">
+        <!-- Grid overlay -->
+        <rect
+          v-if="store.showGrid"
+          x="-5000"
+          y="-5000"
+          width="20000"
+          height="20000"
+          fill="url(#grid-pattern)"
+          class="grid-overlay" />
         <!-- Group bounding boxes -->
         <rect
           v-for="gr in groupRects"
@@ -341,6 +370,10 @@ const portDots = computed<DotItem[]>(() => {
 </template>
 
 <style scoped>
+.grid-overlay {
+  pointer-events: none;
+}
+
 .svg-animated-renderer {
   --t-transform: transform 200ms ease;
   --t-transform-root: transform 200ms ease;
