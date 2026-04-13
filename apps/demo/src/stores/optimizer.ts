@@ -26,6 +26,7 @@ export interface TopEntry {
   popGen?: number
   prevId?: number
   prevGen?: number
+  passNum?: number
 }
 
 export type Selection =
@@ -102,6 +103,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     genLastScore: null as number | null,
     bestFitness: null as Fitness | null,
     stopIn: defaultConfig.stop,
+    passNum: 1,
+    numPasses: 1,
   })
   const top = ref<TopEntry[]>([])
   const currentGenTop = ref<TopEntry[]>([])
@@ -234,6 +237,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
         genLastScore: null,
         bestFitness: null,
         stopIn: defaultConfig.stop,
+        passNum: 1,
+        numPasses: 1,
       }
     } catch {
       error.value = 'Invalid JSON file'
@@ -273,6 +278,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
       genLastScore: null,
       bestFitness: null,
       stopIn: config.value.stop ?? defaultConfig.stop,
+      passNum: 1,
+      numPasses: config.value.passes ?? 1,
     }
     worker = new Worker(new URL('../workers/optimizer.worker.ts', import.meta.url), {
       type: 'module',
@@ -298,6 +305,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
             genLastScore: msg.genLastScore ?? null,
             bestFitness: msg.bestFitness ?? null,
             stopIn: msg.stopIn ?? progress.value.stopIn,
+            passNum: msg.passNum ?? progress.value.passNum,
+            numPasses: msg.numPasses ?? progress.value.numPasses,
           }
           if (msg.top?.length) top.value = msg.top
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop

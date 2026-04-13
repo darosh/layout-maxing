@@ -208,6 +208,7 @@ const groups: GroupDef[] = [
     key: 'run',
     label: 'Run Settings',
     fields: [
+      { key: 'passes' },
       { key: 'workers' },
       { key: 'logProgressInterval' },
       { key: 'logProgress' },

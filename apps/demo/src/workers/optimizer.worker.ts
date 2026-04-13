@@ -33,6 +33,8 @@ type ProgressMsg = {
   genLastScore: number | null
   bestFitness: Fitness | null
   stopIn: number
+  passNum: number
+  numPasses: number
   svg: string | null
   top: TopEntry[] | null
   currentGenTop: TopEntry[] | null
@@ -175,6 +177,8 @@ self.onmessage = async (e: MessageEvent) => {
   const snapshotBuffer: GenerationSnapshot[] = []
   const MAX_SNAPSHOTS = (240 - 40 - 40) * 3
   let currentGen = 0
+  let currentPassNum = 1
+  let currentNumPasses = c.passes ?? 1
 
   // Top-N candidates by score (ascending)
   const top: {
@@ -185,6 +189,7 @@ self.onmessage = async (e: MessageEvent) => {
     popGen?: number
     prevId?: number
     prevGen?: number
+    passNum?: number
   }[] = []
   // Sliding window of current population (last popSize evaluations)
   const currentPop: {
@@ -195,6 +200,7 @@ self.onmessage = async (e: MessageEvent) => {
     popGen?: number
     prevId?: number
     prevGen?: number
+    passNum?: number
   }[] = []
 
   function updateTop(
@@ -205,13 +211,23 @@ self.onmessage = async (e: MessageEvent) => {
     popGen?: number,
     prevId?: number,
     prevGen?: number,
+    passNum?: number,
   ) {
     const worst = top.length >= topN ? top[top.length - 1]!.score : Infinity
     if (score < worst || top.length < topN) {
       // Avoid near-duplicate scores (within 0.01%)
       const dup = top.some((t) => Math.abs(t.score - score) / score < 0.0001)
       if (!dup) {
-        top.push({ score, layouts: cloneForSvg(layouts), fitness, popId, popGen, prevId, prevGen })
+        top.push({
+          score,
+          layouts: cloneForSvg(layouts),
+          fitness,
+          popId,
+          popGen,
+          prevId,
+          prevGen,
+          passNum,
+        })
         top.sort((a, b) => a.score - b.score)
         if (top.length > topN) top.pop()
       }
@@ -240,6 +256,7 @@ self.onmessage = async (e: MessageEvent) => {
       popGen: t.popGen,
       prevId: t.prevId,
       prevGen: t.prevGen,
+      passNum: t.passNum,
     }))
   }
 
@@ -257,6 +274,7 @@ self.onmessage = async (e: MessageEvent) => {
         popGen: t.popGen,
         prevId: t.prevId,
         prevGen: t.prevGen,
+        passNum: t.passNum,
       }))
   }
 
@@ -314,7 +332,7 @@ self.onmessage = async (e: MessageEvent) => {
         const popGen: number | undefined = (layouts as any)._popGen
         const prevId: number | undefined = (layouts as any)._popPrevId
         const prevGen: number | undefined = (layouts as any)._popPrevGen
-        updateTop(result.score, layouts, result, popId, popGen, prevId, prevGen)
+        updateTop(result.score, layouts, result, popId, popGen, prevId, prevGen, currentPassNum)
         // Sliding window for current population
         currentPop.push({
           score: result.score,
@@ -324,6 +342,7 @@ self.onmessage = async (e: MessageEvent) => {
           popGen,
           prevId,
           prevGen,
+          passNum: currentPassNum,
         })
         if (currentPop.length > c.popSize) currentPop.shift()
         const now = Date.now()
@@ -349,6 +368,8 @@ self.onmessage = async (e: MessageEvent) => {
             genLastScore,
             bestFitness,
             stopIn,
+            passNum: currentPassNum,
+            numPasses: currentNumPasses,
             svg: svgNow,
             top: buildTopEntries(),
             currentGenTop: buildCurrentGenEntries(),
@@ -361,8 +382,10 @@ self.onmessage = async (e: MessageEvent) => {
       },
       undefined,
       cfg,
-      (stop: number, snapshot?: GenerationSnapshot) => {
+      (stop: number, snapshot?: GenerationSnapshot, passNum?: number, numPasses?: number) => {
         stopIn = stop
+        if (passNum != null) currentPassNum = passNum
+        if (numPasses != null) currentNumPasses = numPasses
         if (snapshot) {
           currentGen = snapshot.gen
           snapshotBuffer.push(snapshot)
@@ -401,6 +424,8 @@ self.onmessage = async (e: MessageEvent) => {
       genLastScore: sortedFinal[sortedFinal.length - 1]?.score ?? null,
       bestFitness,
       stopIn,
+      passNum: currentPassNum,
+      numPasses: currentNumPasses,
       svg: bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups) : null,
       top: buildTopEntries(),
       currentGenTop: buildCurrentGenEntries(),

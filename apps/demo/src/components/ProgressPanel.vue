@@ -30,8 +30,17 @@ watch(
   <div class="progress-panel" :class="{ idle: idle }">
     <div class="stats-row">
       <div class="stat">
-        <span class="stat-label">Generation</span>
-        <span class="stat-value">{{ store.progress.generation.toLocaleString() }}</span>
+        <span class="stat-label"
+          ><template v-if="store.progress.numPasses > 1">Pass / Gen</template
+          ><template v-else>Generation</template></span
+        >
+        <span class="stat-value"
+          ><template v-if="store.progress.numPasses > 1"
+            >{{ store.progress.passNum.toLocaleString()
+            }}<span style="margin: 0 0.2rem; opacity: 0.5">/</span
+            >{{ store.progress.generation.toLocaleString() }}</template
+          ><template v-else>{{ store.progress.generation.toLocaleString() }}</template></span
+        >
       </div>
       <div class="stat">
         <span class="stat-label">Stop In</span>
@@ -116,17 +125,18 @@ watch(
 }
 
 .stats-row {
-  display: flex;
-  gap: 1rem;
+  display: inline-flex;
+  row-gap: 1rem;
+  column-gap: 5%;
   flex-wrap: wrap;
 }
 
 .stat {
   display: flex;
-  width: 27.5%;
+  width: calc(30%);
   flex-direction: column;
   gap: 0.1rem;
-  min-width: 4rem;
+  align-content: space-between;
 }
 
 .stat-label {

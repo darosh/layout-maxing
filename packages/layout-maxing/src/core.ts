@@ -16,7 +16,7 @@ import {
 import { cloneLayouts } from './mutation.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import runGenetic from './genetic.ts'
-import type { RunMonitor } from './monitor.ts'
+import type { RunMonitor, GenerationSnapshot } from './monitor.ts'
 
 type BoxId = string
 
@@ -79,7 +79,12 @@ export async function main(
   getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: Box[]) => void,
   cfg?: Config,
-  onGenerationEnd?: (stop: number) => void,
+  onGenerationEnd?: (
+    stop: number,
+    snapshot?: GenerationSnapshot,
+    passNum?: number,
+    numPasses?: number,
+  ) => void,
   logProgress?: (...args: any) => void,
   logInfo?: (...args: any) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
@@ -89,8 +94,6 @@ export async function main(
   }
 
   const c = { ...defaultConfig, ...cfg }
-  const rand = c.deterministic ? createDeterministicRandom(c.seed) : Math.random
-
   const patcher = rnbo.patcher
   const lines = patcher.lines ?? []
 
@@ -154,16 +157,49 @@ export async function main(
     logInfo('No lines!')
   }
 
-  return runGenetic(
-    startingLayouts,
-    lines,
-    rand,
-    c,
-    getFitness,
-    onIntermediate,
-    onGenerationEnd,
-    logProgress,
-    logInfo,
-    onMonitorEnd,
-  )
+  const numPasses = c.passes
+
+  let globalBest: Box[] = []
+  let globalBestScore = Infinity
+
+  for (let pass = 0; pass < numPasses; pass++) {
+    const passNum = pass + 1
+    const rand = c.deterministic ? createDeterministicRandom(c.seed + pass) : Math.random
+
+    const wrappedLogProgress =
+      numPasses > 1 && logProgress
+        ? (...args: any[]) =>
+            logProgress(`PASS: ${passNum}/${numPasses} | ` + args[0], ...args.slice(1))
+        : logProgress
+
+    const wrappedOnGenerationEnd = onGenerationEnd
+      ? (stop: number, snapshot?: GenerationSnapshot) =>
+          onGenerationEnd(stop, snapshot, passNum, numPasses)
+      : undefined
+
+    const result = await runGenetic(
+      startingLayouts,
+      lines,
+      rand,
+      c,
+      getFitness,
+      onIntermediate,
+      wrappedOnGenerationEnd,
+      wrappedLogProgress,
+      logInfo,
+      onMonitorEnd,
+    )
+
+    if (result.length > 0) {
+      const resultFitness = getFitness
+        ? await getFitness(result, lines, c)
+        : fitness(result, lines, c)
+      if (resultFitness.score < globalBestScore) {
+        globalBestScore = resultFitness.score
+        globalBest = result
+      }
+    }
+  }
+
+  return globalBest
 }

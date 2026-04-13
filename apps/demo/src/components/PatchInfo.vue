@@ -62,6 +62,9 @@ const fullScore = computed(() => {
       </div>
     </div>
     <div class="overlay overlay-tl-2 selection-label">
+      <template v-if="store.progress.numPasses > 1 && store.displayedEntry?.passNum != null">
+        PASS {{ store.displayedEntry.passNum.toLocaleString() }}
+      </template>
       <template
         v-if="
           store.showStats &&
@@ -197,7 +200,7 @@ const fullScore = computed(() => {
 }
 
 .overlay-tl-2 {
-  top: 2.25rem;
+  top: 2.5rem;
   left: 1.25rem;
   display: block;
 }

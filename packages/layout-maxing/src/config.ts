@@ -26,6 +26,7 @@ export interface Config {
   stop?: number
   popSize?: number
   generations?: number
+  passes?: number
   mutationRate?: number
   maxChildren?: number
   maxParents?: number
@@ -139,6 +140,7 @@ export const configMeta: ConfigMeta = {
   stop: [5000, 1, 100000, 1, 'Stop after this many generations without improvement'],
   popSize: [25, 1, 1000, 1, 'Number of individuals in the population'],
   generations: [100000, 1, 1000000, 1, 'Maximum total generations to run'],
+  passes: [1, 1, 100000, 1, 'Number of times to run the full GA (best result kept across passes)'],
   mutationRate: [0.95, 0, 1, 0.01, 'Probability that a child is mutated after crossover'],
   maxChildren: [9, 1, 20, 1, 'Maximum number of children mutated'],
   maxParents: [9, 1, 20, 1, 'Maximum number of parents mutated'],
@@ -264,7 +266,13 @@ export const configMeta: ConfigMeta = {
   logProgressInterval: [2000, 200, 60000, 500, 'Min ms between progress log lines'],
   writeSvg: [false, false, true, null, 'Write SVG visualization file (CLI only)'],
   writeJson: [false, false, true, null, 'Write JSON data file with layouts and lines (CLI only)'],
-  workers: [0, 0, 128, 1, 'Number of fitness workers (0 = auto: cpu count - 1), using number of performance CPU cores recommended'],
+  workers: [
+    0,
+    0,
+    128,
+    1,
+    'Number of fitness workers (0 = auto: cpu count - 1), using number of performance CPU cores recommended',
+  ],
 }
 
 export const defaultConfig: Required<Config> = Object.fromEntries(
