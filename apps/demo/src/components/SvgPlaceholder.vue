@@ -46,7 +46,9 @@ const props = defineProps<{
       All JSON based Max file types are supported: <span class="hint">MAXPAT</span>,
       <span class="hint">RNBOPAT</span>, <span class="hint">GENDSP</span>.<br />For
       <span class="hint">AMXD</span> files use clipboard copy/paste.<br />Groups are supported. Line
-      segmentation is not supported.<br />Orphaned boxes are ignored by default.
+      segmentation is not supported.<br />
+      Sub-patchers are not processed.<br />
+      Orphaned boxes are ignored by default.
     </div>
     <div class="footnote">
       All processing happens locally in the browser.<br />Your patch is not sent over the internet.

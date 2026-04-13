@@ -4,9 +4,10 @@
 
 - [ ] cli bench deno/bun/node
 - [ ] automate best setting search
+- [ ] fix main layout
 - [x] multi-pass
 - [x] max-workers
-- [ ] sub-patchers note
+- [x] sub-patchers note
 - [x] split tests into files
 - [x] initial mutation optional
 - [x] mutateChild x-y overlap
