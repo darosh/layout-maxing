@@ -28,14 +28,23 @@ watch(
       const best = store.rnbo?.best
       const score = store.progress.bestScore
       let icon: string | null = null
+      let deltaStr: string | null = null
+      let delta: number | null = null
+      let sign: number | null = null
       if (best != null && score != null) {
-        if (Math.round(score) === best) icon = 'pi-check'
-        else if (Math.round(score) < best) icon = 'pi-arrow-down'
+        if (Math.round(score) === best) {
+          icon = 'pi-check'
+        } else if (Math.round(score) < best) icon = 'pi-arrow-down'
+
+        delta = Math.round(score) - best
+        deltaStr = delta.toLocaleString()
+        sign = Math.sign(delta)
       }
+
       toast.add({
         summary: 'Done',
         life: 2800,
-        detail: { msg: formatScore(score), icon },
+        detail: { msg: formatScore(score), icon, delta, deltaStr, sign },
         severity: 'info',
       })
     }
@@ -281,9 +290,15 @@ const btnPause = computed(() => store.status === 'running')
             justify-content: space-between;
           ">
           <div style="color: var(--p-primary-400)">{{ message.summary }}</div>
-          <div>
+          <div class="result">
             {{ message.detail.msg
-            }}<i v-if="message.detail.icon" :class="['pi', 'icon', message.detail.icon]" />
+            }}<i v-if="message.detail.icon" :class="['pi', 'icon', message.detail.icon]" /><template
+              v-if="message.detail.sign !== 0"
+              ><span :class="message.detail.sign < 0 ? 'minus' : 'plus'">
+                <template v-if="message.detail.sign > 0">+</template
+                >{{ message.detail.deltaStr }}</span
+              ></template
+            >
           </div>
         </section>
       </template>
@@ -449,12 +464,32 @@ const btnPause = computed(() => store.status === 'running')
   background: var(--p-button-outlined-info-active-background);
 }
 
+.result {
+  display: flex;
+  align-content: space-between;
+  justify-content: center;
+}
+
 .icon {
   font-size: 0.84rem;
-  margin: 0 0.8rem 0 0.8rem;
+  margin: 0 0 0 0.8rem;
   color: var(--p-primary-400);
   display: inline-block;
   position: relative;
-  top: -1.2px;
+  line-height: 1.4rem;
+}
+
+.minus {
+  color: var(--p-primary-400);
+  font-size: 1rem;
+  margin-left: 1rem;
+  line-height: 1.55rem;
+}
+
+.plus {
+  color: var(--p-red-500);
+  font-size: 1rem;
+  margin-left: 1rem;
+  line-height: 1.55rem;
 }
 </style>
