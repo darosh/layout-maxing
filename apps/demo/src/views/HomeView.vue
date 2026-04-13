@@ -243,25 +243,16 @@ const btnPause = computed(() => store.status === 'running')
         <div class="canvas">
           <SvgAnimatedRenderer v-if="animateSvg" />
           <SvgRenderer v-else />
+          <div
+            v-if="hasEverRendered"
+            @click="store.showStats = !store.showStats"
+            class="canvas-overlay">
+            <PatchInfo />
+          </div>
         </div>
         <TopResultsBar />
-        <div
-          @click="
-            () => {
-              if (hasEverRendered) store.showStats = !store.showStats
-            }
-          "
-          style="
-            position: absolute;
-            flex: 1;
-            width: calc(100% - 320px);
-            height: calc(100vh - 80px - 1.5rem);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          ">
-          <SvgPlaceholder v-if="!hasEverRendered" :paste-key="pasteKey" :copy-key="copyKey" />
-          <PatchInfo v-else />
+        <div v-if="!hasEverRendered" class="canvas-placeholder">
+          <SvgPlaceholder :paste-key="pasteKey" :copy-key="copyKey" />
         </div>
       </section>
     </main>
@@ -448,12 +439,30 @@ const btnPause = computed(() => store.status === 'running')
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .canvas {
   flex: 1;
   overflow: hidden;
   display: flex;
+  position: relative;
+}
+
+.canvas-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .canvas > * {
