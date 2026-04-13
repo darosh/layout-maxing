@@ -10,5 +10,5 @@ export const EXAMPLES: RNBO[] = <RNBO[]>(<unknown[]>[
   { patcher: E2, best: 3934 },
   { patcher: E3, best: 13953 },
   { patcher: E5, best: 13144 },
-  { patcher: E6, best: 11311 },
+  { patcher: E6, best: 15898 },
 ])
