@@ -24,7 +24,9 @@ const props = defineProps<{
     <ul class="list">
       <li>Select or drop a Max patch in the top left area</li>
       <li>
-        Or paste a patch from clipboard&nbsp;<span v-if="props.pasteKey" class="hint">({{ props.pasteKey }})</span>
+        Or paste a patch from clipboard&nbsp;<span v-if="props.pasteKey" class="hint"
+          >({{ props.pasteKey }})</span
+        >
       </li>
       <li>
         Or select an example
@@ -41,7 +43,10 @@ const props = defineProps<{
       </li>
     </ul>
     <div class="footnote">
-      All JSON based Max file types are supported: <span class="hint">MAXPAT</span>, <span class="hint">RNBOPAT</span>, <span class="hint">GENDSP</span>.<br />For <span class="hint">AMXD</span> files use clipboard copy/paste.<br />Groups are supported. Line segmentation is not supported.<br />Orphaned boxes are ignored by default.
+      All JSON based Max file types are supported: <span class="hint">MAXPAT</span>,
+      <span class="hint">RNBOPAT</span>, <span class="hint">GENDSP</span>.<br />For
+      <span class="hint">AMXD</span> files use clipboard copy/paste.<br />Groups are supported. Line
+      segmentation is not supported.<br />Orphaned boxes are ignored by default.
     </div>
     <div class="footnote">
       All processing happens locally in the browser.<br />Your patch is not sent over the internet.
