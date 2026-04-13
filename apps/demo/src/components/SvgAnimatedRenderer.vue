@@ -323,10 +323,10 @@ const portDots = computed<DotItem[]>(() => {
         <!-- Grid overlay -->
         <rect
           v-if="store.showGrid"
-          x="-5000"
-          y="-5000"
-          width="20000"
-          height="20000"
+          x="-20000"
+          y="-20000"
+          width="40000"
+          height="40000"
           fill="url(#grid-pattern)"
           class="grid-overlay" />
         <!-- Group bounding boxes -->
