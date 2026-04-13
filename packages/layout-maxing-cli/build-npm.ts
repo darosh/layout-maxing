@@ -10,6 +10,7 @@ await build({
       name: 'layout-maxing', // command name
       path: './src/index.ts',
     },
+    './src/worker.ts',
   ],
   outDir: './dist-npm',
   shims: {

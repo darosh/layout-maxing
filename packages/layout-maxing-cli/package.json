@@ -25,7 +25,7 @@
   },
   "scripts": {
     "build:node": "vp pack",
-    "build:npm": "deno run -A ./build-npm.ts",
+    "build": "deno run -A ./build-npm.ts",
     "dev:vp": "vp pack --watch",
     "test:node": "vp test",
     "test:cli": "deno run -A ./src/index.ts",
@@ -42,10 +42,15 @@
     "link-local": "npm link ../layout-maxing && chmod +x ./dist-npm/esm/index.js && npm link ./dist-npm/ && cd ./dist-npm && npm link layout-maxing",
     "npx-local": "npx layout-maxing",
     "bun-local": "bun ./dist-npm/esm/index.js",
-    "deno-local": "deno run -A ./dist-npm/esm/index.js"
+    "deno-local": "deno run -A ./dist-npm/esm/index.js",
+    "npx-local:test": "npx layout-maxing layout ./tests/fixtures/the-synth.rnbopat ./tests/output/the-synth.rnbopat",
+    "bun-local:test": "bun ./dist-npm/esm/index.js layout ./tests/fixtures/the-synth.rnbopat ./tests/output/the-synth.rnbopat",
+    "deno-local:test": "deno run -A ./dist-npm/esm/index.js layout ./tests/fixtures/the-synth.rnbopat ./tests/output/the-synth.rnbopat"
   },
   "dependencies": {
-    "layout-maxing": "0.0.0"
+    "layout-maxing": "0.0.0",
+    "temporal-polyfill": "^0.3.2",
+    "web-worker": "^1.5.0"
   },
   "devDependencies": {
     "@types/deno": "^2.5.0",

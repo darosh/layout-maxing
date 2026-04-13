@@ -12,6 +12,8 @@ import type { Box, Config, Fitness, RNBO } from 'layout-maxing'
 import { runCalibrate, getNumericParams, printCalibrateResults } from './calibrate.ts'
 import { cpus } from 'node:os'
 import { dirname, parse, format } from 'jsr:@std/path'
+import Worker from 'web-worker'
+import { Temporal } from 'temporal-polyfill'
 
 // declare const Deno: typeof globalThis.Deno
 
@@ -67,7 +69,7 @@ function getWorkers() {
   const CPUS = Math.max(2, cpus().length - 1)
 
   const fitnessWorkers = Array.from({ length: CPUS }).map(() => {
-    const worker = new Worker(new URL('./worker.ts', import.meta.url).href, {
+    const worker = new Worker(new URL('./worker.js', import.meta.url).href, {
       type: 'module',
     })
 
@@ -135,6 +137,7 @@ async function cli() {
     const { positional, cfg } = parseArgs(Deno.args.slice(1))
 
     if (command === 'layout' || command === 'layout-clipboard') {
+      const start = Date.now()
       const { CPUS, getFitness, terminateWorkers } = getWorkers()
 
       const c = { ...defaultConfig, ...cfg }
@@ -190,6 +193,17 @@ async function cli() {
         await Deno.writeTextFile(svgPath, svg)
         if (c.logInfo) console.log(`SVG visualization of the layout written to: ${svgPath}`)
       }
+
+      const elapsed = Temporal.Duration.from({ milliseconds: Date.now() - start }).toLocaleString(
+        'en',
+        {
+          hours: 'numeric',
+          minutes: '2-digit',
+          seconds: '2-digit',
+        },
+      )
+
+      console.log(`Elapsed ${elapsed}`)
 
       terminateWorkers()
     } else if (command === 'fitness') {
