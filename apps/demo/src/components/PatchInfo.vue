@@ -84,12 +84,12 @@ const fullScore = computed(() => {
     </div>
 
     <div
+      class="all-stats"
       v-if="store.showStats && store.snapshots?.length >= 2"
       style="
         position: absolute;
         right: 0.75rem;
         top: 1rem;
-        display: flex;
         flex-direction: column;
         align-items: flex-end;
       ">
@@ -209,6 +209,7 @@ const fullScore = computed(() => {
   bottom: 1.25rem;
   right: 1.25rem;
   gap: 0.75rem;
+  display: none;
 }
 
 .score-value {
@@ -267,5 +268,21 @@ const fullScore = computed(() => {
 }
 .stat-bg:hover {
   background: rgba(0, 0, 0, 1);
+}
+
+.svg-renderer {
+  container-type: inline-size;
+  container-name: card-container;
+}
+
+.all-stats {
+  display: none;
+}
+
+@container card-container (min-width: 600px) {
+  .all-stats,
+  .overlay-br {
+    display: flex;
+  }
 }
 </style>

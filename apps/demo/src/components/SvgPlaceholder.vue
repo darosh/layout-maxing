@@ -63,8 +63,8 @@ const props = defineProps<{
   align-items: left;
   color: var(--p-surface-600);
   font-size: 0.9rem;
-  padding-top: 80px;
   line-height: 1.8rem;
+  padding: 1rem;
 }
 
 .header {
@@ -108,7 +108,7 @@ const props = defineProps<{
   display: inline-flex;
   gap: 0.5rem;
   padding-left: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   --p-button-sm-font-size: 0.65rem;
   --p-button-sm-padding-x: 0.125rem;
