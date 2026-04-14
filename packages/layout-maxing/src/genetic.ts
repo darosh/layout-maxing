@@ -74,22 +74,6 @@ interface Population {
   lastMutation?: string // persisted after selection, used for deadWeight computation
 }
 
-function minBy<T>(arr: T[], fn: (item: T) => number): T | undefined {
-  if (arr.length === 0) return undefined
-
-  let minItem = arr[0]
-  let minValue = fn(minItem)
-
-  for (let i = 1; i < arr.length; i++) {
-    const value = fn(arr[i])
-    if (value < minValue) {
-      minValue = value
-      minItem = arr[i]
-    }
-  }
-
-  return minItem
-}
 
 function uniqueIndexes(
   count: number,
@@ -110,6 +94,50 @@ function uniqueIndexes(
     }
   }
   return result
+}
+
+const ELITE_OBJECTIVES: (keyof Fitness)[] = [
+  'collisions',
+  'crossings',
+  'overlaps',
+  'length',
+  'score',
+  'view',
+]
+
+function dominates(a: Fitness, b: Fitness): boolean {
+  let strictlyBetter = false
+  for (const obj of ELITE_OBJECTIVES) {
+    const av = a[obj] as number
+    const bv = b[obj] as number
+    if (av > bv) return false
+    if (av < bv) strictlyBetter = true
+  }
+  return strictlyBetter
+}
+
+function paretoFront(population: Population[]): Population[] {
+  return population.filter(
+    (a) => !population.some((b) => b !== a && dominates(b.fitness!, a.fitness!)),
+  )
+}
+
+function applyBandit(
+  weights: number[],
+  runTotals: Record<string, ReturnType<typeof createMutationStat>>,
+  exploration: number,
+): number[] {
+  const totalAttempts = Object.values(runTotals).reduce((s, v) => s + v.attempts, 0)
+  if (totalAttempts === 0) return weights
+
+  return weights.map((w, i) => {
+    const name = MUTATION_NAMES[i]
+    const stat = runTotals[name]
+    if (!stat || stat.attempts === 0) return w
+    const rate = stat.improvements / stat.attempts
+    const ucb = rate + exploration * Math.sqrt(Math.log(totalAttempts + 1) / stat.attempts)
+    return Math.max(0.1, ucb * 100)
+  })
 }
 
 function precomputeCrowdingDistances(population: Population[], prop: keyof Fitness): number[] {
@@ -249,6 +277,7 @@ function mutateChild(
   rand: () => number,
   cfg: Required<Config>,
   effectiveMutate: number,
+  mutWeights?: number[],
 ) {
   const entities = toEntities(child)
   const boxEntityMap = buildBoxEntityIndex(entities)
@@ -256,21 +285,19 @@ function mutateChild(
     entities[Math.floor(rand() * entities.length) % entities.length]
   const childMutatedBoxId = targetEntity.members[0].box.id
 
-  const mutIdx = roulette(
-    [
-      cfg.mutWeightQuadrant,
-      cfg.mutWeightSingle,
-      cfg.mutWeightChildren,
-      cfg.mutWeightParents,
-      cfg.mutWeightSwapSibling,
-      cfg.mutWeightSwapRandom,
-      cfg.mutWeightSwapInRow,
-      cfg.mutWeightSwapInCol,
-      cfg.mutWeightShiftRow,
-      cfg.mutWeightShiftCol,
-    ],
-    rand,
-  )
+  const weights = mutWeights ?? [
+    cfg.mutWeightQuadrant,
+    cfg.mutWeightSingle,
+    cfg.mutWeightChildren,
+    cfg.mutWeightParents,
+    cfg.mutWeightSwapSibling,
+    cfg.mutWeightSwapRandom,
+    cfg.mutWeightSwapInRow,
+    cfg.mutWeightSwapInCol,
+    cfg.mutWeightShiftRow,
+    cfg.mutWeightShiftCol,
+  ]
+  const mutIdx = roulette(weights, rand)
 
   const childMutation = MUTATION_NAMES[mutIdx]
   const mxy = rand()
@@ -355,6 +382,18 @@ async function runGenetic(
   const monitor = createRunMonitor()
   let stagnation = 0
   let nextPopId = cfg.popSize
+  let effectiveMutWeights = [
+    cfg.mutWeightQuadrant,
+    cfg.mutWeightSingle,
+    cfg.mutWeightChildren,
+    cfg.mutWeightParents,
+    cfg.mutWeightSwapSibling,
+    cfg.mutWeightSwapRandom,
+    cfg.mutWeightSwapInRow,
+    cfg.mutWeightSwapInCol,
+    cfg.mutWeightShiftRow,
+    cfg.mutWeightShiftCol,
+  ]
 
   for (let gen = 0; gen < cfg.generations; gen++) {
     let fitnessValues: Fitness[]
@@ -470,6 +509,10 @@ async function runGenetic(
     monitor.snapshots.push(snapshot)
     accumulateMutStats(monitor.runTotals, genMutStats)
 
+    if (cfg.banditEnabled && (gen + 1) % cfg.banditK === 0) {
+      effectiveMutWeights = applyBandit(effectiveMutWeights, monitor.runTotals, cfg.banditExploration)
+    }
+
     onGenerationEnd?.(stop, snapshot)
 
     if (!stop) {
@@ -477,15 +520,12 @@ async function runGenetic(
     }
 
     // Build next generation
-    const newPopulation: Population[] = [
-      {
-        ...population[currentBestIdx],
-        layouts: cloneLayouts(bestIndividual),
-        fitness: bestFitness,
-      },
-    ] // elitism
-
-    const populationCopy = population.filter((_, i) => i !== currentBestIdx)
+    const globalBest: Population = {
+      ...population[currentBestIdx],
+      layouts: cloneLayouts(bestIndividual),
+      fitness: bestFitness,
+    }
+    const newPopulation: Population[] = [globalBest]
 
     // monitoring helper: track elite survival
     const trackEliteSurvival = (ind: Population) => {
@@ -493,47 +533,24 @@ async function runGenetic(
         monitor.runTotals[ind._mutation].survived++
       }
     }
+    trackEliteSurvival(globalBest)
 
-    const removeElite = (pool: Population[], ind: Population) => {
-      const idx = pool.indexOf(ind)
-      if (idx !== -1) pool.splice(idx, 1)
+    // Pareto front elitism: fill up to eliteSize with unique non-dominated individuals
+    const front = paretoFront(population)
+    const eliteAdded = new Set<number>([currentBestIdx])
+    for (const ind of front) {
+      if (newPopulation.length >= cfg.eliteSize) break
+      const idx = population.indexOf(ind)
+      if (!eliteAdded.has(idx)) {
+        eliteAdded.add(idx)
+        newPopulation.push(ind)
+        trackEliteSurvival(ind)
+      }
     }
-
-    const bestByCollisions = minBy<Population>(populationCopy, (v) => v.fitness!.collisions)!
-    removeElite(populationCopy, bestByCollisions)
-    trackEliteSurvival(bestByCollisions)
-    newPopulation.push(bestByCollisions)
-
-    const bestByCrossings = minBy<Population>(populationCopy, (v) => v.fitness!.crossings)!
-    removeElite(populationCopy, bestByCrossings)
-    trackEliteSurvival(bestByCrossings)
-    newPopulation.push(bestByCrossings)
-
-    const bestByOverlaps = minBy<Population>(populationCopy, (v) => v.fitness!.overlaps)!
-    removeElite(populationCopy, bestByOverlaps)
-    trackEliteSurvival(bestByOverlaps)
-    newPopulation.push(bestByOverlaps)
-
-    const bestByLength = minBy<Population>(populationCopy, (v) => v.fitness!.length)!
-    removeElite(populationCopy, bestByLength)
-    trackEliteSurvival(bestByLength)
-    newPopulation.push(bestByLength)
-
-    const bestByScore = minBy<Population>(populationCopy, (v) => v.fitness!.score)!
-    removeElite(populationCopy, bestByScore)
-    trackEliteSurvival(bestByScore)
-    newPopulation.push(bestByScore)
-
-    const bestByView = minBy<Population>(populationCopy, (v) => v.fitness!.view)!
-    removeElite(populationCopy, bestByView)
-    trackEliteSurvival(bestByView)
-    newPopulation.push(bestByView)
 
     // const props = <(keyof Fitness)[]>['score', 'view', 'crossings']
     const props = <(keyof Fitness)[]>['score', 'view']
     // const props = <(keyof Fitness)[]>['score']
-
-    const selected = []
 
     const crowdingCache = cfg.crowdingTieBreak
       ? new Map(props.map((p) => [p, precomputeCrowdingDistances(population, p)]))
@@ -546,11 +563,10 @@ async function runGenetic(
         prop1,
         rand,
         cfg,
-        selected,
+        undefined,
         crowdingCache?.get(prop1),
       )
       const p1 = population[i1]
-      selected.push(i1)
 
       let child: Box[]
       let childMutation: string = 'none'
@@ -578,7 +594,7 @@ async function runGenetic(
           childMutation = 'crossoverStructural'
         }
         if (rand() < effectiveMutationRate) {
-          const __ret = mutateChild(child, rand, cfg, effectiveMutate)
+          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights)
           child = __ret.child
           childMutatedBoxId = __ret.childMutatedBoxId
           childMutation = __ret.childMutation
@@ -588,7 +604,7 @@ async function runGenetic(
         // child = cloneLayouts(population[randInt(1, population.length - 1, rand)].layouts)
 
         if (rand() < effectiveMutationRate) {
-          const __ret = mutateChild(child, rand, cfg, effectiveMutate)
+          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights)
           child = __ret.child
           childMutatedBoxId = __ret.childMutatedBoxId
           childMutation = __ret.childMutation

@@ -85,15 +85,15 @@ priority: **HIGH** = correctness / big perf / big GA win. **LOW** = cleanup, mic
 
 ## GA inefficiencies
 
-- [ ] **HIGH — G1. elitism over-greedy** — main gen loop
+- [x] **HIGH — G1. elitism over-greedy** — main gen loop
   7 elites (best + 6 criteria). even after B1 fix, criteria-bests often same ind → redundant. eats popSize exploration budget.
   fix: 1-2 elite + Pareto front sampling; drop redundant criteria slots.
 
-- [ ] **HIGH — G2. adaptive operator selection NOT wired** — `mutateChild` + `monitor.runTotals`
+- [x] **HIGH — G2. adaptive operator selection NOT wired** — `mutateChild` + `monitor.runTotals`
   stats tracked (`monitor.runTotals[mut].improvements/attempts/survived`) but `cfg.mutWeight*` never updated. dead telemetry.
   fix: every K gens, reweight via bandit (UCB / probability matching) from improvement rate.
 
-- [ ] **HIGH — G5. tournament w/o replacement across whole gen** — main gen loop
+- [x] **HIGH — G5. tournament w/o replacement across whole gen** — main gen loop
   snippet: `selected.push(i1)` then `tournamentSelect(..., selected)` — pool shrinks child-by-child → late children pick from worse residue.
   fix: drop `selected` (tournament w/ replacement is standard) or scope exclusion to within one selection only.
 

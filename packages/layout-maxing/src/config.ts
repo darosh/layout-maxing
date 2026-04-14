@@ -42,6 +42,10 @@ export interface Config {
   nichingExponent?: number
   stagnationThreshold?: number
   stagnationRate?: number
+  eliteSize?: number
+  banditEnabled?: boolean
+  banditK?: number
+  banditExploration?: number
   mutate?: number
   mutateXYOverlap?: number
   // Mutation weights (unitless, roulette selection)
@@ -207,6 +211,10 @@ export const configMeta: ConfigMeta = {
     0.1,
     'Mutation rate multiplier applied during stagnation burst (requires stagnationResetThreshold > 0)',
   ],
+  eliteSize: [3, 1, 20, 1, 'Number of elite individuals preserved each generation (1 global best + Pareto front up to eliteSize-1)'],
+  banditEnabled: [true, false, true, null, 'Adaptively reweight mutation operators via UCB bandit every banditK generations'],
+  banditK: [50, 1, 10000, 1, 'Reweight mutation operators every this many generations'],
+  banditExploration: [1.0, 0, 10, 0.1, 'UCB exploration constant for bandit operator selection'],
   mutate: [0.5, 0, 10, 0.1, 'Box mutation range in viewport units'],
   mutateXYOverlap: [
     0.2,
