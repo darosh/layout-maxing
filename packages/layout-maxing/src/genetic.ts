@@ -141,6 +141,40 @@ function applyBandit(
   })
 }
 
+function computeNsgaRanks(population: Population[]): number[] {
+  const n = population.length
+  const ranks = new Array(n).fill(0)
+  const dominatedBy = new Array(n).fill(0)
+  const dominatesList: number[][] = Array.from({ length: n }, () => [])
+
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (dominates(population[i].fitness!, population[j].fitness!)) {
+        dominatesList[i].push(j)
+        dominatedBy[j]++
+      } else if (dominates(population[j].fitness!, population[i].fitness!)) {
+        dominatesList[j].push(i)
+        dominatedBy[i]++
+      }
+    }
+  }
+
+  let front = dominatedBy.reduce<number[]>((acc, d, i) => (d === 0 ? [...acc, i] : acc), [])
+  let rank = 0
+  while (front.length > 0) {
+    const nextFront: number[] = []
+    for (const i of front) {
+      ranks[i] = rank
+      for (const j of dominatesList[i]) {
+        if (--dominatedBy[j] === 0) nextFront.push(j)
+      }
+    }
+    rank++
+    front = nextFront
+  }
+  return ranks
+}
+
 function precomputeCrowdingDistances(population: Population[], prop: keyof Fitness): number[] {
   const distances = new Array(population.length).fill(0)
   const sorted = population
@@ -162,6 +196,7 @@ function tournamentSelect(
   cfg: Required<Config>,
   exclude?: number[],
   crowdingDistances?: number[],
+  nsgaRanks?: number[],
 ): number {
   const getVal = (ind: Population): number => {
     if (prop === 'score' && cfg.nichingEnabled && ind.fitness!.sharedFitness !== undefined) {
@@ -180,14 +215,26 @@ function tournamentSelect(
   let bestIdx = initial
 
   for (const candidate of rest) {
-    const bestVal = getVal(population[bestIdx])
-    const candidateVal = getVal(population[candidate])
-    if (candidateVal < bestVal) {
-      bestIdx = candidate
-    } else if (cfg.crowdingTieBreak && candidateVal === bestVal) {
-      const distBest = crowdingDistances ? crowdingDistances[bestIdx] : 0
-      const distCandidate = crowdingDistances ? crowdingDistances[candidate] : 0
-      if (distCandidate > distBest) bestIdx = candidate
+    if (nsgaRanks) {
+      const rankBest = nsgaRanks[bestIdx]
+      const rankCandidate = nsgaRanks[candidate]
+      if (rankCandidate < rankBest) {
+        bestIdx = candidate
+      } else if (rankCandidate === rankBest) {
+        const distBest = crowdingDistances ? crowdingDistances[bestIdx] : 0
+        const distCandidate = crowdingDistances ? crowdingDistances[candidate] : 0
+        if (distCandidate > distBest) bestIdx = candidate
+      }
+    } else {
+      const bestVal = getVal(population[bestIdx])
+      const candidateVal = getVal(population[candidate])
+      if (candidateVal < bestVal) {
+        bestIdx = candidate
+      } else if (cfg.crowdingTieBreak && candidateVal === bestVal) {
+        const distBest = crowdingDistances ? crowdingDistances[bestIdx] : 0
+        const distCandidate = crowdingDistances ? crowdingDistances[candidate] : 0
+        if (distCandidate > distBest) bestIdx = candidate
+      }
     }
   }
 
@@ -271,12 +318,46 @@ function randGausInt(min: number, max: number, rand: () => number) {
   return sign * (Math.floor(clamped * (max - min + 1)) + min)
 }
 
+function applyOneMutation(
+  target: LayoutEntity,
+  entities: LayoutEntity[],
+  boxEntityMap: Map<number, LayoutEntity>,
+  mutIdx: number,
+  x: number,
+  y: number,
+  rand: () => number,
+  cfg: Required<Config>,
+) {
+  if (mutIdx === 0) {
+    mutateByQuadrant(target, entities, { x, y }, Math.floor(rand() * 4))
+  } else if (mutIdx === 1) {
+    mutateSingle(target, { x, y })
+  } else if (mutIdx === 2) {
+    mutateWithChildren(target, entities, { x, y }, cfg.maxChildren, boxEntityMap)
+  } else if (mutIdx === 3) {
+    mutateWithParents(target, entities, { x, y }, cfg.maxParents, boxEntityMap)
+  } else if (mutIdx === 4) {
+    mutateSwapSibling(target, entities, rand, boxEntityMap)
+  } else if (mutIdx === 5) {
+    mutateSwapRandom(target, entities, rand)
+  } else if (mutIdx === 6) {
+    mutateSwapInRow(target, entities, rand, cfg)
+  } else if (mutIdx === 7) {
+    mutateSwapInCol(target, entities, rand, cfg)
+  } else if (mutIdx === 8) {
+    mutateShiftRow(target, entities, { x })
+  } else {
+    mutateShiftCol(target, entities, { y })
+  }
+}
+
 function mutateChild(
   child: Box[],
   rand: () => number,
   cfg: Required<Config>,
   effectiveMutate: number,
   mutWeights?: number[],
+  multiMutRate?: number,
 ) {
   const entities = toEntities(child)
   const boxEntityMap = buildBoxEntityIndex(entities)
@@ -310,28 +391,28 @@ function mutateChild(
   const x = mxy < 0.5 + half || mutIdx === 8 ? randGausInt(1, maxX, rand) * cfg.gridX : 0
   const y = mxy >= 0.5 - half || mutIdx === 9 ? randGausInt(1, maxY, rand) * cfg.gridY : 0
 
-  if (mutIdx === 0) {
-    const quadrant = Math.floor(rand() * 4)
-    mutateByQuadrant(targetEntity, entities, { x, y }, quadrant)
-  } else if (mutIdx === 1) {
-    mutateSingle(targetEntity, { x, y })
-  } else if (mutIdx === 2) {
-    mutateWithChildren(targetEntity, entities, { x, y }, cfg.maxChildren, boxEntityMap)
-  } else if (mutIdx === 3) {
-    mutateWithParents(targetEntity, entities, { x, y }, cfg.maxParents, boxEntityMap)
-  } else if (mutIdx === 4) {
-    mutateSwapSibling(targetEntity, entities, rand, boxEntityMap)
-  } else if (mutIdx === 5) {
-    mutateSwapRandom(targetEntity, entities, rand)
-  } else if (mutIdx === 6) {
-    mutateSwapInRow(targetEntity, entities, rand, cfg)
-  } else if (mutIdx === 7) {
-    mutateSwapInCol(targetEntity, entities, rand, cfg)
-  } else if (mutIdx === 8) {
-    mutateShiftRow(targetEntity, entities, { x })
-  } else {
-    mutateShiftCol(targetEntity, entities, { y })
+  applyOneMutation(targetEntity, entities, boxEntityMap, mutIdx, x, y, rand, cfg)
+
+  // Multi-point mutation: additional per-entity Bernoulli passes under stagnation
+  if (multiMutRate && multiMutRate > 0) {
+    const [_x2, _y2, w2, h2] = getViewPort(child)
+    const mx2 = w2 * effectiveMutate
+    const my2 = h2 * effectiveMutate
+    const maxX2 = Math.round((0.5 * mx2) / cfg.gridX)
+    const maxY2 = Math.round((0.5 * my2) / cfg.gridY)
+    for (const e of entities) {
+      if (e === targetEntity) continue
+      if (rand() < multiMutRate) {
+        const mi = roulette(weights, rand)
+        const mxy2 = rand()
+        const half2 = cfg.mutateXYOverlap / 2
+        const ex = mxy2 < 0.5 + half2 || mi === 8 ? randGausInt(1, maxX2, rand) * cfg.gridX : 0
+        const ey = mxy2 >= 0.5 - half2 || mi === 9 ? randGausInt(1, maxY2, rand) * cfg.gridY : 0
+        applyOneMutation(e, entities, boxEntityMap, mi, ex, ey, rand, cfg)
+      }
+    }
   }
+
   return { child, childMutatedBoxId, childMutation }
 }
 
@@ -491,9 +572,12 @@ async function runGenetic(
       // )
     }
 
-    if (cfg.stagnationThreshold > 0 && stagnation >= cfg.stagnationThreshold) {
+    const inStagnation = cfg.stagnationThreshold > 0 && stagnation >= cfg.stagnationThreshold
+    if (inStagnation) {
       effectiveMutationRate = Math.min(1, effectiveMutationRate * cfg.stagnationRate)
+      effectiveMutate = effectiveMutate * cfg.stagnationRate
     }
+    const effectiveMultiMutRate = inStagnation ? cfg.multiMutRate * 2 : cfg.multiMutRate
 
     // --- monitoring: build and store snapshot ---
     const snapshot = buildGenerationSnapshot(
@@ -551,9 +635,12 @@ async function runGenetic(
     const props = <(keyof Fitness)[]>['score', 'view']
     // const props = <(keyof Fitness)[]>['score']
 
+    const nsgaRanks = cfg.nsgaEnabled ? computeNsgaRanks(population) : undefined
+    // For NSGA-II crowding, use 'score' distances; for standard mode, alternate props
     const crowdingCache = cfg.crowdingTieBreak
       ? new Map(props.map((p) => [p, precomputeCrowdingDistances(population, p)]))
       : undefined
+    const nsgaCrowding = nsgaRanks ? precomputeCrowdingDistances(population, 'score') : undefined
 
     while (newPopulation.length < cfg.popSize) {
       const prop1 = props[newPopulation.length % props.length]
@@ -563,7 +650,8 @@ async function runGenetic(
         rand,
         cfg,
         undefined,
-        crowdingCache?.get(prop1),
+        nsgaRanks ? nsgaCrowding : crowdingCache?.get(prop1),
+        nsgaRanks,
       )
       const p1 = population[i1]
 
@@ -578,7 +666,8 @@ async function runGenetic(
           rand,
           cfg,
           [i1],
-          crowdingCache?.get(prop2),
+          nsgaRanks ? nsgaCrowding : crowdingCache?.get(prop2),
+          nsgaRanks,
         )
 
         const crossWeights = [cfg.crossWeightRandom, cfg.crossWeightStruct]
@@ -593,7 +682,7 @@ async function runGenetic(
           childMutation = 'crossoverStructural'
         }
         if (rand() < effectiveMutationRate) {
-          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights)
+          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate)
           child = __ret.child
           childMutatedBoxId = __ret.childMutatedBoxId
           childMutation = __ret.childMutation
@@ -603,7 +692,7 @@ async function runGenetic(
         // child = cloneLayouts(population[randInt(1, population.length - 1, rand)].layouts)
 
         if (rand() < effectiveMutationRate) {
-          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights)
+          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate)
           child = __ret.child
           childMutatedBoxId = __ret.childMutatedBoxId
           childMutation = __ret.childMutation
@@ -626,7 +715,7 @@ async function runGenetic(
         }
       }
 
-      // child = fixOverlaps(child, cfg)
+      if (cfg.repairOffspring) child = fixOverlaps(child, cfg)
 
       if (cfg.normalize) normalizeLayouts(child)
 

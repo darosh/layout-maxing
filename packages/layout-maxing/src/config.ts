@@ -46,6 +46,9 @@ export interface Config {
   banditEnabled?: boolean
   banditK?: number
   banditExploration?: number
+  multiMutRate?: number
+  repairOffspring?: boolean
+  nsgaEnabled?: boolean
   mutate?: number
   mutateXYOverlap?: number
   // Mutation weights (unitless, roulette selection)
@@ -215,6 +218,9 @@ export const configMeta: ConfigMeta = {
   banditEnabled: [true, false, true, null, 'Adaptively reweight mutation operators via UCB bandit every banditK generations'],
   banditK: [50, 1, 10000, 1, 'Reweight mutation operators every this many generations'],
   banditExploration: [1.0, 0, 10, 0.1, 'UCB exploration constant for bandit operator selection'],
+  multiMutRate: [0, 0, 1, 0.01, 'Per-entity Bernoulli probability of additional mutations; stagnation doubles this rate'],
+  repairOffspring: [false, false, true, null, 'Apply fixOverlaps to offspring each generation (consistent with createPopulation)'],
+  nsgaEnabled: [false, false, true, null, 'Use NSGA-II rank-based tournament selection instead of alternating single-objective'],
   mutate: [0.5, 0, 10, 0.1, 'Box mutation range in viewport units'],
   mutateXYOverlap: [
     0.2,
