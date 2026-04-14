@@ -42,6 +42,7 @@ export type { GenerationSnapshot, RunMonitor }
 
 function roulette(weights: number[], rand: () => number): number {
   const total = weights.reduce((a, b) => a + b, 0)
+  if (total <= 0) return Math.floor(rand() * weights.length)
   let r = rand() * total
   for (let i = 0; i < weights.length; i++) {
     r -= weights[i]
@@ -214,7 +215,7 @@ export async function createPopulation(
 
     if (cfg.normalize) normalizeLayouts(ind)
 
-    individuals.push({ id: i, gen: 0, layouts: ind, fitness: undefined as any })
+    individuals.push({ id: i, gen: 0, layouts: ind })
   }
 
   if (getFitness) {
@@ -260,16 +261,14 @@ function randGaussian(mean = 0, stdDev = 1, rand = Math.random) {
   return mean + stdDev * u * mul
 }
 
-function randInt(min: number, max: number, rand: () => number) {
-  return Math.floor(rand() * (max - min + 1)) + min
-}
 
 function randGausInt(min: number, max: number, rand: () => number) {
   // Map abs(Gaussian) to [0,1): values near 0 are most likely, so min is favored
   const raw = Math.abs(randGaussian(0, 1, rand))
   const clamped = Math.min(raw / 3, 0.9999) // 3-sigma covers ~99.7%, map to [0,1)
   const sign = rand() < 0.5 ? -1 : 1
-  return sign * randInt(min, max, () => clamped)
+  // Inline floor instead of passing constant as rand to randInt
+  return sign * (Math.floor(clamped * (max - min + 1)) + min)
 }
 
 function mutateChild(
@@ -282,7 +281,7 @@ function mutateChild(
   const entities = toEntities(child)
   const boxEntityMap = buildBoxEntityIndex(entities)
   const targetEntity: LayoutEntity =
-    entities[Math.floor(rand() * entities.length) % entities.length]
+    entities[Math.floor(rand() * entities.length)]
   const childMutatedBoxId = targetEntity.members[0].box.id
 
   const weights = mutWeights ?? [
@@ -309,7 +308,7 @@ function mutateChild(
 
   const half = cfg.mutateXYOverlap / 2
   const x = mxy < 0.5 + half || mutIdx === 8 ? randGausInt(1, maxX, rand) * cfg.gridX : 0
-  const y = mxy > 0.5 - half || mutIdx === 9 ? randGausInt(1, maxY, rand) * cfg.gridY : 0
+  const y = mxy >= 0.5 - half || mutIdx === 9 ? randGausInt(1, maxY, rand) * cfg.gridY : 0
 
   if (mutIdx === 0) {
     const quadrant = Math.floor(rand() * 4)

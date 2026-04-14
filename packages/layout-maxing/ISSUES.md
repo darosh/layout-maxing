@@ -23,28 +23,28 @@ priority: **HIGH** = correctness / big perf / big GA win. **LOW** = cleanup, mic
   standard GA = crossover THEN mutate. current: crossover branch skips mutation entirely → premature convergence.
   fix: apply mutation after crossover w/ same rate gate.
 
-- [ ] **LOW — B3. `roulette` all-zero weights silently biases idx 0** — `roulette`
+- [x] **LOW — B3. `roulette` all-zero weights silently biases idx 0** — `roulette`
   snippet: `const total = weights.reduce((a, b) => a + b, 0)` then `r = rand() * total`
   total=0 → r=0 → first `r -= 0` → `r<=0` true → return 0.
   fix: guard `if (total<=0) throw` or uniform fallback.
 
-- [ ] **LOW — B4. `randGausInt` passes constant as rand** — `randGausInt`
+- [x] **LOW — B4. `randGausInt` passes constant as rand** — `randGausInt`
   snippet: `sign * randInt(min, max, () => clamped)`
   works but confusing: magnitude deterministic from single gaussian sample. `min=1`, `maxX` → when clamped≈0.9999 get exactly maxX, boundary ok but hidden.
   fix: inline `sign * (Math.floor(clamped*(max-min+1))+min)` w/ comment.
 
-- [ ] **LOW — B5. redundant modulo on entity pick** — `mutateChild`
+- [x] **LOW — B5. redundant modulo on entity pick** — `mutateChild`
   snippet: `entities[Math.floor(rand() * entities.length) % entities.length]`
   `floor(rand()*N)` already in `[0,N-1]`. `% N` dead.
 
-- [ ] **LOW — B6. `mutateXYOverlap` asymmetric band edge** — `mutateChild`
+- [x] **LOW — B6. `mutateXYOverlap` asymmetric band edge** — `mutateChild`
   snippet: `const x = mxy < 0.5 + half || mutIdx === 8 ? ... : 0`
   with half=0 and mxy===0.5 exactly: x=0 AND y=0 → no-op mutation. rare but wasted child.
 
-- [ ] **LOW — B7. dead field `lastMutation`** — newPopulation push
+- [x] **LOW — B7. dead field `lastMutation`** — newPopulation push
   snippet: `lastMutation: childMutation,` — duplicates `_mutation`, unused elsewhere.
 
-- [ ] **LOW — B8. fitness type lie** — `createPopulation`
+- [x] **LOW — B8. fitness type lie** — `createPopulation`
   snippet: `fitness: undefined as any` — drop or widen type properly.
 
 ---
