@@ -36,6 +36,11 @@ export interface Config {
   crossWeightStruct?: number
   tournamentSize?: number
   diversityBoost?: number
+  diversityBoostCap?: number
+  diversityBoostFactor?: number
+  catastropheThreshold?: number
+  catastropheFraction?: number
+  initMutations?: number
   crowdingTieBreak?: boolean
   nichingEnabled?: boolean
   nichingRadius?: number
@@ -176,8 +181,13 @@ export const configMeta: ConfigMeta = {
     0,
     1,
     0.01,
-    'Scales up mutationRate when population diversity is low; 0 = disabled',
+    'Scales up mutation magnitude when population diversity is low; 0 = disabled',
   ],
+  diversityBoostCap: [2, 1, 10, 0.1, 'Maximum multiplier applied to mutation magnitude by diversity boost'],
+  diversityBoostFactor: [0, 0, 1, 0.01, 'Additive increase to mutationRate per unit of (1-diversity); 0 = disabled'],
+  catastropheThreshold: [0, 0, 100000, 1, 'Stagnation gens before catastrophe restart; 0 = disabled'],
+  catastropheFraction: [0.5, 0, 1, 0.01, 'Fraction of non-elite population reinitialised on catastrophe'],
+  initMutations: [1, 1, 20, 1, 'Max number of mutations applied per clone during initial population; later clones get progressively more up to this limit'],
   crowdingTieBreak: [
     true,
     false,
@@ -219,7 +229,7 @@ export const configMeta: ConfigMeta = {
   banditK: [50, 1, 10000, 1, 'Reweight mutation operators every this many generations'],
   banditExploration: [1.0, 0, 10, 0.1, 'UCB exploration constant for bandit operator selection'],
   multiMutRate: [0, 0, 1, 0.01, 'Per-entity Bernoulli probability of additional mutations; stagnation doubles this rate'],
-  repairOffspring: [false, false, true, null, 'Apply fixOverlaps to offspring each generation (consistent with createPopulation)'],
+  repairOffspring: [true, false, true, null, 'Apply fixOverlaps to offspring each generation (consistent with createPopulation)'],
   nsgaEnabled: [false, false, true, null, 'Use NSGA-II rank-based tournament selection instead of alternating single-objective'],
   mutate: [0.5, 0, 10, 0.1, 'Box mutation range in viewport units'],
   mutateXYOverlap: [

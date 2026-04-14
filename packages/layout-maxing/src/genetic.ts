@@ -255,7 +255,12 @@ export async function createPopulation(
     let ind = cloneLayouts(base)
 
     if (i >= startingLayouts.length && cfg.initialMutation) {
-      mutateChild(ind, rand, cfg, cfg.mutate)
+      // Scale mutation count with clone round: later copies of the same starting layout get more mutations
+      const cloneRound = Math.floor(i / startingLayouts.length)
+      const numMutations = Math.min(cloneRound, cfg.initMutations)
+      for (let m = 0; m < numMutations; m++) {
+        mutateChild(ind, rand, cfg, cfg.mutate)
+      }
     }
 
     ind = fixOverlaps(ind, cfg)
@@ -571,11 +576,10 @@ async function runGenetic(
 
     if (cfg.diversityBoost > 0) {
       const boost = 1 + cfg.diversityBoost * (1 - diversity)
-      effectiveMutate = cfg.mutate * Math.min(2, boost)
-      // effectiveMutationRate = Math.min(
-      //   1,
-      //   cfg.mutationRate + (1 - diversity) * cfg.diversityBoostFactor,
-      // )
+      effectiveMutate = cfg.mutate * Math.min(cfg.diversityBoostCap, boost)
+    }
+    if (cfg.diversityBoostFactor > 0) {
+      effectiveMutationRate = Math.min(1, effectiveMutationRate + (1 - diversity) * cfg.diversityBoostFactor)
     }
 
     const inStagnation = cfg.stagnationThreshold > 0 && stagnation >= cfg.stagnationThreshold
@@ -732,6 +736,27 @@ async function runGenetic(
         _parentScore: p1.fitness!.score,
         lastMutation: childMutation,
       })
+    }
+
+    // Catastrophe restart: reinitialise bottom fraction of non-elite slots
+    if (cfg.catastropheThreshold > 0 && stagnation >= cfg.catastropheThreshold) {
+      const numElite = Math.min(cfg.eliteSize, newPopulation.length)
+      const numToReplace = Math.floor(cfg.catastropheFraction * (cfg.popSize - numElite))
+      for (let r = 0; r < numToReplace; r++) {
+        const freshLayouts = cloneLayouts(bestIndividual)
+        mutateChild(freshLayouts, rand, cfg, cfg.mutate * 2, effectiveMutWeights)
+        if (cfg.repairOffspring) fixOverlaps(freshLayouts, cfg)
+        if (cfg.normalize) normalizeLayouts(freshLayouts)
+        newPopulation[newPopulation.length - 1 - r] = {
+          id: nextPopId++,
+          gen: gen + 1,
+          layouts: freshLayouts,
+          _mutation: 'catastrophe',
+          lastMutation: 'catastrophe',
+        }
+      }
+      stagnation = 0
+      stop = Math.min(stop + Math.floor(cfg.stop * cfg.catastropheFraction), cfg.stop)
     }
 
     population = newPopulation

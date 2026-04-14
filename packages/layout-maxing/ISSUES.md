@@ -115,17 +115,17 @@ priority: **HIGH** = correctness / big perf / big GA win. **LOW** = cleanup, mic
   snippet: `const props = <(keyof Fitness)[]>['score', 'view']`
   alternating objective = poor man's multi-obj; crowding only tiebreaks within prop. switch to NSGA-II non-dominated sort if true multi-obj desired.
 
-- [ ] **LOW — G8. diversity boost half-implemented** — main gen loop
+- [x] **LOW — G8. diversity boost half-implemented** — main gen loop
   snippet: `effectiveMutate = cfg.mutate * Math.min(2, boost)` and commented `effectiveMutationRate = Math.min(1, cfg.mutationRate + (1-diversity)*cfg.diversityBoostFactor)`
   arbitrary cap=2; rate branch commented out. finalize or delete.
 
-- [ ] **LOW — G9. no restart / island / catastrophe on deep stagnation** — main gen loop
+- [x] **LOW — G9. no restart / island / catastrophe on deep stagnation** — main gen loop
   only `stop` termination. consider random-restart fraction after N×stagnation.
 
-- [ ] **LOW — G11. crossover offspring never repaired or normalized check** — `crossover*` in `mutation.ts`
+- [x] **LOW — G11. crossover offspring never repaired or normalized check** — `crossover*` in `mutation.ts`
   snippet: `if (cfg.normalize) normalizeLayouts(child)` — optional. combined w/ G6 overlap skip, invalid children common.
 
-- [ ] **LOW — G12. low init diversity when startingLayouts small** — `createPopulation`
+- [x] **LOW — G12. low init diversity when startingLayouts small** — `createPopulation`
   snippet: `if (i >= startingLayouts.length && cfg.initialMutation) mutateChild(ind, rand, cfg, cfg.mutate)` — one mutation per clone. scale mutation count w/ clone index or use bigger magnitude.
 
 ---
