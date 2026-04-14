@@ -229,7 +229,11 @@ function randInt(min: number, max: number, rand: () => number) {
 }
 
 function randGausInt(min: number, max: number, rand: () => number) {
-  return randInt(min, max, () => Math.abs(randGaussian(0, 1, rand)))
+  // Map abs(Gaussian) to [0,1): values near 0 are most likely, so min is favored
+  const raw = Math.abs(randGaussian(0, 1, rand))
+  const clamped = Math.min(raw / 3, 0.9999) // 3-sigma covers ~99.7%, map to [0,1)
+  const sign = rand() < 0.5 ? -1 : 1
+  return sign * randInt(min, max, () => clamped)
 }
 
 function mutateChild(
