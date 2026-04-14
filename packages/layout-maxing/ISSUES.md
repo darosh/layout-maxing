@@ -97,21 +97,21 @@ priority: **HIGH** = correctness / big perf / big GA win. **LOW** = cleanup, mic
   snippet: `selected.push(i1)` then `tournamentSelect(..., selected)` — pool shrinks child-by-child → late children pick from worse residue.
   fix: drop `selected` (tournament w/ replacement is standard) or scope exclusion to within one selection only.
 
-- [ ] **MEDIUM — G3. one-entity mutation per child** — `mutateChild`
+- [x] **MEDIUM — G3. one-entity mutation per child** — `mutateChild`
   snippet: `const targetEntity = entities[Math.floor(rand() * entities.length)]`
   only 1 entity mutated per child; `effectiveMutate` scales magnitude not count. add per-entity bernoulli for multi-point mutation under stagnation.
 
-- [ ] **MEDIUM — G6. no overlap repair on offspring** — main gen loop
+- [x] **MEDIUM — G6. no overlap repair on offspring** — main gen loop
   snippet: `// child = fixOverlaps(child, cfg)` (commented)
   createPop repairs init, offspring don't → inconsistent; invalid geom costs fitness evals.
   decide: repair always OR never; don't half.
 
-- [ ] **MEDIUM — G7. stagnation boosts RATE not MAGNITUDE** — main gen loop
+- [x] **MEDIUM — G7. stagnation boosts RATE not MAGNITUDE** — main gen loop
   snippet: `if (cfg.stagnationThreshold > 0 && stagnation >= cfg.stagnationThreshold) { effectiveMutationRate = Math.min(1, effectiveMutationRate * cfg.stagnationRate) }`
   `effectiveMutate` (magnitude) ignored. escape typically needs bigger jumps.
   fix: also scale `effectiveMutate`.
 
-- [ ] **MEDIUM — G10. Pareto underused** — main gen loop
+- [x] **MEDIUM — G10. Pareto underused** — main gen loop
   snippet: `const props = <(keyof Fitness)[]>['score', 'view']`
   alternating objective = poor man's multi-obj; crowding only tiebreaks within prop. switch to NSGA-II non-dominated sort if true multi-obj desired.
 
