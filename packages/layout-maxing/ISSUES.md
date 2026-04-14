@@ -8,17 +8,17 @@ priority: **HIGH** = correctness / big perf / big GA win. **LOW** = cleanup, mic
 
 ## BUGS
 
-- [ ] **HIGH — B1. elite splice returns removed chunk not rest** — `runGenetic`
+- [x] **HIGH — B1. elite splice returns removed chunk not rest** — `runGenetic`
   snippet: `let populationCopy = [...population].splice(currentBestIdx, 1)` (also 5 more `populationCopy = populationCopy.splice(populationCopy.indexOf(bestBy*), 1)`)
   `splice` returns REMOVED elements. `populationCopy` collapses to 1 elem. all 6 `minBy` pick same individual → elite slots duplicate.
   fix: `const pool = population.filter((_,i)=>i!==currentBestIdx)`; then remove by index (`pool.splice(idx,1)` statement-form, don't reassign).
 
-- [ ] **HIGH — B2. `uniqueIndexes` can return [] → tournamentSelect blows up** — `uniqueIndexes`, `tournamentSelect`
+- [x] **HIGH — B2. `uniqueIndexes` can return [] → tournamentSelect blows up** — `uniqueIndexes`, `tournamentSelect`
   snippet: `const sanitizeCount = Math.min(count, max - min - (exclude ? exclude.length : 0))`
   when `selected` grows large (line `selected.push(i1)` in main loop) sanitizeCount≤0 → `[initial,...rest] = []` → `initial=undefined` → `population[undefined]`. also exclude indexes outside [min,max] over-subtract.
   fix: clamp, handle empty, or filter exclude to in-range first.
 
-- [ ] **HIGH — G4. crossover children never mutated** — `runGenetic` main loop
+- [x] **HIGH — G4. crossover children never mutated** — `runGenetic` main loop
   snippet: `if (rand() < cfg.crossoverRate) { ... } else { ... if (rand() < effectiveMutationRate) mutateChild(...) }`
   standard GA = crossover THEN mutate. current: crossover branch skips mutation entirely → premature convergence.
   fix: apply mutation after crossover w/ same rate gate.

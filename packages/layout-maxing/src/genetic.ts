@@ -99,7 +99,8 @@ function uniqueIndexes(
 ): number[] {
   const result: number[] = []
   const excluded = new Set(exclude)
-  const sanitizeCount = Math.min(count, max - min - (exclude ? exclude.length : 0))
+  const inRangeExcludeCount = exclude ? exclude.filter((e) => e >= min && e < max).length : 0
+  const sanitizeCount = Math.min(count, max - min - inRangeExcludeCount)
   while (result.length < sanitizeCount) {
     const idx = min + Math.floor(rand() * (max - min))
     if (!excluded.has(idx)) {
@@ -465,7 +466,7 @@ async function runGenetic(
       },
     ] // elitism
 
-    let populationCopy = [...population].splice(currentBestIdx, 1)
+    const populationCopy = population.filter((_, i) => i !== currentBestIdx)
 
     // monitoring helper: track elite survival
     const trackEliteSurvival = (ind: Population) => {
@@ -474,33 +475,38 @@ async function runGenetic(
       }
     }
 
+    const removeElite = (pool: Population[], ind: Population) => {
+      const idx = pool.indexOf(ind)
+      if (idx !== -1) pool.splice(idx, 1)
+    }
+
     const bestByCollisions = minBy<Population>(populationCopy, (v) => v.fitness!.collisions)!
-    populationCopy = populationCopy.splice(populationCopy.indexOf(bestByCollisions), 1)
+    removeElite(populationCopy, bestByCollisions)
     trackEliteSurvival(bestByCollisions)
     newPopulation.push(bestByCollisions)
 
     const bestByCrossings = minBy<Population>(populationCopy, (v) => v.fitness!.crossings)!
-    populationCopy = populationCopy.splice(populationCopy.indexOf(bestByCrossings), 1)
+    removeElite(populationCopy, bestByCrossings)
     trackEliteSurvival(bestByCrossings)
     newPopulation.push(bestByCrossings)
 
     const bestByOverlaps = minBy<Population>(populationCopy, (v) => v.fitness!.overlaps)!
-    populationCopy = populationCopy.splice(populationCopy.indexOf(bestByOverlaps), 1)
+    removeElite(populationCopy, bestByOverlaps)
     trackEliteSurvival(bestByOverlaps)
     newPopulation.push(bestByOverlaps)
 
     const bestByLength = minBy<Population>(populationCopy, (v) => v.fitness!.length)!
-    populationCopy = populationCopy.splice(populationCopy.indexOf(bestByLength), 1)
+    removeElite(populationCopy, bestByLength)
     trackEliteSurvival(bestByLength)
     newPopulation.push(bestByLength)
 
     const bestByScore = minBy<Population>(populationCopy, (v) => v.fitness!.score)!
-    populationCopy = populationCopy.splice(populationCopy.indexOf(bestByScore), 1)
+    removeElite(populationCopy, bestByScore)
     trackEliteSurvival(bestByScore)
     newPopulation.push(bestByScore)
 
     const bestByView = minBy<Population>(populationCopy, (v) => v.fitness!.view)!
-    populationCopy = populationCopy.splice(populationCopy.indexOf(bestByView), 1)
+    removeElite(populationCopy, bestByView)
     trackEliteSurvival(bestByView)
     newPopulation.push(bestByView)
 
@@ -543,6 +549,12 @@ async function runGenetic(
         } else {
           child = crossoverStructural(p1.layouts, population[i2].layouts, rand)
           childMutation = 'crossoverStructural'
+        }
+        if (rand() < effectiveMutationRate) {
+          const __ret = mutateChild(child, rand, cfg, effectiveMutate)
+          child = __ret.child
+          childMutatedBoxId = __ret.childMutatedBoxId
+          childMutation = __ret.childMutation
         }
       } else {
         child = cloneLayouts(p1.layouts)
