@@ -67,6 +67,9 @@ export interface Config {
   useDagre?: boolean
   useInput?: boolean
   useSimpleFlow?: boolean
+  useZero?: boolean
+  useSquare?: boolean
+  useCircle?: boolean
   initialMutation?: boolean
   // Logging / debug output
   logInfo?: boolean
@@ -252,6 +255,21 @@ export const configMeta: ConfigMeta = {
     true,
     null,
     'Use simple flow for initial layout before GA optimization',
+  ],
+  useZero: [false, false, true, null, 'Place all boxes at position 0,0 as starting layout'],
+  useSquare: [
+    false,
+    false,
+    true,
+    null,
+    'Arrange boxes in a square grid (side = sqrt(count)) snapped to gridX/gridY',
+  ],
+  useCircle: [
+    false,
+    false,
+    true,
+    null,
+    'Arrange boxes on a circle (circumference = count × diagonal of grid cell), snapped to grid',
   ],
   initialMutation: [
     true,

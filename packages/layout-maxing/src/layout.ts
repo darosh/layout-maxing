@@ -438,6 +438,34 @@ export function simpleFlow(baseLayouts: Box[], cfg: Required<Config>) {
   }
 }
 
+export function zeroFlow(layouts: Box[]) {
+  for (const b of layouts) {
+    b.x = 0
+    b.y = 0
+  }
+}
+
+export function squareFlow(layouts: Box[], cfg: Required<Config>) {
+  const side = Math.ceil(Math.sqrt(layouts.length))
+  layouts.forEach((b, i) => {
+    b.x = (i % side) * cfg.gridX
+    b.y = Math.floor(i / side) * cfg.gridY
+  })
+}
+
+export function circleFlow(layouts: Box[], cfg: Required<Config>) {
+  const diagonal = Math.sqrt(cfg.gridX * cfg.gridX + cfg.gridY * cfg.gridY)
+  const circumference = layouts.length * diagonal
+  const radius = circumference / (2 * Math.PI)
+  layouts.forEach((b, i) => {
+    const angle = (2 * Math.PI * i) / layouts.length
+    const rawX = radius + radius * Math.cos(angle)
+    const rawY = radius + radius * Math.sin(angle)
+    b.x = Math.round(rawX / cfg.gridX) * cfg.gridX
+    b.y = Math.round(rawY / cfg.gridY) * cfg.gridY
+  })
+}
+
 export function dagreFlow(
   layouts: Box[],
   lines: Line[],

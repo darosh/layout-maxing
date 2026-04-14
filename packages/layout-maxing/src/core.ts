@@ -7,6 +7,9 @@ import {
   fillDepths,
   dagreFlow,
   simpleFlow,
+  zeroFlow,
+  squareFlow,
+  circleFlow,
   normalizeLayouts,
   stripOrphans,
   preserveGroupMembers,
@@ -140,6 +143,24 @@ export async function main(
   if (c.useSimpleFlow) {
     const clone = cloneLayouts(baseLayouts)
     simpleFlow(clone, c)
+    startingLayouts.push(clone)
+  }
+
+  if (c.useZero) {
+    const clone = cloneLayouts(baseLayouts)
+    zeroFlow(clone)
+    startingLayouts.push(clone)
+  }
+
+  if (c.useSquare) {
+    const clone = cloneLayouts(baseLayouts)
+    squareFlow(clone, c)
+    startingLayouts.push(clone)
+  }
+
+  if (c.useCircle) {
+    const clone = cloneLayouts(baseLayouts)
+    circleFlow(clone, c)
     startingLayouts.push(clone)
   }
 
