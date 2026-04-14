@@ -21,8 +21,9 @@ export function mutateWithChildren(
   entities: LayoutEntity[],
   delta: { x: number; y: number },
   maxDepth: number,
+  boxEntityMap?: Map<number, LayoutEntity>,
 ): void {
-  const boxEntityMap = buildBoxEntityIndex(entities)
+  const entityMap = boxEntityMap ?? buildBoxEntityIndex(entities)
   const visited = new Set<LayoutEntity>()
 
   function apply(entity: LayoutEntity, depth: number) {
@@ -31,7 +32,7 @@ export function mutateWithChildren(
     moveEntityTo(entity, entity.x + delta.x, entity.y + delta.y)
     for (const { box } of entity.members) {
       for (const childIdx of box.children ?? []) {
-        const childEntity = boxEntityMap.get(childIdx)
+        const childEntity = entityMap.get(childIdx)
         if (childEntity) apply(childEntity, depth - 1)
       }
     }
@@ -45,8 +46,9 @@ export function mutateWithParents(
   entities: LayoutEntity[],
   delta: { x: number; y: number },
   maxDepth: number,
+  boxEntityMap?: Map<number, LayoutEntity>,
 ): void {
-  const boxEntityMap = buildBoxEntityIndex(entities)
+  const entityMap = boxEntityMap ?? buildBoxEntityIndex(entities)
   const visited = new Set<LayoutEntity>()
 
   function apply(entity: LayoutEntity, depth: number) {
@@ -55,7 +57,7 @@ export function mutateWithParents(
     moveEntityTo(entity, entity.x + delta.x, entity.y + delta.y)
     for (const { box } of entity.members) {
       for (const parentIdx of box.parents ?? []) {
-        const parentEntity = boxEntityMap.get(parentIdx)
+        const parentEntity = entityMap.get(parentIdx)
         if (parentEntity) apply(parentEntity, depth - 1)
       }
     }
@@ -94,17 +96,18 @@ export function mutateSwapSibling(
   target: LayoutEntity,
   entities: LayoutEntity[],
   rand: () => number,
+  boxEntityMap?: Map<number, LayoutEntity>,
 ): void {
-  const boxEntityMap = buildBoxEntityIndex(entities)
+  const entityMap = boxEntityMap ?? buildBoxEntityIndex(entities)
   const siblingEntities = new Set<LayoutEntity>()
 
   for (const { box } of target.members) {
     for (const parentIdx of box.parents ?? []) {
-      const parentEntity = boxEntityMap.get(parentIdx)
+      const parentEntity = entityMap.get(parentIdx)
       if (!parentEntity) continue
       for (const { box: parentBox } of parentEntity.members) {
         for (const childIdx of parentBox.children ?? []) {
-          const sibEntity = boxEntityMap.get(childIdx)
+          const sibEntity = entityMap.get(childIdx)
           if (sibEntity && sibEntity !== target) siblingEntities.add(sibEntity)
         }
       }

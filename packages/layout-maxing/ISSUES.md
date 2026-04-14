@@ -51,18 +51,18 @@ priority: **HIGH** = correctness / big perf / big GA win. **LOW** = cleanup, mic
 
 ## PERF
 
-- [ ] **HIGH — P1. `crowdingDistance` re-sorts whole pop per call** — `crowdingDistance`
+- [x] **HIGH — P1. `crowdingDistance` re-sorts whole pop per call** — `crowdingDistance`
   snippet: `const sorted = population.map(...).sort((a,b)=>a.v-b.v)` inside per-candidate tiebreak loop.
   O(N log N) × tourneys × candidates × tiebreaks. cache sort per (generation, prop) or precompute rank array once.
 
-- [ ] **HIGH — P3. async-wrap on sync fitness** — createPopulation + main gen loop
+- [x] **HIGH — P3. async-wrap on sync fitness** — createPopulation + main gen loop
   snippet: `fitnessPromises = population.map(async (ind) => { ... ind.fitness = getFitness ? await getFitness(...) : fitness(...) })`
   sync path still pays microtask × popSize × gens. branch: if no `getFitness` run tight sync loop.
 
-- [ ] **HIGH — P5. `toEntities` rebuilt per child mutation** — `mutateChild`
+- [x] **HIGH — P5. `toEntities` rebuilt per child mutation** — `mutateChild`
   snippet: `const entities = toEntities(child)` — rebuild per child. build once per gen when possible, or after crossover.
 
-- [ ] **HIGH — P6. `buildBoxEntityIndex` rebuilt per mutation** — `mutation.ts:mutateWithChildren/mutateWithParents`
+- [x] **HIGH — P6. `buildBoxEntityIndex` rebuilt per mutation** — `mutation.ts:mutateWithChildren/mutateWithParents`
   snippet: `const boxEntityMap = buildBoxEntityIndex(entities)` — share across calls in same gen.
 
 - [ ] **LOW — P2. diversity per gen** — `computePopulationDiversity`

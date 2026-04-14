@@ -23,6 +23,7 @@ import {
   mutateShiftRow,
   mutateShiftCol,
 } from './mutation.ts'
+import { buildBoxEntityIndex } from './layout.ts'
 import { getViewPort } from './geometry.ts'
 import {
   type GenerationSnapshot,
@@ -111,15 +112,18 @@ function uniqueIndexes(
   return result
 }
 
-function crowdingDistance(population: Population[], idx: number, prop: keyof Fitness): number {
-  const val = population[idx].fitness![prop] as number
+function precomputeCrowdingDistances(population: Population[], prop: keyof Fitness): number[] {
+  const distances = new Array(population.length).fill(0)
   const sorted = population
     .map((ind, i) => ({ i, v: ind.fitness![prop] as number }))
     .sort((a, b) => a.v - b.v)
-  const pos = sorted.findIndex((e) => e.i === idx)
-  const prev = sorted[pos - 1]?.v ?? val
-  const next = sorted[pos + 1]?.v ?? val
-  return Math.abs(val - prev) + Math.abs(next - val)
+  for (let pos = 0; pos < sorted.length; pos++) {
+    const { i, v } = sorted[pos]
+    const prev = sorted[pos - 1]?.v ?? v
+    const next = sorted[pos + 1]?.v ?? v
+    distances[i] = Math.abs(v - prev) + Math.abs(next - v)
+  }
+  return distances
 }
 
 function tournamentSelect(
@@ -128,6 +132,7 @@ function tournamentSelect(
   rand: () => number,
   cfg: Required<Config>,
   exclude?: number[],
+  crowdingDistances?: number[],
 ): number {
   const getVal = (ind: Population): number => {
     if (prop === 'score' && cfg.nichingEnabled && ind.fitness!.sharedFitness !== undefined) {
@@ -151,8 +156,8 @@ function tournamentSelect(
     if (candidateVal < bestVal) {
       bestIdx = candidate
     } else if (cfg.crowdingTieBreak && candidateVal === bestVal) {
-      const distBest = crowdingDistance(population, bestIdx, prop)
-      const distCandidate = crowdingDistance(population, candidate, prop)
+      const distBest = crowdingDistances ? crowdingDistances[bestIdx] : 0
+      const distCandidate = crowdingDistances ? crowdingDistances[candidate] : 0
       if (distCandidate > distBest) bestIdx = candidate
     }
   }
@@ -184,21 +189,23 @@ export async function createPopulation(
     individuals.push({ id: i, gen: 0, layouts: ind, fitness: undefined as any })
   }
 
-  // Run fitness in parallel
-  const fitnessPromises = individuals.map((ind) => {
-    ;(ind.layouts as any)._popId = ind.id
-    ;(ind.layouts as any)._popGen = ind.gen
-    const result = getFitness
-      ? getFitness(ind.layouts, lines, cfg)
-      : fitness(ind.layouts, lines, cfg)
-
-    return Promise.resolve(result).then((value) => {
-      ind.fitness = value
-      return value
+  if (getFitness) {
+    const fitnessPromises = individuals.map((ind) => {
+      ;(ind.layouts as any)._popId = ind.id
+      ;(ind.layouts as any)._popGen = ind.gen
+      return getFitness(ind.layouts, lines, cfg).then((value) => {
+        ind.fitness = value
+        return value
+      })
     })
-  })
-
-  await Promise.all(fitnessPromises)
+    await Promise.all(fitnessPromises)
+  } else {
+    for (const ind of individuals) {
+      ;(ind.layouts as any)._popId = ind.id
+      ;(ind.layouts as any)._popGen = ind.gen
+      ind.fitness = fitness(ind.layouts, lines, cfg)
+    }
+  }
 
   return individuals
 }
@@ -244,6 +251,7 @@ function mutateChild(
   effectiveMutate: number,
 ) {
   const entities = toEntities(child)
+  const boxEntityMap = buildBoxEntityIndex(entities)
   const targetEntity: LayoutEntity =
     entities[Math.floor(rand() * entities.length) % entities.length]
   const childMutatedBoxId = targetEntity.members[0].box.id
@@ -282,11 +290,11 @@ function mutateChild(
   } else if (mutIdx === 1) {
     mutateSingle(targetEntity, { x, y })
   } else if (mutIdx === 2) {
-    mutateWithChildren(targetEntity, entities, { x, y }, cfg.maxChildren)
+    mutateWithChildren(targetEntity, entities, { x, y }, cfg.maxChildren, boxEntityMap)
   } else if (mutIdx === 3) {
-    mutateWithParents(targetEntity, entities, { x, y }, cfg.maxParents)
+    mutateWithParents(targetEntity, entities, { x, y }, cfg.maxParents, boxEntityMap)
   } else if (mutIdx === 4) {
-    mutateSwapSibling(targetEntity, entities, rand)
+    mutateSwapSibling(targetEntity, entities, rand, boxEntityMap)
   } else if (mutIdx === 5) {
     mutateSwapRandom(targetEntity, entities, rand)
   } else if (mutIdx === 6) {
@@ -349,21 +357,32 @@ async function runGenetic(
   let nextPopId = cfg.popSize
 
   for (let gen = 0; gen < cfg.generations; gen++) {
-    const fitnessPromises = population.map(async (ind) => {
-      if (ind.fitness === undefined) {
-        ;(ind.layouts as any)._popId = ind.id
-        ;(ind.layouts as any)._popGen = ind.gen
-        ;(ind.layouts as any)._popPrevId = ind.prevId
-        ;(ind.layouts as any)._popPrevGen = ind.prevGen
-        ind.fitness = getFitness
-          ? await getFitness(ind.layouts, lines, cfg)
-          : fitness(ind.layouts, lines, cfg)
+    let fitnessValues: Fitness[]
+    if (getFitness) {
+      fitnessValues = await Promise.all(
+        population.map(async (ind) => {
+          if (ind.fitness === undefined) {
+            ;(ind.layouts as any)._popId = ind.id
+            ;(ind.layouts as any)._popGen = ind.gen
+            ;(ind.layouts as any)._popPrevId = ind.prevId
+            ;(ind.layouts as any)._popPrevGen = ind.prevGen
+            ind.fitness = await getFitness(ind.layouts, lines, cfg)
+          }
+          return ind.fitness
+        }),
+      )
+    } else {
+      for (const ind of population) {
+        if (ind.fitness === undefined) {
+          ;(ind.layouts as any)._popId = ind.id
+          ;(ind.layouts as any)._popGen = ind.gen
+          ;(ind.layouts as any)._popPrevId = ind.prevId
+          ;(ind.layouts as any)._popPrevGen = ind.prevGen
+          ind.fitness = fitness(ind.layouts, lines, cfg)
+        }
       }
-
-      return ind.fitness
-    })
-
-    const fitnessValues = await Promise.all(fitnessPromises)
+      fitnessValues = population.map((ind) => ind.fitness!)
+    }
 
     if (cfg.nichingEnabled) {
       applyFitnessSharing(population, cfg.nichingRadius, cfg.nichingExponent)
@@ -516,13 +535,19 @@ async function runGenetic(
 
     const selected = []
 
+    const crowdingCache = cfg.crowdingTieBreak
+      ? new Map(props.map((p) => [p, precomputeCrowdingDistances(population, p)]))
+      : undefined
+
     while (newPopulation.length < cfg.popSize) {
+      const prop1 = props[newPopulation.length % props.length]
       const i1 = tournamentSelect(
         population,
-        props[newPopulation.length % props.length],
+        prop1,
         rand,
         cfg,
         selected,
+        crowdingCache?.get(prop1),
       )
       const p1 = population[i1]
       selected.push(i1)
@@ -531,12 +556,14 @@ async function runGenetic(
       let childMutation: string = 'none'
       let childMutatedBoxId: string = ''
       if (rand() < cfg.crossoverRate) {
+        const prop2 = props[(newPopulation.length + 1) % props.length]
         const i2 = tournamentSelect(
           population,
-          props[(newPopulation.length + 1) % props.length],
+          prop2,
           rand,
           cfg,
           [i1],
+          crowdingCache?.get(prop2),
         )
 
         const crossWeights = [cfg.crossWeightRandom, cfg.crossWeightStruct]
