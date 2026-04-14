@@ -172,15 +172,6 @@ export async function createPopulation(
     const base = startingLayouts[i % startingLayouts.length]
     let ind = cloneLayouts(base)
 
-    // this does not lead to meaningful population
-    // if (i >= startingLayouts.length) {
-    //   // Add controlled diversity to the first generation
-    //   for (const box of ind) {
-    //     box.x = rand() * Math.sqrt(base.length / 2)
-    //     box.y = rand() * Math.sqrt(base.length / 2)
-    //   }
-    // }
-
     if (i >= startingLayouts.length && cfg.initialMutation) {
       mutateChild(ind, rand, cfg, cfg.mutate)
     }
