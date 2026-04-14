@@ -363,7 +363,7 @@ function mutateChild(
   const boxEntityMap = buildBoxEntityIndex(entities)
   const targetEntity: LayoutEntity =
     entities[Math.floor(rand() * entities.length)]
-  const childMutatedBoxId = targetEntity.members[0].box.id
+  const mutatedBox = targetEntity.members[0].box
 
   const weights = mutWeights ?? [
     cfg.mutWeightQuadrant,
@@ -413,7 +413,7 @@ function mutateChild(
     }
   }
 
-  return { child, childMutatedBoxId, childMutation }
+  return { child, mutatedBox, childMutation }
 }
 
 async function runGenetic(
@@ -508,8 +508,14 @@ async function runGenetic(
     }
 
     // Track global best
-    const minScore = Math.min(...fitnessValues.map(({ score }) => score))
-    const currentBestIdx = fitnessValues.findIndex(({ score }) => score === minScore)
+    let minScore = Infinity
+    let currentBestIdx = 0
+    for (let i = 0; i < fitnessValues.length; i++) {
+      if (fitnessValues[i].score < minScore) {
+        minScore = fitnessValues[i].score
+        currentBestIdx = i
+      }
+    }
 
     // --- monitoring: per-mutation improvement stats ---
     const genMutStats: Record<string, ReturnType<typeof createMutationStat>> = {}
@@ -605,7 +611,7 @@ async function runGenetic(
     // Build next generation
     const globalBest: Population = {
       ...population[currentBestIdx],
-      layouts: cloneLayouts(bestIndividual),
+      layouts: bestIndividual, // safe: offspring always clone before mutating
       fitness: bestFitness,
     }
     const newPopulation: Population[] = [globalBest]
@@ -657,7 +663,7 @@ async function runGenetic(
 
       let child: Box[]
       let childMutation: string = 'none'
-      let childMutatedBoxId: string = ''
+      let mutatedBox: Box | undefined
       if (rand() < cfg.crossoverRate) {
         const prop2 = props[(newPopulation.length + 1) % props.length]
         const i2 = tournamentSelect(
@@ -684,17 +690,16 @@ async function runGenetic(
         if (rand() < effectiveMutationRate) {
           const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate)
           child = __ret.child
-          childMutatedBoxId = __ret.childMutatedBoxId
+          mutatedBox = __ret.mutatedBox
           childMutation = __ret.childMutation
         }
       } else {
         child = cloneLayouts(p1.layouts)
-        // child = cloneLayouts(population[randInt(1, population.length - 1, rand)].layouts)
 
         if (rand() < effectiveMutationRate) {
           const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate)
           child = __ret.child
-          childMutatedBoxId = __ret.childMutatedBoxId
+          mutatedBox = __ret.mutatedBox
           childMutation = __ret.childMutation
         }
       }
@@ -704,14 +709,11 @@ async function runGenetic(
         childMutation !== 'crossover' &&
         childMutation !== 'crossoverStructural' &&
         childMutation !== 'none' &&
-        childMutatedBoxId
+        mutatedBox
       ) {
-        const box = child.find((b) => b.id === childMutatedBoxId)
-        if (box) {
-          box._mutations = {
-            ...box._mutations,
-            [childMutation]: (box._mutations?.[childMutation] ?? 0) + 1,
-          }
+        mutatedBox._mutations = {
+          ...mutatedBox._mutations,
+          [childMutation]: (mutatedBox._mutations?.[childMutation] ?? 0) + 1,
         }
       }
 
@@ -726,7 +728,7 @@ async function runGenetic(
         prevGen: p1.gen,
         layouts: child,
         _mutation: childMutation,
-        _mutatedBoxId: childMutatedBoxId,
+        _mutatedBoxId: mutatedBox?.id ?? '',
         _parentScore: p1.fitness!.score,
         lastMutation: childMutation,
       })

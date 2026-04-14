@@ -184,11 +184,16 @@ export function computePopulationDiversity(population: { layouts: Box[] }[]): nu
   const rangeX = maxX - minX || 1
   const rangeY = maxY - minY || 1
 
-  // Average pairwise normalized Manhattan distance
+  // Average pairwise normalized Manhattan distance (stride-sampled to cap at ~500 pairs)
+  const maxPairs = 500
+  const totalPairs = (n * (n - 1)) / 2
+  const stride = Math.max(1, Math.ceil(totalPairs / maxPairs))
   let totalDist = 0
   let pairs = 0
+  let pairIdx = 0
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
+      if (pairIdx++ % stride !== 0) continue
       let dist = 0
       const len = Math.min(disc[i].length, disc[j].length)
       for (let k = 0; k < len; k++) {

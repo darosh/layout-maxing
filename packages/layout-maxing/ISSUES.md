@@ -65,20 +65,20 @@ priority: **HIGH** = correctness / big perf / big GA win. **LOW** = cleanup, mic
 - [x] **HIGH — P6. `buildBoxEntityIndex` rebuilt per mutation** — `mutation.ts:mutateWithChildren/mutateWithParents`
   snippet: `const boxEntityMap = buildBoxEntityIndex(entities)` — share across calls in same gen.
 
-- [ ] **LOW — P2. diversity per gen** — `computePopulationDiversity`
+- [x] **LOW — P2. diversity per gen** — `computePopulationDiversity`
   verify cost in `monitor.ts`; if O(N²) use stride sampling or evict stale fingerprints.
 
-- [ ] **LOW — P4. `Math.min(...array)` spread overflow** — main gen loop
+- [x] **LOW — P4. `Math.min(...array)` spread overflow** — main gen loop
   snippet: `const minScore = Math.min(...fitnessValues.map(({ score }) => score))` — popSize >~1e4 blows stack.
   fix: `reduce((m,f)=>f.score<m?f.score:m, Infinity)`.
 
-- [ ] **LOW — P7. elite cloned twice per gen** — main gen loop
+- [x] **LOW — P7. elite cloned twice per gen** — main gen loop
   snippet: `bestIndividual = cloneLayouts(population[currentBestIdx].layouts)` AND later `layouts: cloneLayouts(bestIndividual)`. clone only on improvement; reuse ref for elite slot if downstream doesn't mutate.
 
-- [ ] **LOW — P8. `child.find(b=>b.id===childMutatedBoxId)`** — main gen loop
+- [x] **LOW — P8. `child.find(b=>b.id===childMutatedBoxId)`** — main gen loop
   snippet: `const box = child.find((b) => b.id === childMutatedBoxId)` — linear scan per child for monitoring bookkeeping. build id→box map once per child (or let mutateChild return box ref).
 
-- [ ] **LOW — P9. six `minBy` passes over populationCopy** — main gen loop
+- [x] **LOW — P9. six `minBy` passes over populationCopy** — main gen loop
   after B1 fix, fuse into single pass computing 6 mins.
 
 ---
