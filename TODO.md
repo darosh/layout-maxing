@@ -5,6 +5,7 @@
 - [ ] automate best setting search
 - [ ] best of pass
 - [ ] use summarizeRun
+- [ ] presets to cli and UI
 - [x] try another prng
 - [x] cli bench deno/bun/node (bun is 50% slower, workers = perf cores)
 - [x] fix main layout
@@ -34,7 +35,6 @@
 
 ### UI
 
-- [ ] presets?
 - [x] processed locally info
 - [x] smaller examples
 - [x] check exact hotkeys
