@@ -20,7 +20,6 @@ import { cloneLayouts } from './mutation.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import runGenetic from './genetic.ts'
 import type { RunMonitor, GenerationSnapshot } from './monitor.ts'
-import { getRandomXoshiro } from './random-xoshiro256.ts'
 import { getRandomMulberry } from './random-mulberry-32.ts'
 
 type BoxId = string
