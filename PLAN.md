@@ -85,7 +85,7 @@ Cross-session work tracker. Each item has target anchors (fn name + code pattern
 
 ## Analytics
 
-- [ ] **A1 — Add `summarizeRun` to monitor**
+- [x] **A1 — Add `summarizeRun` to monitor**
       File: `packages/layout-maxing/src/monitor.ts`
       Anchor: after `computeDeadWeightMutations` fn
       New fn: `summarizeRun(monitor: RunMonitor, passes?: number): string`
