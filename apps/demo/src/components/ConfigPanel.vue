@@ -191,6 +191,7 @@ const groups: GroupDef[] = [
       { key: 'totalDistPenalty' },
       { key: 'arPenalty' },
       { key: 'arMax' },
+      { key: 'viewExponent' },
       { key: 'totalCrossPenalty' },
       { key: 'totalOverPenalty' },
       { key: 'totalCollisionPenalty' },
@@ -204,6 +205,7 @@ const groups: GroupDef[] = [
     label: 'Initial Population',
     fields: [
       { key: 'useInput' },
+      { key: 'usePassBest' },
       { key: 'useDagre' },
       { key: 'useSimpleFlow' },
       { key: 'useSquare' },

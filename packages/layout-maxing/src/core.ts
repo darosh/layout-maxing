@@ -202,6 +202,10 @@ export async function main(
       if (resultFitness.score < globalBestScore) {
         globalBestScore = resultFitness.score
         globalBest = result
+
+        if (cfg.usePassBest) {
+          startingLayouts = [...startingLayouts, globalBest]
+        }
       }
     }
   }

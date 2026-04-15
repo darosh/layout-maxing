@@ -167,7 +167,7 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
   return {
     score:
       (totalLength || 1) *
-      view ** (1 / layouts.length) *
+      view ** (c.viewExponent / layouts.length) *
       c.totalCollisionPenalty ** collisions *
       c.totalSSCPenalty ** singleSelfCollisions *
       c.misalignedSSPenalty ** misalignedSS *

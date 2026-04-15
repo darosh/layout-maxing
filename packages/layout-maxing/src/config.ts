@@ -21,6 +21,7 @@ export interface Config {
   totalDistPenalty?: number
   arPenalty?: number
   arMax?: number
+  viewExponent?: number
   // GA parameters
   svgAtStop?: number
   stop?: number
@@ -78,6 +79,7 @@ export interface Config {
   keepGroups?: boolean
   useDagre?: boolean
   useInput?: boolean
+  usePassBest?: boolean
   useSimpleFlow?: boolean
   useZero?: boolean
   useSquare?: boolean
@@ -120,6 +122,7 @@ export const configMeta: ConfigMeta = {
   totalDistPenalty: [1.4, 1, 2, 0.1, 'Exponential multiplier for minDistX/minDistY pair violations'],
   arPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier based on aspect ratio of the viewport'],
   arMax: [5, 1, 25, 0.01, 'Maximum non-penalized aspect ratio'],
+  viewExponent: [1, 0, 2, 0.01, 'Exponent applied to viewport-coverage score (default 1/20 keeps pressure for large n)'],
   // GA parameters
   svgAtStop: [9995, 0, 100000, 1, 'Generation count at which to write final SVG snapshot'],
   stop: [999, 1, 100000, 1, 'Stop after this many generations without improvement'],
@@ -177,6 +180,7 @@ export const configMeta: ConfigMeta = {
   keepGroups: [true, false, true, null, 'Preserve relative positions within patcher.boxgroups'],
   useDagre: [true, false, true, null, 'Use Dagre for initial layout before GA optimization'],
   useInput: [false, false, true, null, 'Use the input file layout as the GA starting point'],
+  usePassBest: [false, false, true, null, 'Use global best from previous pass'],
   useSimpleFlow: [false, false, true, null, 'Use simple flow for initial layout before GA optimization'],
   useZero: [false, false, true, null, 'Place all boxes at position 0,0 as starting layout'],
   useSquare: [false, false, true, null, 'Arrange boxes in a square grid (side = sqrt(count)) snapped to gridX/gridY'],
