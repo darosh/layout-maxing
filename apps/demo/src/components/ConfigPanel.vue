@@ -207,6 +207,7 @@ const groups: GroupDef[] = [
       { key: 'useInput' },
       { key: 'usePassBest' },
       { key: 'useDagre' },
+      { key: 'dagreLR' },
       { key: 'useSimpleFlow' },
       { key: 'useSquare' },
       { key: 'useCircle' },

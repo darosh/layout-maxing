@@ -121,13 +121,10 @@ export async function main(
   let startingLayouts: Box[][] = []
 
   if (c.useDagre) {
-    startingLayouts.push(
-      ...(['TB' /*'LR', 'BT', 'RL'*/] as const).map((dir) => {
-        const clone = cloneLayouts(baseLayouts)
-        dagreFlow(clone, lines, dir)
-        return clone
-      }),
-    )
+    const preferredDir = c.dagreLR ? 'LR' : 'TB'
+    const clone = cloneLayouts(baseLayouts)
+    dagreFlow(clone, lines, preferredDir)
+    startingLayouts.push(clone)
   }
 
   if (c.useSimpleFlow) {
@@ -203,7 +200,7 @@ export async function main(
         globalBestScore = resultFitness.score
         globalBest = result
 
-        if (cfg.usePassBest) {
+        if (c.usePassBest) {
           startingLayouts = [...startingLayouts, globalBest]
         }
       }

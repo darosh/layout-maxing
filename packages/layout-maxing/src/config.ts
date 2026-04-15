@@ -78,6 +78,7 @@ export interface Config {
   ignoreOrphans?: boolean
   keepGroups?: boolean
   useDagre?: boolean
+  dagreLR?: boolean
   useInput?: boolean
   usePassBest?: boolean
   useSimpleFlow?: boolean
@@ -179,6 +180,7 @@ export const configMeta: ConfigMeta = {
   ignoreOrphans: [true, false, true, null, 'Skip boxes with no incoming or outgoing lines'],
   keepGroups: [true, false, true, null, 'Preserve relative positions within patcher.boxgroups'],
   useDagre: [true, false, true, null, 'Use Dagre for initial layout before GA optimization'],
+  dagreLR: [false, false, true, null, 'Use Dagre LR direction instead of TB'],
   useInput: [false, false, true, null, 'Use the input file layout as the GA starting point'],
   usePassBest: [false, false, true, null, 'Use global best from previous pass'],
   useSimpleFlow: [false, false, true, null, 'Use simple flow for initial layout before GA optimization'],

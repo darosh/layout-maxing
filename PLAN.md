@@ -47,13 +47,13 @@ Cross-session work tracker. Each item has target anchors (fn name + code pattern
   Issue: Each pass starts from same seeds with different RNG. Best from pass N never used as seed for pass N+1.
   Fix: After each pass, if `result` is new globalBest, push `globalBest` into `startingLayouts` (replacing or appending) so pass N+1 can refine it.
 
-- [ ] **G4 — `dagreFlow` only uses TB direction**
+- ~~[ ] **G4 — `dagreFlow` only uses TB direction**~~
   File: `packages/layout-maxing/src/core.ts`
   Anchor: `(['TB' /*'LR', 'BT', 'RL'*/] as const).map(...)` in the `useDagre` block
   Issue: 3 directions commented out. LR especially useful for horizontally-oriented patches.
   Fix: Add `useDagreLR` boolean config (default false), add it as second dagre seed when enabled.
 
-- [ ] **G5 — No inlet/outlet-side-aware initial layout**
+- [x] **G5 — No inlet/outlet-side-aware initial layout**
   File: `packages/layout-maxing/src/core.ts` + `packages/layout-maxing/src/layout.ts`
   Anchor: after `dagreFlow` block, before `simpleFlow` block
   Issue: Dagre TB always places parents above children regardless of outlet/inlet index distribution. Patches with many non-first outlets would benefit from LR layout.
