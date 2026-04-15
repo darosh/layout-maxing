@@ -175,6 +175,16 @@ const rootTransform = computed(() => {
   return `translate(${tx}px, ${ty}px) scale(${scale})`
 })
 const gridStrokeWidth = computed(() => 1 / rootScale.value)
+const MIN_GRID_PX = 5
+const showGrid = computed(() => {
+  if (!store.showGrid) return false
+  const { w, h } = containerSize.value
+  const { width, height } = viewport.value
+  const scaleX = w / width
+  const scaleY = h / height
+  const cellPx = Math.min(cfg.value.gridX * scaleX, cfg.value.gridY * scaleY)
+  return cellPx >= MIN_GRID_PX
+})
 
 const boxMap = computed(() => {
   const m = new Map<string, (typeof layouts.value)[number]>()
@@ -315,7 +325,7 @@ const portDots = computed<DotItem[]>(() => {
         :style="{ transform: rootTransform }">
         <!-- Grid overlay -->
         <rect
-          v-if="store.showGrid"
+          v-if="showGrid"
           x="-100000"
           y="-100000"
           width="200000"
