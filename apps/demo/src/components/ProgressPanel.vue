@@ -27,17 +27,15 @@ watch(
 </script>
 
 <template>
-  <div class="progress-panel" :class="{ idle: idle }">
+  <div
+    class="progress-panel"
+    :class="{ idle: idle }">
     <div class="stats-row">
       <div class="stat">
-        <span class="stat-label"
-          ><template v-if="store.progress.numPasses > 1">Pass / Gen</template
-          ><template v-else>Generation</template></span
-        >
+        <span class="stat-label"><template v-if="store.progress.numPasses > 1">Pass / Gen</template><template v-else>Generation</template></span>
         <span class="stat-value"
           ><template v-if="store.progress.numPasses > 1"
-            >{{ store.progress.passNum.toLocaleString()
-            }}<span style="margin: 0 0.2rem; opacity: 0.5">/</span
+            >{{ store.progress.passNum.toLocaleString() }}<span style="margin: 0 0.2rem; opacity: 0.5">/</span
             >{{ store.progress.generation.toLocaleString() }}</template
           ><template v-else>{{ store.progress.generation.toLocaleString() }}</template></span
         >

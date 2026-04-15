@@ -1,16 +1,8 @@
-import {
-  createInitialLayouts,
-  defaultConfig,
-  jsonDiff,
-  main,
-  toSvg,
-  fitness,
-  help,
-  applyBestLayout,
-} from 'layout-maxing'
+import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg, fitness, help, applyBestLayout } from 'layout-maxing'
 import type { Box, Config, Fitness, RNBO } from 'layout-maxing'
 import { runCalibrate, getNumericParams, printCalibrateResults } from './calibrate.ts'
 import { cpus } from 'node:os'
+// @ts-ignore
 import { dirname, parse, format } from 'jsr:@std/path'
 import Worker from 'web-worker'
 import { Temporal } from 'temporal-polyfill'
@@ -146,11 +138,9 @@ async function cli() {
       const filePath = positional[0]
       const outPath = positional[1]
       const jsonText = await Deno.readTextFile(filePath)
-      const rnbo: RNBO =
-        command === 'layout-clipboard' ? { patcher: JSON.parse(jsonText) } : JSON.parse(jsonText)
+      const rnbo: RNBO = command === 'layout-clipboard' ? { patcher: JSON.parse(jsonText) } : JSON.parse(jsonText)
       const lines = rnbo.patcher.lines
-      const outputPath =
-        outPath ?? format({ ...parse(filePath), name: `${parse(filePath).name}_updated` })
+      const outputPath = outPath ?? format({ ...parse(filePath), name: `${parse(filePath).name}_updated` })
 
       await Deno.mkdir(dirname(outputPath), { recursive: true })
 
@@ -193,14 +183,11 @@ async function cli() {
         if (c.logInfo) console.log(`SVG visualization of the layout written to: ${svgPath}`)
       }
 
-      const elapsed = Temporal.Duration.from({ milliseconds: Date.now() - start }).toLocaleString(
-        'en',
-        {
-          hours: 'numeric',
-          minutes: '2-digit',
-          seconds: '2-digit',
-        },
-      )
+      const elapsed = Temporal.Duration.from({ milliseconds: Date.now() - start }).toLocaleString('en', {
+        hours: 'numeric',
+        minutes: '2-digit',
+        seconds: '2-digit',
+      })
 
       console.log(`Elapsed ${elapsed}`)
 
@@ -217,9 +204,7 @@ async function cli() {
         console.log(`Configuration\n${JSON.stringify(jsonDiff<Config>(defaultConfig, cfg))}`)
       }
 
-      console.log(
-        `Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`,
-      )
+      console.log(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`)
     } else if (command === 'calibrate') {
       const filePath = positional[0]
       if (!filePath) {
@@ -228,8 +213,7 @@ async function cli() {
       }
 
       const depthIdx = Deno.args.indexOf('--depth')
-      const depth =
-        depthIdx !== -1 && Deno.args[depthIdx + 1] ? parseInt(Deno.args[depthIdx + 1], 10) : 3
+      const depth = depthIdx !== -1 && Deno.args[depthIdx + 1] ? parseInt(Deno.args[depthIdx + 1], 10) : 3
 
       const { getFitness, terminateWorkers } = getWorkers()
       const rnbo: RNBO = JSON.parse(await Deno.readTextFile(filePath))
@@ -237,9 +221,7 @@ async function cli() {
       const lines = rnbo.patcher.lines
       const params = getNumericParams()
 
-      console.log(
-        `Calibrating ${params.length} numeric params at depth=${depth} (${params.length * depth + 1} evaluations)...`,
-      )
+      console.log(`Calibrating ${params.length} numeric params at depth=${depth} (${params.length * depth + 1} evaluations)...`)
 
       const result = await runCalibrate(layouts, lines, depth, getFitness)
       printCalibrateResults(result)
@@ -249,9 +231,7 @@ async function cli() {
     } else if (command === 'config') {
       console.log(JSON.stringify(defaultConfig, null, 2))
     } else {
-      console.log(
-        'Commands: layout <input.json> [output.json], fitness <input.json>, calibrate <input.json> [--depth N], config, help',
-      )
+      console.log('Commands: layout <input.json> [output.json], fitness <input.json>, calibrate <input.json> [--depth N], config, help')
     }
   }
 }

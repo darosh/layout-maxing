@@ -11,9 +11,7 @@ export function useHighlight() {
   }
   function isHighlighted(features: string[]): boolean {
     if (!highlightedFeatures.value.length || !features.length) return false
-    return highlightedFeatures.value.some((h) =>
-      features.some((f) => f.indexOf(h) !== -1 || h.indexOf(f) !== -1),
-    )
+    return highlightedFeatures.value.some((h) => features.some((f) => f.indexOf(h) !== -1 || h.indexOf(f) !== -1))
   }
   return { highlightedFeatures, setHighlight, clearHighlight, isHighlighted }
 }

@@ -1,15 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, toRaw, watch } from 'vue'
 import { defaultConfig, applyBestLayout } from 'layout-maxing'
-import type {
-  RNBO,
-  Config,
-  Fitness,
-  Box,
-  Line,
-  GenerationSnapshot,
-  RunMonitor,
-} from 'layout-maxing'
+import type { RNBO, Config, Fitness, Box, Line, GenerationSnapshot, RunMonitor } from 'layout-maxing'
 
 const CONFIG_KEY = 'layout-maxing-config'
 const RUN_KEY = 'layout-maxing-run'
@@ -29,10 +21,7 @@ export interface TopEntry {
   passNum?: number
 }
 
-export type Selection =
-  | { kind: 'original' }
-  | { kind: 'allTime'; index: number }
-  | { kind: 'current'; index: number }
+export type Selection = { kind: 'original' } | { kind: 'allTime'; index: number } | { kind: 'current'; index: number }
 
 export const useOptimizerStore = defineStore('optimizer', () => {
   const rnbo = ref<RNBO | null>(null)
@@ -86,11 +75,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     )
   })
 
-  const isConfigDefault = computed(() =>
-    (Object.keys(defaultConfig) as (keyof Config)[]).every(
-      (k) => config.value[k] === defaultConfig[k],
-    ),
-  )
+  const isConfigDefault = computed(() => (Object.keys(defaultConfig) as (keyof Config)[]).every((k) => config.value[k] === defaultConfig[k]))
 
   const status = ref<Status>('idle')
   const progress = ref({
@@ -127,14 +112,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
 
   let worker: Worker | null = null
 
-  const canStart = computed(
-    () => rnbo.value !== null && status.value !== 'running' && status.value !== 'paused',
-  )
-  const totalEvals = computed(
-    () =>
-      (config.value.generations ?? defaultConfig.generations) *
-      (config.value.popSize ?? defaultConfig.popSize),
-  )
+  const canStart = computed(() => rnbo.value !== null && status.value !== 'running' && status.value !== 'paused')
+  const totalEvals = computed(() => (config.value.generations ?? defaultConfig.generations) * (config.value.popSize ?? defaultConfig.popSize))
   const progressPercent = computed(() => {
     if (totalEvals.value === 0) return 0
     return Math.min(100, (progress.value.evalCount / totalEvals.value) * 100)
@@ -213,9 +192,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     return resolveEntry(sel) ?? null
   })
 
-  const canExport = computed(
-    () => selection.value.kind === 'original' || top.value.length > 0 || resultRnbo.value !== null,
-  )
+  const canExport = computed(() => selection.value.kind === 'original' || top.value.length > 0 || resultRnbo.value !== null)
 
   function loadFile(content: string | RNBO, name: string, source: 'file' | 'clipboard' = 'file') {
     const wasRunning = status.value === 'running' || status.value === 'paused'

@@ -66,14 +66,21 @@ async function pasteFromClipboard() {
       @dragover="onDragOver"
       @dragleave="onDragLeave"
       @drop="onDrop">
-      <p v-if="store.fileName" class="loaded-file">
+      <p
+        v-if="store.fileName"
+        class="loaded-file">
         <i class="pi pi-file" />
         <span>{{ store.fileName }} </span>
       </p>
-      <p v-else class="drop-text">Drop a Max file here</p>
-      <p v-if="store.rnbo" class="file-meta">
-        {{ store.rnbo.patcher.boxes.length }} boxes,
-        {{ store.rnbo.patcher.lines?.length ?? 0 }} lines
+      <p
+        v-else
+        class="drop-text"
+        >Drop a Max file here</p
+      >
+      <p
+        v-if="store.rnbo"
+        class="file-meta">
+        {{ store.rnbo.patcher.boxes.length }} boxes, {{ store.rnbo.patcher.lines?.length ?? 0 }} lines
       </p>
       <div class="drop-actions">
         <template v-if="showExamples">
@@ -88,7 +95,11 @@ async function pasteFromClipboard() {
             @click="store.loadFile(example, `example-${i + 1}`, 'clipboard')" />
         </template>
         <template v-else>
-          <Button variant="outlined" label="Select file" size="small" @click="openPicker" />
+          <Button
+            variant="outlined"
+            label="Select file"
+            size="small"
+            @click="openPicker" />
           <Button
             label="Paste"
             :class="{ 'info-active': props.pasteActive }"
@@ -112,7 +123,9 @@ async function pasteFromClipboard() {
         class="hidden-input"
         @change="onFileChange" />
     </div>
-    <div v-if="store.error" class="file-error">
+    <div
+      v-if="store.error"
+      class="file-error">
       <i class="pi pi-exclamation-triangle" />
       <span>{{ store.error }}</span>
     </div>
@@ -136,13 +149,7 @@ async function pasteFromClipboard() {
   transition:
     border-color 0.2s,
     background 0.2s;
-  background: repeating-linear-gradient(
-    45deg,
-    var(--p-surface-900),
-    var(--p-surface-900) 16px,
-    var(--p-surface-700) 16px,
-    var(--p-surface-700) 17px
-  );
+  background: repeating-linear-gradient(45deg, var(--p-surface-900), var(--p-surface-900) 16px, var(--p-surface-700) 16px, var(--p-surface-700) 17px);
 }
 
 .drop-area.dragging {

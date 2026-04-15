@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import { useOptimizerStore } from '@/stores/optimizer'
-import {
-  getOutletPos,
-  getInletPos,
-  getViewPort,
-  normalizeLayouts,
-  cloneLayouts,
-  type Box,
-} from 'layout-maxing'
+import { getOutletPos, getInletPos, getViewPort, normalizeLayouts, cloneLayouts, type Box } from 'layout-maxing'
 import { defaultConfig } from 'layout-maxing'
 
 const store = useOptimizerStore()
@@ -207,9 +200,7 @@ const groupRects = computed<GroupRect[]>(() => {
   const result: GroupRect[] = []
   for (let i = 0; i < boxgroups.length; i++) {
     const group = boxgroups[i]!
-    const members = group.boxes
-      .map((id) => bm.get(id))
-      .filter(Boolean) as (typeof layouts.value)[number][]
+    const members = group.boxes.map((id) => bm.get(id)).filter(Boolean) as (typeof layouts.value)[number][]
     if (members.length < 2) continue
     let minX = Infinity,
       minY = Infinity,
@@ -298,7 +289,9 @@ const portDots = computed<DotItem[]>(() => {
 </script>
 
 <template>
-  <div ref="rootEl" class="svg-animated-renderer">
+  <div
+    ref="rootEl"
+    class="svg-animated-renderer">
     <svg
       v-if="layouts.length"
       :viewBox="viewBox"
@@ -346,7 +339,11 @@ const portDots = computed<DotItem[]>(() => {
           :key="box.id"
           :style="{ transform: `translate(${box.x}px, ${box.y}px)` }"
           :class="['box-group', { 'box-group--jump': skipAllTransitions }]">
-          <rect :width="box.width" :height="box.height" rx="4" class="box" />
+          <rect
+            :width="box.width"
+            :height="box.height"
+            rx="4"
+            class="box" />
         </g>
 
         <!-- Lines: d attribute is CSS-animatable in modern browsers -->
@@ -362,7 +359,10 @@ const portDots = computed<DotItem[]>(() => {
           :key="dot.key"
           :style="{ transform: `translate(${dot.cx}px, ${dot.cy}px)` }"
           :class="['port-group', { 'port-group--jump': skipAllTransitions }]">
-          <path d="m 0 0 l 0 0" stroke-width="6" class="port" />
+          <path
+            d="m 0 0 l 0 0"
+            stroke-width="6"
+            class="port" />
         </g>
       </g>
     </svg>

@@ -82,12 +82,7 @@ export async function main(
   getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: Box[]) => void,
   cfg?: Config,
-  onGenerationEnd?: (
-    stop: number,
-    snapshot?: GenerationSnapshot,
-    passNum?: number,
-    numPasses?: number,
-  ) => void,
+  onGenerationEnd?: (stop: number, snapshot?: GenerationSnapshot, passNum?: number, numPasses?: number) => void,
   logProgress?: (...args: any) => void,
   logInfo?: (...args: any) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
@@ -109,14 +104,9 @@ export async function main(
     stampGroupIdx(baseLayouts, patcher.boxgroups)
     stampGroupOffsets(baseLayouts, patcher.boxgroups)
   }
-  const inputFitness = getFitness
-    ? await getFitness(baseLayouts, lines, c)
-    : fitness(baseLayouts, lines, c)
+  const inputFitness = getFitness ? await getFitness(baseLayouts, lines, c) : fitness(baseLayouts, lines, c)
 
-  if (logInfo)
-    logInfo(
-      `Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`,
-    )
+  if (logInfo) logInfo(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`)
   fillDepths(baseLayouts, lines)
 
   if (c.ignoreOrphans) {
@@ -188,14 +178,10 @@ export async function main(
     const rand = c.deterministic ? createDeterministicRandom(c.seed + pass) : Math.random
 
     const wrappedLogProgress =
-      numPasses > 1 && logProgress
-        ? (...args: any[]) =>
-            logProgress(`PASS: ${passNum}/${numPasses} | ` + args[0], ...args.slice(1))
-        : logProgress
+      numPasses > 1 && logProgress ? (...args: any[]) => logProgress(`PASS: ${passNum}/${numPasses} | ` + args[0], ...args.slice(1)) : logProgress
 
     const wrappedOnGenerationEnd = onGenerationEnd
-      ? (stop: number, snapshot?: GenerationSnapshot) =>
-          onGenerationEnd(stop, snapshot, passNum, numPasses)
+      ? (stop: number, snapshot?: GenerationSnapshot) => onGenerationEnd(stop, snapshot, passNum, numPasses)
       : undefined
 
     const result = await runGenetic(
@@ -212,9 +198,7 @@ export async function main(
     )
 
     if (result.length > 0) {
-      const resultFitness = getFitness
-        ? await getFitness(result, lines, c)
-        : fitness(result, lines, c)
+      const resultFitness = getFitness ? await getFitness(result, lines, c) : fitness(result, lines, c)
       if (resultFitness.score < globalBestScore) {
         globalBestScore = resultFitness.score
         globalBest = result

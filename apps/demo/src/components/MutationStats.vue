@@ -109,8 +109,12 @@ function onMouseLeave() {
 </script>
 
 <template>
-  <FlyingTooltip ref="tooltip" :max-width="220" />
-  <div v-if="snapshots.length >= 1 && rows.length" class="mut-stats">
+  <FlyingTooltip
+    ref="tooltip"
+    :max-width="220" />
+  <div
+    v-if="snapshots.length >= 1 && rows.length"
+    class="mut-stats">
     <!-- Overall stats table -->
     <table>
       <thead>
@@ -144,34 +148,41 @@ function onMouseLeave() {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in rows" :key="row.name" :class="{ 'dead-weight': row.deadWeight }">
+        <tr
+          v-for="row in rows"
+          :key="row.name"
+          :class="{ 'dead-weight': row.deadWeight }">
           <td
             class="td-name th-interactive"
             @mouseenter="onMouseEnter($event, row)"
             @mouseleave="onMouseLeave">
-            <span v-if="isHighlighted([row.shortName])" class="hl-dot" />{{ row.shortName }}
+            <span
+              v-if="isHighlighted([row.shortName])"
+              class="hl-dot" />{{ row.shortName }}
           </td>
           <td>
-            <template v-if="row.attempts">{{
-              row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 })
-            }}</template>
+            <template v-if="row.attempts">{{ row.attempts.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</template>
           </td>
           <td>
-            <template v-if="row.attempts">{{
-              row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 })
-            }}</template>
+            <template v-if="row.attempts">{{ row.impPct.toLocaleString('en-US', { maximumFractionDigits: 1 }) }}</template>
           </td>
           <td :class="row.avgDelta < 0 ? 'good' : 'neutral'">
-            <template v-if="row.attempts">
-              {{ row.avgDelta < 0 ? '−' : '' }}{{ formatScore(Math.abs(row.avgDelta)) }}</template
-            >
+            <template v-if="row.attempts"> {{ row.avgDelta < 0 ? '−' : '' }}{{ formatScore(Math.abs(row.avgDelta)) }}</template>
           </td>
-          <td v-if="hasBestData" class="td-best">
+          <td
+            v-if="hasBestData"
+            class="td-best">
             <template v-if="row.attempts">
-              <span v-if="row.bestCount > 0" class="best-count">{{
-                row.bestCount.toLocaleString('en-US', { maximumFractionDigits: 0 })
-              }}</span>
-              <span v-else class="empty">—</span>
+              <span
+                v-if="row.bestCount > 0"
+                class="best-count"
+                >{{ row.bestCount.toLocaleString('en-US', { maximumFractionDigits: 0 }) }}</span
+              >
+              <span
+                v-else
+                class="empty"
+                >—</span
+              >
             </template>
           </td>
         </tr>

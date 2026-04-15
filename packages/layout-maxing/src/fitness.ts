@@ -1,14 +1,6 @@
 import { type Config, defaultConfig } from './config.ts'
 import { type Box, type Line } from './layout.ts'
-import {
-  segmentsIntersect,
-  segmentsOverlap,
-  bezierLength,
-  getViewPort,
-  getStraightLinePoints,
-  boxLineCollision,
-  getIntersectionArea,
-} from './geometry.ts'
+import { segmentsIntersect, segmentsOverlap, bezierLength, getViewPort, getStraightLinePoints, boxLineCollision, getIntersectionArea } from './geometry.ts'
 
 type BoxId = string
 
@@ -38,21 +30,9 @@ export const fitnessMeta: FitnessMeta = {
   length: ['Length', 'LEN', 'Total line length'],
   overlaps: ['Overlaps', 'OVE', 'Number of line-line overlaps'],
   collisions: ['Collisions', 'COL', 'Number of line-box collisions'],
-  singleSelfCollisions: [
-    'Single Self Collisions',
-    'SSC',
-    'Box-line collisions from single-outlet single-connection boxes with themselves',
-  ],
-  misalignedSS: [
-    'Misaligned SS',
-    'MSS',
-    'Misaligned SSC sibling sources sharing a common child without shared x or y',
-  ],
-  misalignedFirst: [
-    'Misaligned First',
-    'MST',
-    'Number of first-outlet to first-inlet lines with x-misalignment penalty applied',
-  ],
+  singleSelfCollisions: ['Single Self Collisions', 'SSC', 'Box-line collisions from single-outlet single-connection boxes with themselves'],
+  misalignedSS: ['Misaligned SS', 'MSS', 'Misaligned SSC sibling sources sharing a common child without shared x or y'],
+  misalignedFirst: ['Misaligned First', 'MST', 'Number of first-outlet to first-inlet lines with x-misalignment penalty applied'],
   area: ['Area', 'ARE', 'Number of box-box intersection areas'],
   minDist: ['Min Dist', 'DST', 'Number of box pairs violating minDistX or minDistY spacing'],
   view: ['View', 'VIE', 'Viewport size'],
@@ -82,8 +62,7 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
   }
   const sscSourceIds = new Set<BoxId>()
   for (const b of layouts) {
-    if (b.numOutlets === 1 && outgoingCount.get(b.id) === 1 && !incomingCount.has(b.id))
-      sscSourceIds.add(b.id)
+    if (b.numOutlets === 1 && outgoingCount.get(b.id) === 1 && !incomingCount.has(b.id)) sscSourceIds.add(b.id)
   }
 
   // Compute misalignedSS: SSC sibling pairs sharing a child without shared x or y
@@ -129,9 +108,7 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
       if (segmentsOverlap(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) {
         overlaps++
         over_pen++
-      } else if (
-        segmentsIntersect(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)
-      ) {
+      } else if (segmentsIntersect(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) {
         crossings++
         cross_pen++
       }
@@ -158,10 +135,7 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
     }
 
     totalLength +=
-      (segmentLength + firstMisalignmentPenalty) *
-      (cross_pen ? cross_pen * c.crossPenalty : 1) *
-      (over_pen ? over_pen * c.overPenalty : 1) *
-      reverse_pen
+      (segmentLength + firstMisalignmentPenalty) * (cross_pen ? cross_pen * c.crossPenalty : 1) * (over_pen ? over_pen * c.overPenalty : 1) * reverse_pen
   }
 
   let area = 0

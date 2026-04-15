@@ -203,78 +203,15 @@
         "preset_data": [
           {
             "number": 1,
-            "data": [
-              5,
-              "obj-55",
-              "slider",
-              "int",
-              65,
-              5,
-              "obj-56",
-              "slider",
-              "int",
-              65,
-              5,
-              "obj-57",
-              "slider",
-              "int",
-              65,
-              5,
-              "obj-50",
-              "toggle",
-              "int",
-              1
-            ]
+            "data": [5, "obj-55", "slider", "int", 65, 5, "obj-56", "slider", "int", 65, 5, "obj-57", "slider", "int", 65, 5, "obj-50", "toggle", "int", 1]
           },
           {
             "number": 2,
-            "data": [
-              5,
-              "obj-55",
-              "slider",
-              "int",
-              37,
-              5,
-              "obj-56",
-              "slider",
-              "int",
-              19,
-              5,
-              "obj-57",
-              "slider",
-              "int",
-              6,
-              5,
-              "obj-50",
-              "toggle",
-              "int",
-              1
-            ]
+            "data": [5, "obj-55", "slider", "int", 37, 5, "obj-56", "slider", "int", 19, 5, "obj-57", "slider", "int", 6, 5, "obj-50", "toggle", "int", 1]
           },
           {
             "number": 3,
-            "data": [
-              5,
-              "obj-55",
-              "slider",
-              "int",
-              112,
-              5,
-              "obj-56",
-              "slider",
-              "int",
-              127,
-              5,
-              "obj-57",
-              "slider",
-              "int",
-              118,
-              5,
-              "obj-50",
-              "toggle",
-              "int",
-              0
-            ]
+            "data": [5, "obj-55", "slider", "int", 112, 5, "obj-56", "slider", "int", 127, 5, "obj-57", "slider", "int", 118, 5, "obj-50", "toggle", "int", 0]
           }
         ]
       }

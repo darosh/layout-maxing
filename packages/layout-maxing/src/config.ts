@@ -93,13 +93,7 @@ export interface Config {
 }
 
 // Tuple: [default, min, max, step | null, description]
-export type ConfigMetaEntry = [
-  default_: number | boolean,
-  min: number | boolean,
-  max: number | boolean,
-  step: number | null,
-  description: string,
-]
+export type ConfigMetaEntry = [default_: number | boolean, min: number | boolean, max: number | boolean, step: number | null, description: string]
 
 export type ConfigMeta = Record<keyof Config, ConfigMetaEntry>
 
@@ -116,38 +110,14 @@ export const configMeta: ConfigMeta = {
   crossPenalty: [1.5, 1, 10, 0.1, 'Multiplier penalty for line-line crossing'],
   overPenalty: [6, 1, 10, 0.1, 'Multiplier penalty line overlaps'],
   totalCollisionPenalty: [1.04, 1, 2, 0.01, 'Exponential multiplier for line-box collisions'],
-  totalSSCPenalty: [
-    1.04,
-    1,
-    2,
-    0.01,
-    'Exponential multiplier for single-outlet single-connection self-collisions (SSC)',
-  ],
-  misalignedSSPenalty: [
-    1.02,
-    1,
-    2,
-    0.01,
-    'Exponential multiplier for misaligned SSC sibling sources sharing a common child',
-  ],
-  misalignedFirstPenalty: [
-    0,
-    0,
-    10,
-    0.1,
-    'Additive penalty per pixel of x-misalignment for first-outlet to first-inlet connections',
-  ],
+  totalSSCPenalty: [1.04, 1, 2, 0.01, 'Exponential multiplier for single-outlet single-connection self-collisions (SSC)'],
+  misalignedSSPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier for misaligned SSC sibling sources sharing a common child'],
+  misalignedFirstPenalty: [0, 0, 10, 0.1, 'Additive penalty per pixel of x-misalignment for first-outlet to first-inlet connections'],
   totalCrossPenalty: [1.01, 1, 2, 0.01, 'Exponential multiplier line-line crossings'],
   totalOverPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier line-line overlaps'],
   reversePenalty: [3, 1, 10, 0.1, 'Multiplier penalty for lines connecting to inlet in upper box'],
   areaPenalty: [1.5, 1, 2, 0.1, 'Exponential multiplier based on number of overlapping boxes'],
-  totalDistPenalty: [
-    1.4,
-    1,
-    2,
-    0.1,
-    'Exponential multiplier for minDistX/minDistY pair violations',
-  ],
+  totalDistPenalty: [1.4, 1, 2, 0.1, 'Exponential multiplier for minDistX/minDistY pair violations'],
   arPenalty: [1.02, 1, 2, 0.01, 'Exponential multiplier based on aspect ratio of the viewport'],
   arMax: [5, 1, 25, 0.01, 'Maximum non-penalized aspect ratio'],
   // GA parameters
@@ -160,70 +130,22 @@ export const configMeta: ConfigMeta = {
   maxChildren: [9, 1, 20, 1, 'Maximum number of children mutated'],
   maxParents: [1, 1, 20, 1, 'Maximum number of parents mutated'],
   crossoverRate: [0.75, 0, 1, 0.01, 'Probability of performing crossover between two parents'],
-  crossoverMix: [
-    0.25,
-    0,
-    1,
-    0.01,
-    'Fraction of genes taken from the second parent during crossover',
-  ],
+  crossoverMix: [0.25, 0, 1, 0.01, 'Fraction of genes taken from the second parent during crossover'],
   crossWeightRandom: [10, 0, 100, 1, 'Roulette weight for positional crossover (per-box mix)'],
-  crossWeightStruct: [
-    10,
-    0,
-    100,
-    1,
-    'Roulette weight for structural crossover (one box + descendants)',
-  ],
+  crossWeightStruct: [10, 0, 100, 1, 'Roulette weight for structural crossover (one box + descendants)'],
   tournamentSize: [1, 0, 1, 0.1, 'Fraction of population sampled in tournament selection'],
-  diversityBoost: [
-    0.5,
-    0,
-    1,
-    0.01,
-    'Scales up mutation magnitude when population diversity is low; 0 = disabled',
-  ],
+  diversityBoost: [0.5, 0, 1, 0.01, 'Scales up mutation magnitude when population diversity is low; 0 = disabled'],
   diversityBoostCap: [2, 1, 10, 0.1, 'Maximum multiplier applied to mutation magnitude by diversity boost'],
   diversityBoostFactor: [0, 0, 1, 0.01, 'Additive increase to mutationRate per unit of (1-diversity); 0 = disabled'],
   catastropheThreshold: [0, 0, 100000, 1, 'Stagnation gens before catastrophe restart; 0 = disabled'],
   catastropheFraction: [0.5, 0, 1, 0.01, 'Fraction of non-elite population reinitialised on catastrophe'],
   initMutations: [1, 1, 20, 1, 'Max number of mutations applied per clone during initial population; later clones get progressively more up to this limit'],
-  crowdingTieBreak: [
-    true,
-    false,
-    true,
-    null,
-    'Prefer less-crowded individuals when tournament fitness is tied',
-  ],
-  nichingEnabled: [
-    false,
-    false,
-    true,
-    null,
-    'Enable fitness sharing (niching) to maintain population diversity',
-  ],
-  nichingRadius: [
-    5000,
-    0,
-    1e9,
-    1,
-    'Sigma: fitness-space distance threshold for niching neighbourhood',
-  ],
+  crowdingTieBreak: [true, false, true, null, 'Prefer less-crowded individuals when tournament fitness is tied'],
+  nichingEnabled: [false, false, true, null, 'Enable fitness sharing (niching) to maintain population diversity'],
+  nichingRadius: [5000, 0, 1e9, 1, 'Sigma: fitness-space distance threshold for niching neighbourhood'],
   nichingExponent: [1, 0.1, 5, 0.1, 'Alpha: shape of the sharing function (1 = linear)'],
-  stagnationThreshold: [
-    11,
-    0,
-    100000,
-    1,
-    'Generations without improvement before boosting mutation rate; 0 = disabled',
-  ],
-  stagnationRate: [
-    1.1,
-    1,
-    10,
-    0.1,
-    'Mutation rate multiplier applied during stagnation burst (requires stagnationResetThreshold > 0)',
-  ],
+  stagnationThreshold: [11, 0, 100000, 1, 'Generations without improvement before boosting mutation rate; 0 = disabled'],
+  stagnationRate: [1.1, 1, 10, 0.1, 'Mutation rate multiplier applied during stagnation burst (requires stagnationResetThreshold > 0)'],
   eliteSize: [3, 1, 20, 1, 'Number of elite individuals preserved each generation (1 global best + Pareto front up to eliteSize-1)'],
   banditEnabled: [false, false, true, null, 'Adaptively reweight mutation operators via UCB bandit every banditK generations'],
   banditK: [50, 1, 10000, 1, 'Reweight mutation operators every this many generations'],
@@ -232,13 +154,7 @@ export const configMeta: ConfigMeta = {
   repairOffspring: [true, false, true, null, 'Apply fixOverlaps to offspring each generation (consistent with createPopulation)'],
   nsgaEnabled: [false, false, true, null, 'Use NSGA-II rank-based tournament selection instead of alternating single-objective'],
   mutate: [0.5, 0, 10, 0.1, 'Box mutation range in viewport units'],
-  mutateXYOverlap: [
-    0.2,
-    0,
-    1,
-    0.1,
-    'Overlap between x-only and y-only mutation ranges; 0 = exclusive, 1 = always both',
-  ],
+  mutateXYOverlap: [0.2, 0, 1, 0.1, 'Overlap between x-only and y-only mutation ranges; 0 = exclusive, 1 = always both'],
   // Mutation weights
   mutWeightQuadrant: [30, 0, 100, 1, 'Roulette weight for quadrant-flip mutation'],
   mutWeightSingle: [30, 0, 100, 1, 'Roulette weight for single-node position mutation'],
@@ -254,80 +170,33 @@ export const configMeta: ConfigMeta = {
   showStraightLines: [false, false, true, null, 'Render straight lines instead of curves'],
   removeLineSegments: [true, false, true, null, 'Remove patchline midpoints after applying layout'],
   deterministic: [true, false, true, null, 'Use a fixed random seed for reproducible results'],
-  seed: [
-    123456789,
-    0,
-    2147483647,
-    1,
-    'Seed for deterministic random (ignored unless deterministic=true)',
-  ],
+  seed: [123456789, 0, 2147483647, 1, 'Seed for deterministic random (ignored unless deterministic=true)'],
   normalize: [true, false, true, null, 'Normalize layouts to origin [0,0] after each generation'],
-  normalizeExport: [
-    true,
-    false,
-    true,
-    null,
-    'Normalize layouts to origin when applying positions back to patch',
-  ],
+  normalizeExport: [true, false, true, null, 'Normalize layouts to origin when applying positions back to patch'],
   ignoreOrphans: [true, false, true, null, 'Skip boxes with no incoming or outgoing lines'],
   keepGroups: [true, false, true, null, 'Preserve relative positions within patcher.boxgroups'],
   useDagre: [true, false, true, null, 'Use Dagre for initial layout before GA optimization'],
   useInput: [false, false, true, null, 'Use the input file layout as the GA starting point'],
-  useSimpleFlow: [
-    false,
-    false,
-    true,
-    null,
-    'Use simple flow for initial layout before GA optimization',
-  ],
+  useSimpleFlow: [false, false, true, null, 'Use simple flow for initial layout before GA optimization'],
   useZero: [false, false, true, null, 'Place all boxes at position 0,0 as starting layout'],
-  useSquare: [
-    false,
-    false,
-    true,
-    null,
-    'Arrange boxes in a square grid (side = sqrt(count)) snapped to gridX/gridY',
-  ],
-  useCircle: [
-    false,
-    false,
-    true,
-    null,
-    'Arrange boxes on a circle (circumference = count × diagonal of grid cell), snapped to grid',
-  ],
-  initialMutation: [
-    true,
-    false,
-    true,
-    null,
-    'Mutate extra individuals in the initial population beyond the seed layouts',
-  ],
+  useSquare: [false, false, true, null, 'Arrange boxes in a square grid (side = sqrt(count)) snapped to gridX/gridY'],
+  useCircle: [false, false, true, null, 'Arrange boxes on a circle (circumference = count × diagonal of grid cell), snapped to grid'],
+  initialMutation: [true, false, true, null, 'Mutate extra individuals in the initial population beyond the seed layouts'],
   // Logging / debug output
   logInfo: [true, false, true, null, 'Log info messages to console'],
   logProgress: [true, false, true, null, 'Log progress stats to console each interval'],
   logProgressInterval: [2000, 200, 60000, 500, 'Min ms between progress log lines'],
   writeSvg: [false, false, true, null, 'Write SVG visualization file (CLI only)'],
   writeJson: [false, false, true, null, 'Write JSON data file with layouts and lines (CLI only)'],
-  workers: [
-    0,
-    0,
-    128,
-    1,
-    'Number of fitness workers (0 = auto: cpu count - 1), using number of performance CPU cores recommended',
-  ],
+  workers: [0, 0, 128, 1, 'Number of fitness workers (0 = auto: cpu count - 1), using number of performance CPU cores recommended'],
 }
 
-export const defaultConfig: Required<Config> = Object.fromEntries(
-  Object.entries(configMeta).map(([k, v]) => [k, v[0]]),
-) as Required<Config>
+export const defaultConfig: Required<Config> = Object.fromEntries(Object.entries(configMeta).map(([k, v]) => [k, v[0]])) as Required<Config>
 
 export function help(): string {
   const lines: string[] = ['Config options (--key value):\n']
   for (const [key, [def, min, max, step, desc]] of Object.entries(configMeta)) {
-    const range =
-      typeof def === 'boolean'
-        ? `boolean, default: ${def}`
-        : `default: ${def}, min: ${min}, max: ${max}${step !== null ? `, step: ${step}` : ''}`
+    const range = typeof def === 'boolean' ? `boolean, default: ${def}` : `default: ${def}, min: ${min}, max: ${max}${step !== null ? `, step: ${step}` : ''}`
     lines.push(`  --${key.padEnd(26)} ${desc}\n    (${range})`)
   }
   return lines.join('\n')

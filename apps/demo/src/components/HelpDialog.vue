@@ -9,10 +9,7 @@ defineEmits<{ 'update:visible': [value: boolean] }>()
 const modKey = computed(() => (props.isMac ? '⌘ ' : 'Ctrl +'))
 const altKey = computed(() => (props.isMac ? '⌥ ' : 'Alt +'))
 
-const entries = Object.entries(configMeta) as [
-  string,
-  [number | boolean, number | boolean, number | boolean, number | null, string],
-][]
+const entries = Object.entries(configMeta) as [string, [number | boolean, number | boolean, number | boolean, number | null, string]][]
 
 function rangeMeta(entry: (typeof entries)[number][1]): string {
   const [def, min, max, step] = entry
@@ -48,9 +45,7 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
           <td class="help-key">
             <kbd>{{ altKey }}R</kbd>
           </td>
-          <td class="help-desc">
-            Re-run (uses best result as initial positions, when <code>useInput</code>> is on)
-          </td>
+          <td class="help-desc"> Re-run (uses best result as initial positions, when <code>useInput</code>> is on) </td>
         </tr>
         <tr>
           <td class="help-key">
@@ -68,10 +63,7 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
           <td class="help-key">
             <kbd>{{ altKey }}</kbd> hold
           </td>
-          <td class="help-desc">
-            Switches <code>Run</code> → <code>Re-run</code> button; <code>Download</code> →
-            <code>Copy</code> button
-          </td>
+          <td class="help-desc"> Switches <code>Run</code> → <code>Re-run</code> button; <code>Download</code> → <code>Copy</code> button </td>
         </tr>
         <tr>
           <td class="help-key"><kbd>Shift + Enter</kbd></td>
@@ -98,7 +90,9 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="[key, meta] in entries" :key="key">
+        <tr
+          v-for="[key, meta] in entries"
+          :key="key">
           <td class="help-key">{{ key }}</td>
           <td class="help-desc">{{ meta[4] }}</td>
           <td class="help-range">{{ rangeMeta(meta) }}</td>

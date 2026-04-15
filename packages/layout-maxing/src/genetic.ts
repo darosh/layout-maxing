@@ -1,12 +1,5 @@
 import { type Config } from './config.ts'
-import {
-  type Box,
-  type Line,
-  type LayoutEntity,
-  fixOverlaps,
-  normalizeLayouts,
-  toEntities,
-} from './layout.ts'
+import { type Box, type Line, type LayoutEntity, fixOverlaps, normalizeLayouts, toEntities } from './layout.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import {
   cloneLayouts,
@@ -75,14 +68,7 @@ interface Population {
   lastMutation?: string // persisted after selection, used for deadWeight computation
 }
 
-
-function uniqueIndexes(
-  count: number,
-  min: number,
-  max: number,
-  rand: () => number,
-  exclude?: number[],
-): number[] {
+function uniqueIndexes(count: number, min: number, max: number, rand: () => number, exclude?: number[]): number[] {
   const result: number[] = []
   const excluded = new Set(exclude)
   const inRangeExcludeCount = exclude ? exclude.filter((e) => e >= min && e < max).length : 0
@@ -97,14 +83,7 @@ function uniqueIndexes(
   return result
 }
 
-const ELITE_OBJECTIVES: (keyof Fitness)[] = [
-  'collisions',
-  'crossings',
-  'overlaps',
-  'length',
-  'score',
-  'view',
-]
+const ELITE_OBJECTIVES: (keyof Fitness)[] = ['collisions', 'crossings', 'overlaps', 'length', 'score', 'view']
 
 function dominates(a: Fitness, b: Fitness): boolean {
   let strictlyBetter = false
@@ -118,16 +97,10 @@ function dominates(a: Fitness, b: Fitness): boolean {
 }
 
 function paretoFront(population: Population[]): Population[] {
-  return population.filter(
-    (a) => !population.some((b) => b !== a && dominates(b.fitness!, a.fitness!)),
-  )
+  return population.filter((a) => !population.some((b) => b !== a && dominates(b.fitness!, a.fitness!)))
 }
 
-function applyBandit(
-  weights: number[],
-  runTotals: Record<string, ReturnType<typeof createMutationStat>>,
-  exploration: number,
-): number[] {
+function applyBandit(weights: number[], runTotals: Record<string, ReturnType<typeof createMutationStat>>, exploration: number): number[] {
   const totalAttempts = Object.values(runTotals).reduce((s, v) => s + v.attempts, 0)
   if (totalAttempts === 0) return weights
 
@@ -142,13 +115,13 @@ function applyBandit(
 }
 
 function computeNsgaRanks(population: Population[]): number[] {
-  const n = population.length
-  const ranks = new Array(n).fill(0)
-  const dominatedBy = new Array(n).fill(0)
-  const dominatesList: number[][] = Array.from({ length: n }, () => [])
+  const { length } = population
+  const ranks = Array.from({ length }, () => 0)
+  const dominatedBy = Array.from({ length }, () => 0)
+  const dominatesList: number[][] = Array.from({ length }, () => [])
 
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
+  for (let i = 0; i < length; i++) {
+    for (let j = i + 1; j < length; j++) {
       if (dominates(population[i].fitness!, population[j].fitness!)) {
         dominatesList[i].push(j)
         dominatedBy[j]++
@@ -176,10 +149,9 @@ function computeNsgaRanks(population: Population[]): number[] {
 }
 
 function precomputeCrowdingDistances(population: Population[], prop: keyof Fitness): number[] {
-  const distances = new Array(population.length).fill(0)
-  const sorted = population
-    .map((ind, i) => ({ i, v: ind.fitness![prop] as number }))
-    .sort((a, b) => a.v - b.v)
+  const { length } = population
+  const distances = Array.from({ length }, () => 0)
+  const sorted = population.map((ind, i) => ({ i, v: ind.fitness![prop] as number })).sort((a, b) => a.v - b.v)
   for (let pos = 0; pos < sorted.length; pos++) {
     const { i, v } = sorted[pos]
     const prev = sorted[pos - 1]?.v ?? v
@@ -205,13 +177,7 @@ function tournamentSelect(
     return ind.fitness![prop] as number
   }
 
-  const [initial, ...rest] = uniqueIndexes(
-    Math.round(cfg.tournamentSize * population.length),
-    0,
-    population.length,
-    rand,
-    exclude,
-  )
+  const [initial, ...rest] = uniqueIndexes(Math.round(cfg.tournamentSize * population.length), 0, population.length, rand, exclude)
   let bestIdx = initial
 
   for (const candidate of rest) {
@@ -313,7 +279,6 @@ function randGaussian(mean = 0, stdDev = 1, rand = Math.random) {
   return mean + stdDev * u * mul
 }
 
-
 function randGausInt(min: number, max: number, rand: () => number) {
   // Map abs(Gaussian) to [0,1): values near 0 are most likely, so min is favored
   const raw = Math.abs(randGaussian(0, 1, rand))
@@ -356,18 +321,10 @@ function applyOneMutation(
   }
 }
 
-function mutateChild(
-  child: Box[],
-  rand: () => number,
-  cfg: Required<Config>,
-  effectiveMutate: number,
-  mutWeights?: number[],
-  multiMutRate?: number,
-) {
+function mutateChild(child: Box[], rand: () => number, cfg: Required<Config>, effectiveMutate: number, mutWeights?: number[], multiMutRate?: number) {
   const entities = toEntities(child)
   const boxEntityMap = buildBoxEntityIndex(entities)
-  const targetEntity: LayoutEntity =
-    entities[Math.floor(rand() * entities.length)]
+  const targetEntity: LayoutEntity = entities[Math.floor(rand() * entities.length)]
   const mutatedBox = targetEntity.members[0].box
 
   const weights = mutWeights ?? [
@@ -429,8 +386,8 @@ async function runGenetic(
   getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
   onIntermediate?: (layouts: Box[]) => void,
   onGenerationEnd?: (stop: number, snapshot?: GenerationSnapshot) => void,
-  logProgress?: (...args) => void,
-  logInfo?: (...args) => void,
+  logProgress?: (...args: any) => void,
+  logInfo?: (...args: any) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
 ): Promise<Box[]> {
   // Create population
@@ -445,18 +402,10 @@ async function runGenetic(
     return []
   }
 
-  const initialFitness = getFitness
-    ? await getFitness(population[0].layouts, lines, cfg)
-    : fitness(population[0].layouts, lines, cfg)
-  if (logInfo)
-    logInfo(
-      `Initial fitness ${initialFitness.score.toFixed(0)}\n${JSON.stringify(initialFitness, null, 2)}`,
-    )
+  const initialFitness = getFitness ? await getFitness(population[0].layouts, lines, cfg) : fitness(population[0].layouts, lines, cfg)
+  if (logInfo) logInfo(`Initial fitness ${initialFitness.score.toFixed(0)}\n${JSON.stringify(initialFitness, null, 2)}`)
 
-  const bestInitIdx = population.reduce(
-    (bi, ind, i) => (ind.fitness!.score < population[bi].fitness!.score ? i : bi),
-    0,
-  )
+  const bestInitIdx = population.reduce((bi, ind, i) => (ind.fitness!.score < population[bi].fitness!.score ? i : bi), 0)
   let bestFitnessScore = population[bestInitIdx].fitness!.score
   let bestFitness: Fitness | undefined = population[bestInitIdx].fitness
   let bestIndividual: Box[] = cloneLayouts(population[bestInitIdx].layouts)
@@ -647,22 +596,12 @@ async function runGenetic(
 
     const nsgaRanks = cfg.nsgaEnabled ? computeNsgaRanks(population) : undefined
     // For NSGA-II crowding, use 'score' distances; for standard mode, alternate props
-    const crowdingCache = cfg.crowdingTieBreak
-      ? new Map(props.map((p) => [p, precomputeCrowdingDistances(population, p)]))
-      : undefined
+    const crowdingCache = cfg.crowdingTieBreak ? new Map(props.map((p) => [p, precomputeCrowdingDistances(population, p)])) : undefined
     const nsgaCrowding = nsgaRanks ? precomputeCrowdingDistances(population, 'score') : undefined
 
     while (newPopulation.length < cfg.popSize) {
       const prop1 = props[newPopulation.length % props.length]
-      const i1 = tournamentSelect(
-        population,
-        prop1,
-        rand,
-        cfg,
-        undefined,
-        nsgaRanks ? nsgaCrowding : crowdingCache?.get(prop1),
-        nsgaRanks,
-      )
+      const i1 = tournamentSelect(population, prop1, rand, cfg, undefined, nsgaRanks ? nsgaCrowding : crowdingCache?.get(prop1), nsgaRanks)
       const p1 = population[i1]
 
       let child: Box[]
@@ -670,15 +609,7 @@ async function runGenetic(
       let mutatedBox: Box | undefined
       if (rand() < cfg.crossoverRate) {
         const prop2 = props[(newPopulation.length + 1) % props.length]
-        const i2 = tournamentSelect(
-          population,
-          prop2,
-          rand,
-          cfg,
-          [i1],
-          nsgaRanks ? nsgaCrowding : crowdingCache?.get(prop2),
-          nsgaRanks,
-        )
+        const i2 = tournamentSelect(population, prop2, rand, cfg, [i1], nsgaRanks ? nsgaCrowding : crowdingCache?.get(prop2), nsgaRanks)
 
         const crossWeights = [cfg.crossWeightRandom, cfg.crossWeightStruct]
         const sw = singleWeight(crossWeights)
@@ -709,12 +640,7 @@ async function runGenetic(
       }
 
       // Increment per-box mutation counts (monitoring, doesn't affect algorithm)
-      if (
-        childMutation !== 'crossover' &&
-        childMutation !== 'crossoverStructural' &&
-        childMutation !== 'none' &&
-        mutatedBox
-      ) {
+      if (childMutation !== 'crossover' && childMutation !== 'crossoverStructural' && childMutation !== 'none' && mutatedBox) {
         mutatedBox._mutations = {
           ...mutatedBox._mutations,
           [childMutation]: (mutatedBox._mutations?.[childMutation] ?? 0) + 1,
@@ -762,15 +688,10 @@ async function runGenetic(
     population = newPopulation
   }
 
-  if (logInfo)
-    logInfo(
-      `Optimization finished. Final fitness: ${bestFitnessScore.toFixed(0)}\n${JSON.stringify(bestFitness, null, 2)}`,
-    )
+  if (logInfo) logInfo(`Optimization finished. Final fitness: ${bestFitnessScore.toFixed(0)}\n${JSON.stringify(bestFitness, null, 2)}`)
 
   // Finalize monitor
-  const sortedFinal = [...population]
-    .filter((ind) => ind.fitness !== undefined)
-    .sort((a, b) => a.fitness!.score - b.fitness!.score)
+  const sortedFinal = [...population].filter((ind) => ind.fitness !== undefined).sort((a, b) => a.fitness!.score - b.fitness!.score)
   monitor.deadWeightMutations = computeDeadWeightMutations(sortedFinal, monitor.runTotals)
   onMonitorEnd?.(monitor)
 

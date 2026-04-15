@@ -163,17 +163,9 @@ const btnPause = computed(() => store.status === 'running')
               :label="btnStart ? (optionDown ? 'Re-run' : 'Run') : 'Stop'"
               size="small"
               :variant="btnStart ? (!store.canStart ? 'outlined' : undefined) : 'outlined'"
-              :severity="
-                btnStart ? (btnStart && !store.canStart ? 'secondary' : undefined) : 'secondary'
-              "
+              :severity="btnStart ? (btnStart && !store.canStart ? 'secondary' : undefined) : 'secondary'"
               :disabled="btnStart && (!store.canStart || (optionDown && !store.top.length))"
-              @click="
-                btnStart
-                  ? optionDown
-                    ? store.startReOptimization()
-                    : store.startOptimization()
-                  : store.stopOptimization()
-              " />
+              @click="btnStart ? (optionDown ? store.startReOptimization() : store.startOptimization()) : store.stopOptimization()" />
             <Button
               v-if="btnPauseResume"
               :label="btnPause ? 'Pause' : 'Resume'"
@@ -181,31 +173,26 @@ const btnPause = computed(() => store.status === 'running')
               size="small"
               severity="secondary"
               @click="btnPause ? store.pauseOptimization() : store.resumeOptimization()" />
-            <Button v-else style="visibility: hidden" variant="outlined" size="small" disabled />
             <Button
-              :label="
-                store.inputSource === 'clipboard' || optionDown || copyKeyDown ? 'Copy' : 'Download'
-              "
+              v-else
+              style="visibility: hidden"
+              variant="outlined"
+              size="small"
+              disabled />
+            <Button
+              :label="store.inputSource === 'clipboard' || optionDown || copyKeyDown ? 'Copy' : 'Download'"
               variant="outlined"
               :class="{ 'info-active': copyKeyDown }"
               size="small"
-              :severity="
-                !store.canExport
-                  ? 'secondary'
-                  : store.inputSource === 'clipboard' || optionDown || copyKeyDown
-                    ? 'info'
-                    : undefined
-              "
+              :severity="!store.canExport ? 'secondary' : store.inputSource === 'clipboard' || optionDown || copyKeyDown ? 'info' : undefined"
               :disabled="!store.canExport"
-              @click="
-                store.inputSource === 'clipboard' || optionDown || copyKeyDown
-                  ? copyRnbo()
-                  : downloadRnbo()
-              " />
+              @click="store.inputSource === 'clipboard' || optionDown || copyKeyDown ? copyRnbo() : downloadRnbo()" />
           </div>
           <div class="section-divider"></div>
           <ProgressPanel />
-          <div class="section-divider" style="margin-bottom: 0.5rem"></div>
+          <div
+            class="section-divider"
+            style="margin-bottom: 0.5rem"></div>
           <ConfigPanel />
         </div>
         <Toolbar class="sidebar-toolbar">
@@ -251,19 +238,21 @@ const btnPause = computed(() => store.status === 'running')
           </div>
         </div>
         <TopResultsBar />
-        <div v-if="!hasEverRendered" class="canvas-placeholder">
-          <SvgPlaceholder :paste-key="pasteKey" :copy-key="copyKey" />
+        <div
+          v-if="!hasEverRendered"
+          class="canvas-placeholder">
+          <SvgPlaceholder
+            :paste-key="pasteKey"
+            :copy-key="copyKey" />
         </div>
       </section>
     </main>
-    <HelpDialog v-model:visible="helpVisible" :is-mac="isMac" />
+    <HelpDialog
+      v-model:visible="helpVisible"
+      :is-mac="isMac" />
     <Toast
       position="center"
-      style="
-        --p-toast-info-background: rgba(66, 66, 66, 0.4);
-        --p-toast-info-border-color: rgba(88, 88, 88, 0.5);
-        --p-toast-info-color: #fff;
-      ">
+      style="--p-toast-info-background: rgba(66, 66, 66, 0.4); --p-toast-info-border-color: rgba(88, 88, 88, 0.5); --p-toast-info-color: #fff">
       <template #container="{ message, closeCallback }">
         <section
           @click="closeCallback"
@@ -282,11 +271,11 @@ const btnPause = computed(() => store.status === 'running')
           <div style="color: var(--p-primary-400)">{{ message.summary }}</div>
           <div class="result">
             {{ message.detail.msg
-            }}<i v-if="message.detail.icon" :class="['pi', 'icon', message.detail.icon]" /><template
-              v-if="message.detail.sign !== 0"
+            }}<i
+              v-if="message.detail.icon"
+              :class="['pi', 'icon', message.detail.icon]" /><template v-if="message.detail.sign !== 0"
               ><span :class="message.detail.sign < 0 ? 'minus' : 'plus'">
-                <template v-if="message.detail.sign > 0">+</template
-                >{{ message.detail.deltaStr }}</span
+                <template v-if="message.detail.sign > 0">+</template>{{ message.detail.deltaStr }}</span
               ></template
             >
           </div>

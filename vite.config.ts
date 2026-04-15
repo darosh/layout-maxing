@@ -8,8 +8,9 @@ export default defineConfig({
     singleQuote: true,
     ignorePatterns: ['docs/'],
     bracketSameLine: true,
-    singleAttributePerLine: false,
+    singleAttributePerLine: true,
     htmlWhitespaceSensitivity: 'strict',
+    printWidth: 160,
   },
   lint: {
     plugins: ['eslint', 'typescript', 'unicorn', 'oxc', 'vue', 'vitest'],

@@ -6,10 +6,7 @@ import { applyBestLayout, main, type RNBO } from '../src/index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const fixturePath = resolve(
-  __dirname,
-  '../../layout-maxing-cli/tests/fixtures/reverb-grouped-example.json',
-)
+const fixturePath = resolve(__dirname, '../../layout-maxing-cli/tests/fixtures/reverb-grouped-example.json')
 
 function loadFixture(): RNBO {
   const patcher = JSON.parse(readFileSync(fixturePath, 'utf-8'))

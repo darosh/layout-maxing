@@ -19,9 +19,7 @@ const hoveredSeries = ref<SeriesKey>('best')
 
 function toPath(points: [number, number][]): string {
   if (!points.length) return ''
-  return points
-    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`)
-    .join(' ')
+  return points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
 }
 
 const chart = computed(() => {
@@ -72,10 +70,7 @@ const chart = computed(() => {
 
   const yMutRate = (v: number) => PAD.top + ((v - minMutRate) / rangeMutRate) * innerH
   const yMutate = (v: number) => PAD.top + ((v - minMutate) / rangeMutate) * innerH
-  const effMutRatePts: [number, number][] = snaps.map((s, i) => [
-    xOf(i),
-    yMutRate(s.effectiveMutRate),
-  ])
+  const effMutRatePts: [number, number][] = snaps.map((s, i) => [xOf(i), yMutRate(s.effectiveMutRate)])
   const effMutatePts: [number, number][] = snaps.map((s, i) => [xOf(i), yMutate(s.effectiveMutate)])
 
   // Area fill between median and best
@@ -110,9 +105,7 @@ const chart = computed(() => {
   }
 })
 
-const scoreLabels = computed(
-  () => chart.value?.seriesLabels[hoveredSeries.value] ?? { min: '', max: '' },
-)
+const scoreLabels = computed(() => chart.value?.seriesLabels[hoveredSeries.value] ?? { min: '', max: '' })
 
 const seriesColor: Record<SeriesKey, string> = {
   best: 'var(--p-primary-400)',
@@ -125,15 +118,35 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
 </script>
 
 <template>
-  <div v-if="snapshots.length >= 2" class="gen-chart">
-    <svg :width="W" :height="H" class="chart-svg">
+  <div
+    v-if="snapshots.length >= 2"
+    class="gen-chart">
+    <svg
+      :width="W"
+      :height="H"
+      class="chart-svg">
       <defs>
-        <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--p-primary-500)" stop-opacity="0.15" />
-          <stop offset="100%" stop-color="var(--p-primary-500)" stop-opacity="0.02" />
+        <linearGradient
+          id="area-grad"
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="1">
+          <stop
+            offset="0%"
+            stop-color="var(--p-primary-500)"
+            stop-opacity="0.15" />
+          <stop
+            offset="100%"
+            stop-color="var(--p-primary-500)"
+            stop-opacity="0.02" />
         </linearGradient>
         <clipPath id="chart-clip">
-          <rect :x="PAD.left" :y="PAD.top" :width="innerW" :height="innerH" />
+          <rect
+            :x="PAD.left"
+            :y="PAD.top"
+            :width="innerW"
+            :height="innerH" />
         </clipPath>
       </defs>
 
@@ -186,11 +199,19 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
           stroke-opacity=".75" />
 
         <!-- best line -->
-        <path :d="chart!.bestPath" fill="none" stroke="var(--p-primary-400)" stroke-width="1" />
+        <path
+          :d="chart!.bestPath"
+          fill="none"
+          stroke="var(--p-primary-400)"
+          stroke-width="1" />
       </g>
 
       <!-- gen labels -->
-      <text :x="PAD.left" :y="H - PAD.bottom + M" alignment-baseline="hanging" class="axis-label">
+      <text
+        :x="PAD.left"
+        :y="H - PAD.bottom + M"
+        alignment-baseline="hanging"
+        class="axis-label">
         GEN: {{ chart!.firstGen }}
       </text>
       <text
@@ -222,14 +243,32 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
     </svg>
 
     <div class="chart-legend">
-      <span class="legend-item best" @mouseenter="hoveredSeries = 'best'">best</span>
-      <span class="legend-item median" @mouseenter="hoveredSeries = 'median'">median</span>
+      <span
+        class="legend-item best"
+        @mouseenter="hoveredSeries = 'best'"
+        >best</span
+      >
+      <span
+        class="legend-item median"
+        @mouseenter="hoveredSeries = 'median'"
+        >median</span
+      >
       <!--      <span class="legend-item p75">p75</span>-->
-      <span class="legend-item diversity" @mouseenter="hoveredSeries = 'diversity'">diversity</span>
-      <span class="legend-item eff-mut-rate" @mouseenter="hoveredSeries = 'eff-mut-rate'"
+      <span
+        class="legend-item diversity"
+        @mouseenter="hoveredSeries = 'diversity'"
+        >diversity</span
+      >
+      <span
+        class="legend-item eff-mut-rate"
+        @mouseenter="hoveredSeries = 'eff-mut-rate'"
         >mut rate</span
       >
-      <span class="legend-item eff-mutate" @mouseenter="hoveredSeries = 'eff-mutate'">mutate</span>
+      <span
+        class="legend-item eff-mutate"
+        @mouseenter="hoveredSeries = 'eff-mutate'"
+        >mutate</span
+      >
     </div>
   </div>
 </template>

@@ -1,12 +1,5 @@
 import { type Config } from './config.ts'
-import {
-  type Box,
-  type LayoutEntity,
-  toEntities,
-  moveEntityTo,
-  swapEntities,
-  buildBoxEntityIndex,
-} from './layout.ts'
+import { type Box, type LayoutEntity, toEntities, moveEntityTo, swapEntities, buildBoxEntityIndex } from './layout.ts'
 
 export function cloneLayouts(layouts: Box[]): Box[] {
   return layouts.map((l) => ({ ...l }))
@@ -66,12 +59,7 @@ export function mutateWithParents(
   apply(target, maxDepth + 1)
 }
 
-export function mutateByQuadrant(
-  target: LayoutEntity,
-  entities: LayoutEntity[],
-  delta: { x: number; y: number },
-  quadrant: number,
-): void {
+export function mutateByQuadrant(target: LayoutEntity, entities: LayoutEntity[], delta: { x: number; y: number }, quadrant: number): void {
   const left = quadrant === 0 || quadrant === 2
   const top = quadrant === 0 || quadrant === 1
 
@@ -82,22 +70,13 @@ export function mutateByQuadrant(
   }
 }
 
-export function mutateSwapRandom(
-  target: LayoutEntity,
-  entities: LayoutEntity[],
-  rand: () => number,
-): void {
+export function mutateSwapRandom(target: LayoutEntity, entities: LayoutEntity[], rand: () => number): void {
   const idx = Math.floor(rand() * entities.length) % entities.length
   const other = entities[idx]
   if (other !== target) swapEntities(target, other)
 }
 
-export function mutateSwapSibling(
-  target: LayoutEntity,
-  entities: LayoutEntity[],
-  rand: () => number,
-  boxEntityMap?: Map<number, LayoutEntity>,
-): void {
+export function mutateSwapSibling(target: LayoutEntity, entities: LayoutEntity[], rand: () => number, boxEntityMap?: Map<number, LayoutEntity>): void {
   const entityMap = boxEntityMap ?? buildBoxEntityIndex(entities)
   const siblingEntities = new Set<LayoutEntity>()
 
@@ -120,12 +99,7 @@ export function mutateSwapSibling(
   swapEntities(target, sibling)
 }
 
-export function mutateSwapInRow(
-  target: LayoutEntity,
-  entities: LayoutEntity[],
-  rand: () => number,
-  cfg: Required<Config>,
-): void {
+export function mutateSwapInRow(target: LayoutEntity, entities: LayoutEntity[], rand: () => number, cfg: Required<Config>): void {
   const row = entities.filter((e) => e.y === target.y).sort((a, b) => a.x - b.x)
   const idx = row.findIndex((e) => e === target)
   const neighbors: LayoutEntity[] = []
@@ -138,19 +112,10 @@ export function mutateSwapInRow(
   const leftX = left.x
   const rightX = right.x
   moveEntityTo(right, leftX, right.y)
-  moveEntityTo(
-    left,
-    Math.round((rightX + right.width - left.width) / cfg.gridX) * cfg.gridX,
-    left.y,
-  )
+  moveEntityTo(left, Math.round((rightX + right.width - left.width) / cfg.gridX) * cfg.gridX, left.y)
 }
 
-export function mutateSwapInCol(
-  target: LayoutEntity,
-  entities: LayoutEntity[],
-  rand: () => number,
-  cfg: Required<Config>,
-): void {
+export function mutateSwapInCol(target: LayoutEntity, entities: LayoutEntity[], rand: () => number, cfg: Required<Config>): void {
   const col = entities.filter((e) => e.x === target.x).sort((a, b) => a.y - b.y)
   const idx = col.findIndex((e) => e === target)
   const neighbors: LayoutEntity[] = []
@@ -163,38 +128,23 @@ export function mutateSwapInCol(
   const topY = top.y
   const bottomY = bottom.y
   moveEntityTo(bottom, bottom.x, topY)
-  moveEntityTo(
-    top,
-    top.x,
-    Math.round((bottomY + bottom.height - top.height) / cfg.gridY) * cfg.gridY,
-  )
+  moveEntityTo(top, top.x, Math.round((bottomY + bottom.height - top.height) / cfg.gridY) * cfg.gridY)
 }
 
-export function mutateShiftRow(
-  target: LayoutEntity,
-  entities: LayoutEntity[],
-  delta: { x: number },
-): void {
+export function mutateShiftRow(target: LayoutEntity, entities: LayoutEntity[], delta: { x: number }): void {
   for (const e of entities.filter((e) => e.y === target.y)) {
     moveEntityTo(e, e.x + delta.x, e.y)
   }
 }
 
-export function mutateShiftCol(
-  target: LayoutEntity,
-  entities: LayoutEntity[],
-  delta: { y: number },
-): void {
+export function mutateShiftCol(target: LayoutEntity, entities: LayoutEntity[], delta: { y: number }): void {
   for (const e of entities.filter((e) => e.x === target.x)) {
     moveEntityTo(e, e.x, e.y + delta.y)
   }
 }
 
 // Find entity in otherEntities that matches the given entity (by groupIdx or box.index).
-function matchEntity(
-  entity: LayoutEntity,
-  otherEntities: LayoutEntity[],
-): LayoutEntity | undefined {
+function matchEntity(entity: LayoutEntity, otherEntities: LayoutEntity[]): LayoutEntity | undefined {
   if (entity.groupIdx !== undefined) {
     return otherEntities.find((e) => e.groupIdx === entity.groupIdx)
   }
@@ -202,12 +152,7 @@ function matchEntity(
   return otherEntities.find((e) => e.groupIdx === undefined && e.members[0].box.index === myIdx)
 }
 
-export function crossover(
-  parent1: Box[],
-  parent2: Box[],
-  rand: () => number,
-  cfg: Required<Config>,
-): Box[] {
+export function crossover(parent1: Box[], parent2: Box[], rand: () => number, cfg: Required<Config>): Box[] {
   const child = cloneLayouts(parent1)
   const childEntities = toEntities(child)
   const p2Entities = toEntities(parent2)

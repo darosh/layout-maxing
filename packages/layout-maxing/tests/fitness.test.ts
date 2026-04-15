@@ -6,10 +6,7 @@ import { fitness, createInitialLayouts, stampGroupIdx, type RNBO } from '../src/
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const optimizedFixturePath = resolve(
-  __dirname,
-  '../../layout-maxing-cli/tests/fixtures/reverb-grouped-optimized.json',
-)
+const optimizedFixturePath = resolve(__dirname, '../../layout-maxing-cli/tests/fixtures/reverb-grouped-optimized.json')
 
 function loadOptimizedWithGroups(): RNBO {
   const patcher = JSON.parse(readFileSync(optimizedFixturePath, 'utf-8'))

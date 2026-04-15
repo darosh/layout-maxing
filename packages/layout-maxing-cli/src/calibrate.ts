@@ -1,11 +1,4 @@
-import {
-  type Box,
-  type Config,
-  type Line,
-  type Fitness,
-  defaultConfig,
-  configMeta,
-} from 'layout-maxing'
+import { type Box, type Config, type Line, type Fitness, defaultConfig, configMeta } from 'layout-maxing'
 
 // Uses configMeta min/max by default — override with [min, max] only when the meta range
 // includes trivially-good values (e.g. exponential bases that go to 1.0).
@@ -40,9 +33,7 @@ interface CalibrateResult {
   }
 }
 
-export function getNumericParams(
-  whitelist: Partial<Record<keyof Config, true | [number, number]>> = calibrateDefault,
-) {
+export function getNumericParams(whitelist: Partial<Record<keyof Config, true | [number, number]>> = calibrateDefault) {
   return Object.entries(configMeta)
     .filter(([key, entry]) => entry[3] !== null && key in whitelist)
     .map(([key, entry]) => {
@@ -67,10 +58,7 @@ function sampleValues(min: number, max: number, depth: number): number[] {
 
 // Returns 1.0 when cfg matches defaultConfig exactly, 0.0 when maximally different.
 // Uses normalized L2 distance so zero-vector configs are handled correctly.
-function similarityToDefault(
-  cfg: Partial<Config>,
-  params: ReturnType<typeof getNumericParams>,
-): number {
+function similarityToDefault(cfg: Partial<Config>, params: ReturnType<typeof getNumericParams>): number {
   let sumSq = 0
   for (const { key, min, max } of params) {
     const range = max - min
@@ -128,9 +116,7 @@ export async function runCalibrate(
   }
 
   // Combined best config
-  const combinedBestConfig: Partial<Config> = Object.fromEntries(
-    paramResults.map((r) => [r.key, r.bestVal]),
-  )
+  const combinedBestConfig: Partial<Config> = Object.fromEntries(paramResults.map((r) => [r.key, r.bestVal]))
   const combinedFitness = await getFitness(layouts, lines, {
     ...defaultConfig,
     ...combinedBestConfig,
@@ -155,9 +141,7 @@ export async function runCalibrate(
   const closestToDefault =
     aboveThreshold.length > 0
       ? aboveThreshold.reduce((a, b) => (a.score < b.score ? a : b))
-      : withSimilarity.reduce((a, b) =>
-          Math.abs(a.similarity - threshold) < Math.abs(b.similarity - threshold) ? a : b,
-        )
+      : withSimilarity.reduce((a, b) => (Math.abs(a.similarity - threshold) < Math.abs(b.similarity - threshold) ? a : b))
 
   return { paramResults, combinedBestConfig, combinedBestScore, defaultScore, closestToDefault }
 }
@@ -179,28 +163,13 @@ export function printCalibrateResults(result: CalibrateResult): void {
 
   // Primary: constrained best (high similarity to default — penalties stay meaningful)
   const closestImprove = ((defaultScore - closestToDefault.score) / defaultScore) * 100
-  console.log(
-    `\n--- Recommended config (similarity: ${closestToDefault.similarity.toFixed(3)}) ---`,
-  )
-  console.log(
-    `Score: ${fmt(closestToDefault.score)}  (${closestImprove >= 0 ? '-' : '+'}${Math.abs(closestImprove).toFixed(1)}% vs baseline)`,
-  )
-  const closestDiff = Object.fromEntries(
-    Object.entries(closestToDefault.config).filter(
-      ([k, v]) => (defaultConfig as Record<string, unknown>)[k] !== v,
-    ),
-  )
+  console.log(`\n--- Recommended config (similarity: ${closestToDefault.similarity.toFixed(3)}) ---`)
+  console.log(`Score: ${fmt(closestToDefault.score)}  (${closestImprove >= 0 ? '-' : '+'}${Math.abs(closestImprove).toFixed(1)}% vs baseline)`)
+  const closestDiff = Object.fromEntries(Object.entries(closestToDefault.config).filter(([k, v]) => (defaultConfig as Record<string, unknown>)[k] !== v))
   console.log(JSON.stringify(closestDiff, null, 2))
 
   // Table: per-param sensitivity
-  console.log(
-    '\n' +
-      'Parameter'.padEnd(28) +
-      'Default'.padStart(10) +
-      'Best'.padStart(10) +
-      'Score'.padStart(12) +
-      'Improve%'.padStart(10),
-  )
+  console.log('\n' + 'Parameter'.padEnd(28) + 'Default'.padStart(10) + 'Best'.padStart(10) + 'Score'.padStart(12) + 'Improve%'.padStart(10))
   console.log('-'.repeat(70))
 
   const sorted = [...paramResults].sort((a, b) => b.improvementPct - a.improvementPct)
@@ -217,11 +186,7 @@ export function printCalibrateResults(result: CalibrateResult): void {
 
   // Secondary: unconstrained best (informational — may have disabled penalties)
   console.log(`\n--- Unconstrained best (combined) ---`)
-  console.log(
-    `Score: ${fmt(combinedBestScore)}  (${combinedImprove >= 0 ? '-' : '+'}${Math.abs(combinedImprove).toFixed(1)}% vs baseline)`,
-  )
-  const bestDiff = Object.fromEntries(
-    paramResults.filter((r) => r.bestVal !== r.defaultVal).map((r) => [r.key, r.bestVal]),
-  )
+  console.log(`Score: ${fmt(combinedBestScore)}  (${combinedImprove >= 0 ? '-' : '+'}${Math.abs(combinedImprove).toFixed(1)}% vs baseline)`)
+  const bestDiff = Object.fromEntries(paramResults.filter((r) => r.bestVal !== r.defaultVal).map((r) => [r.key, r.bestVal]))
   console.log(JSON.stringify(bestDiff, null, 2))
 }

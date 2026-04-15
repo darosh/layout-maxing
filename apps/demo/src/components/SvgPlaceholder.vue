@@ -18,13 +18,20 @@ const props = defineProps<{
       layout-maxing <span class="version">v{{ version }}</span>
     </div>
     <div class="subtitle">
-      A <a href="https://cycling74.com/products/max" target="_blank">Max</a> patch layout utility
-      powered by genetic algorithm
+      A
+      <a
+        href="https://cycling74.com/products/max"
+        target="_blank"
+        >Max</a
+      >
+      patch layout utility powered by genetic algorithm
     </div>
     <ul class="list">
       <li>Select or drop a Max patch in the top left area</li>
       <li>
-        Or paste a patch from clipboard&nbsp;<span v-if="props.pasteKey" class="hint"
+        Or paste a patch from clipboard&nbsp;<span
+          v-if="props.pasteKey"
+          class="hint"
           >({{ props.pasteKey }})</span
         >
       </li>
@@ -43,16 +50,13 @@ const props = defineProps<{
       </li>
     </ul>
     <div class="footnote">
-      All JSON based Max file types are supported: <span class="hint">MAXPAT</span>,
-      <span class="hint">RNBOPAT</span>, <span class="hint">GENDSP</span>.<br />For
-      <span class="hint">AMXD</span> files use clipboard copy/paste.<br />Groups are supported. Line
-      segmentation is not supported.<br />
+      All JSON based Max file types are supported: <span class="hint">MAXPAT</span>, <span class="hint">RNBOPAT</span>,
+      <span class="hint">GENDSP</span>.<br />For <span class="hint">AMXD</span> files use clipboard copy/paste.<br />Groups are supported. Line segmentation is
+      not supported.<br />
       Sub-patchers are not processed.<br />
       Orphaned boxes are ignored by default.
     </div>
-    <div class="footnote">
-      All processing happens locally in the browser.<br />Your patch is not sent over the internet.
-    </div>
+    <div class="footnote"> All processing happens locally in the browser.<br />Your patch is not sent over the internet. </div>
   </div>
 </template>
 

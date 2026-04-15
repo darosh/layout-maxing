@@ -24,8 +24,7 @@ const vTip = {
   mounted(el: HTMLElement, binding: DirectiveBinding<TipBinding>) {
     const pos = binding.modifiers.right ? 'right' : 'top'
     const getText = () => (typeof binding.value === 'string' ? binding.value : binding.value.text)
-    const getFeatures = () =>
-      typeof binding.value === 'string' ? [] : (binding.value.features ?? [])
+    const getFeatures = () => (typeof binding.value === 'string' ? [] : (binding.value.features ?? []))
     el.addEventListener('mouseenter', (e) => {
       setHighlight(getFeatures())
       ft.value?.show(e, getText(), pos)
@@ -216,15 +215,7 @@ const groups: GroupDef[] = [
   {
     key: 'grid',
     label: 'Geometry',
-    fields: [
-      { key: 'gridX' },
-      { key: 'gridY' },
-      { key: 'minDistX' },
-      { key: 'minDistY' },
-      { key: 'boxZone' },
-      { key: 'letOffest' },
-      { key: 'curveControl' },
-    ],
+    fields: [{ key: 'gridX' }, { key: 'gridY' }, { key: 'minDistX' }, { key: 'minDistY' }, { key: 'boxZone' }, { key: 'letOffest' }, { key: 'curveControl' }],
   },
   {
     key: 'run',
@@ -321,16 +312,26 @@ function copyCli() {
       </div>
     </div>
 
-    <Accordion :value="[]" multiple class="accordion">
-      <AccordionPanel v-for="group in groups" :key="group.key" :value="group.key">
+    <Accordion
+      :value="[]"
+      multiple
+      class="accordion">
+      <AccordionPanel
+        v-for="group in groups"
+        :key="group.key"
+        :value="group.key">
         <AccordionHeader :class="{ 'non-default': isGroupNonDefault(group.fields) }">
           {{ group.label }}
         </AccordionHeader>
         <AccordionContent>
           <div class="fields-grid">
-            <template v-for="f in group.fields" :key="f.key">
+            <template
+              v-for="f in group.fields"
+              :key="f.key">
               <!-- wide-row special case (seed) -->
-              <div v-if="f.wideRow" class="wide-row">
+              <div
+                v-if="f.wideRow"
+                class="wide-row">
                 <label
                   :class="{ 'non-default': isNonDefault(f.key) }"
                   @click="isNonDefault(f.key) && resetProp(f.key)"
@@ -374,7 +375,9 @@ function copyCli() {
                     size="small"
                     v-tip.right="configTip(f.key)"
                     @keydown="handleShiftKey($event, f.key)" />
-                  <span v-if="isHighlighted(configFeatureTags[f.key] ?? [])" class="hl-dot" />
+                  <span
+                    v-if="isHighlighted(configFeatureTags[f.key] ?? [])"
+                    class="hl-dot" />
                 </div>
               </template>
             </template>
@@ -486,16 +489,11 @@ function copyCli() {
   color: var(--p-primary-400);
 }
 
-:deep(
-  .p-accordionpanel:not(.p-accordionpanel-active):not(.p-disabled)
-    > .p-accordionheader.non-default:hover
-) {
+:deep(.p-accordionpanel:not(.p-accordionpanel-active):not(.p-disabled) > .p-accordionheader.non-default:hover) {
   color: var(--p-primary-300);
 }
 
-:deep(
-  .p-accordionpanel:not(.p-disabled).p-accordionpanel-active > .p-accordionheader.non-default:hover
-) {
+:deep(.p-accordionpanel:not(.p-disabled).p-accordionpanel-active > .p-accordionheader.non-default:hover) {
   color: var(--p-primary-300);
 }
 

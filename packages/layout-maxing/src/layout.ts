@@ -67,10 +67,7 @@ export function normalizeLayouts(layouts: Box[]): void {
 
 // Stamp groupIdx on layouts from raw boxgroups so fitness can skip same-group
 // pairs. Safe to call before fillDepths/stripOrphans.
-export function stampGroupIdx(
-  layouts: Box[],
-  boxgroups: Array<{ boxes: BoxId[] }> | undefined,
-): void {
+export function stampGroupIdx(layouts: Box[], boxgroups: Array<{ boxes: BoxId[] }> | undefined): void {
   if (!boxgroups?.length) return
   const byId = new Map(layouts.map((l) => [l.id, l]))
   boxgroups.forEach((g, i) => {
@@ -85,10 +82,7 @@ export function stampGroupIdx(
 // Must be called on baseLayouts BEFORE any layout algorithm (dagre etc.) shifts positions.
 // These offsets are preserved through cloneLayouts and used by toEntities so that all
 // mutations and fixOverlaps enforce the original group structure.
-export function stampGroupOffsets(
-  layouts: Box[],
-  boxgroups: Array<{ boxes: BoxId[] }> | undefined,
-): void {
+export function stampGroupOffsets(layouts: Box[], boxgroups: Array<{ boxes: BoxId[] }> | undefined): void {
   if (!boxgroups?.length) return
   const byId = new Map(layouts.map((l) => [l.id, l]))
   for (const g of boxgroups) {
@@ -105,10 +99,7 @@ export function stampGroupOffsets(
 
 // If a group has any connected member (depth ≥ 0), mark all its members as
 // connected so stripOrphans won't remove them.
-export function preserveGroupMembers(
-  layouts: Box[],
-  boxgroups: Array<{ boxes: BoxId[] }> | undefined,
-): void {
+export function preserveGroupMembers(layouts: Box[], boxgroups: Array<{ boxes: BoxId[] }> | undefined): void {
   if (!boxgroups?.length) return
   const byId = new Map(layouts.map((l) => [l.id, l]))
   for (const g of boxgroups) {
@@ -357,11 +348,7 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
 
   // Initial grid snap (entity top-left)
   for (const e of entities) {
-    moveEntityTo(
-      e,
-      Math.round(e.x / cfg.gridX) * cfg.gridX,
-      Math.round(e.y / cfg.gridY) * cfg.gridY,
-    )
+    moveEntityTo(e, Math.round(e.x / cfg.gridX) * cfg.gridX, Math.round(e.y / cfg.gridY) * cfg.gridY)
   }
 
   let changed = true
@@ -380,14 +367,8 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
         const prev = entities[j]
 
         if (entitiesOverlap(curr, prev)) {
-          const overlapX = Math.max(
-            0,
-            Math.min(curr.x + curr.width, prev.x + prev.width) - Math.max(curr.x, prev.x),
-          )
-          const overlapY = Math.max(
-            0,
-            Math.min(curr.y + curr.height, prev.y + prev.height) - Math.max(curr.y, prev.y),
-          )
+          const overlapX = Math.max(0, Math.min(curr.x + curr.width, prev.x + prev.width) - Math.max(curr.x, prev.x))
+          const overlapY = Math.max(0, Math.min(curr.y + curr.height, prev.y + prev.height) - Math.max(curr.y, prev.y))
 
           if (overlapX <= overlapY || overlapY === 0) {
             moveEntityTo(curr, prev.x + prev.width + cfg.minDistX, curr.y)
@@ -466,11 +447,7 @@ export function circleFlow(layouts: Box[], cfg: Required<Config>) {
   })
 }
 
-export function dagreFlow(
-  layouts: Box[],
-  lines: Line[],
-  rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB',
-) {
+export function dagreFlow(layouts: Box[], lines: Line[], rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB') {
   // Create a new directed graph
   const g = new dagre.graphlib.Graph()
 

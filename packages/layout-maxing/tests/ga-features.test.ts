@@ -42,26 +42,8 @@ test('diversity boost: score does not significantly regress and diversity activa
   const baseline: RunMonitor[] = []
   const boosted: RunMonitor[] = []
 
-  await main(
-    loadTwoGroups(),
-    undefined,
-    undefined,
-    { ...BENCH_CFG, diversityBoost: 0 },
-    undefined,
-    undefined,
-    undefined,
-    (m) => baseline.push(m),
-  )
-  await main(
-    loadTwoGroups(),
-    undefined,
-    undefined,
-    { ...BENCH_CFG, diversityBoost: 0.5 },
-    undefined,
-    undefined,
-    undefined,
-    (m) => boosted.push(m),
-  )
+  await main(loadTwoGroups(), undefined, undefined, { ...BENCH_CFG, diversityBoost: 0 }, undefined, undefined, undefined, (m) => baseline.push(m))
+  await main(loadTwoGroups(), undefined, undefined, { ...BENCH_CFG, diversityBoost: 0.5 }, undefined, undefined, undefined, (m) => boosted.push(m))
 
   const baseScore = bestScore(baseline[0])
   const boostScore = bestScore(boosted[0])
@@ -69,15 +51,9 @@ test('diversity boost: score does not significantly regress and diversity activa
   const boostMeanDiv = meanDiversity(boosted[0])
 
   // Diversity boost may explore more, but score must not regress more than 2x
-  expect(
-    boostScore,
-    `score with boost (${boostScore.toFixed(0)}) should be within 2x of baseline (${baseScore.toFixed(0)})`,
-  ).toBeLessThanOrEqual(baseScore * 2)
+  expect(boostScore, `score with boost (${boostScore.toFixed(0)}) should be within 2x of baseline (${baseScore.toFixed(0)})`).toBeLessThanOrEqual(baseScore * 2)
   // Mean diversity across run must be positive (feature is active)
-  expect(
-    boostMeanDiv,
-    `mean diversity with boost (${boostMeanDiv.toFixed(3)}) should be > 0`,
-  ).toBeGreaterThan(0)
+  expect(boostMeanDiv, `mean diversity with boost (${boostMeanDiv.toFixed(3)}) should be > 0`).toBeGreaterThan(0)
   // Mean diversity with boost should not collapse more than 50% below baseline
   expect(
     boostMeanDiv,
@@ -89,34 +65,15 @@ test('crowding weight: score does not significantly regress', async () => {
   const baseline: RunMonitor[] = []
   const crowded: RunMonitor[] = []
 
-  await main(
-    loadTwoGroups(),
-    undefined,
-    undefined,
-    { ...BENCH_CFG, crowdingTieBreak: false },
-    undefined,
-    undefined,
-    undefined,
-    (m) => baseline.push(m),
-  )
-  await main(
-    loadTwoGroups(),
-    undefined,
-    undefined,
-    { ...BENCH_CFG, crowdingTieBreak: true },
-    undefined,
-    undefined,
-    undefined,
-    (m) => crowded.push(m),
-  )
+  await main(loadTwoGroups(), undefined, undefined, { ...BENCH_CFG, crowdingTieBreak: false }, undefined, undefined, undefined, (m) => baseline.push(m))
+  await main(loadTwoGroups(), undefined, undefined, { ...BENCH_CFG, crowdingTieBreak: true }, undefined, undefined, undefined, (m) => crowded.push(m))
 
   const baseScore = bestScore(baseline[0])
   const crowdScore = bestScore(crowded[0])
 
   // Crowding only fires on exact fitness ties; score must not regress significantly
-  expect(
-    crowdScore,
-    `score with crowding (${crowdScore.toFixed(0)}) should be within 2x of baseline (${baseScore.toFixed(0)})`,
-  ).toBeLessThanOrEqual(baseScore * 2)
+  expect(crowdScore, `score with crowding (${crowdScore.toFixed(0)}) should be within 2x of baseline (${baseScore.toFixed(0)})`).toBeLessThanOrEqual(
+    baseScore * 2,
+  )
   expect(meanDiversity(crowded[0])).toBeGreaterThan(0)
 })

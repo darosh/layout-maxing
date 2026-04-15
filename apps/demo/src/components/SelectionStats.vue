@@ -31,10 +31,7 @@ const selRows = computed((): SelRow[] => {
   const known = ['crossover', ...props.mutationOrder]
   const order = [...known, ...Object.keys(counts).filter((n) => !known.includes(n))]
   return order.map((name): SelRow => {
-    const meta =
-      mutationMeta[name] ??
-      crossoverMeta[name] ??
-      (name === 'crossover' ? crossoverMeta['uniform']! : undefined)
+    const meta = mutationMeta[name] ?? crossoverMeta[name] ?? (name === 'crossover' ? crossoverMeta['uniform']! : undefined)
     const count = counts[name] ?? 0
     return {
       name,
@@ -65,7 +62,9 @@ function onMouseLeave() {
 </script>
 
 <template>
-  <FlyingTooltip ref="tooltip" :max-width="220" />
+  <FlyingTooltip
+    ref="tooltip"
+    :max-width="220" />
   <template v-if="selRows.length">
     <table>
       <thead>
@@ -76,12 +75,17 @@ function onMouseLeave() {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="row in selRows" :key="row.name" :class="{ 'empty-row': !row.count }">
+        <tr
+          v-for="row in selRows"
+          :key="row.name"
+          :class="{ 'empty-row': !row.count }">
           <td
             class="td-name th-interactive"
             @mouseenter="onMouseEnter($event, row)"
             @mouseleave="onMouseLeave">
-            <span v-if="isHighlighted([row.shortName])" class="hl-dot" />{{ row.shortName }}
+            <span
+              v-if="isHighlighted([row.shortName])"
+              class="hl-dot" />{{ row.shortName }}
           </td>
           <td>
             <template v-if="row.count">{{ formatScore(row.count) }}</template

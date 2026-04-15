@@ -23,9 +23,7 @@ function isActive(sel: Selection): boolean {
 }
 
 // 2nd…Nth entries in the currently active mode
-const displaySet = computed(() =>
-  store.allTimeTop ? store.top.slice(1) : store.currentGenTop.slice(1),
-)
+const displaySet = computed(() => (store.allTimeTop ? store.top.slice(1) : store.currentGenTop.slice(1)))
 
 let o: string
 
@@ -35,24 +33,27 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
 
 <template>
   <FlyingTooltip ref="tooltip" />
-  <div v-if="store.originalSvg || store.top.length" ref="barRef" class="top-results-bar">
+  <div
+    v-if="store.originalSvg || store.top.length"
+    ref="barRef"
+    class="top-results-bar">
     <!-- Original layout -->
     <button
       v-if="store.originalSvg"
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'original' }) }"
       @mouseenter="
-        tooltip?.show($event, () =>
-          store.originalFitness
-            ? `Original input\nScore: ${formatFullScore(store.originalFitness.score)}`
-            : 'Original input',
-        )
+        tooltip?.show($event, () => (store.originalFitness ? `Original input\nScore: ${formatFullScore(store.originalFitness.score)}` : 'Original input'))
       "
       @mouseleave="tooltip?.hide()"
       @click="store.selection = { kind: 'original' }">
-      <div class="thumb-svg" v-html="store.originalSvg" />
+      <div
+        class="thumb-svg"
+        v-html="store.originalSvg" />
       <span class="thumb-label">Input</span>
-      <span v-if="store.originalFitness" class="thumb-score">
+      <span
+        v-if="store.originalFitness"
+        class="thumb-score">
         {{ formatScore(store.originalFitness.score) }}
       </span>
     </button>
@@ -62,12 +63,12 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
       v-if="store.top.length"
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'allTime', index: 0 }) }"
-      @mouseenter="
-        tooltip?.show($event, () => `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)
-      "
+      @mouseenter="tooltip?.show($event, () => `All-time best\nScore: ${formatFullScore(store.top[0]!.score)}`)"
       @mouseleave="tooltip?.hide()"
       @click="store.selection = { kind: 'allTime', index: 0 }">
-      <div class="thumb-svg" v-html="store.top[0]!.svg" />
+      <div
+        class="thumb-svg"
+        v-html="store.top[0]!.svg" />
       <span class="thumb-label">Best</span>
       <span class="thumb-score">{{ formatScore(store.top[0]!.score) }}</span>
     </button>
@@ -77,21 +78,20 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
       v-if="store.currentGenTop.length"
       class="thumb-btn"
       :class="{ active: isActive({ kind: 'current', index: 0 }) }"
-      @mouseenter="
-        tooltip?.show(
-          $event,
-          () => `Current gen best\nScore: ${formatFullScore(store.currentGenTop[0]!.score)}`,
-        )
-      "
+      @mouseenter="tooltip?.show($event, () => `Current gen best\nScore: ${formatFullScore(store.currentGenTop[0]!.score)}`)"
       @mouseleave="tooltip?.hide()"
       @click="store.selection = { kind: 'current', index: 0 }">
-      <div class="thumb-svg" v-html="store.currentGenTop[0]!.svg" />
+      <div
+        class="thumb-svg"
+        v-html="store.currentGenTop[0]!.svg" />
       <span class="thumb-label">Current</span>
       <span class="thumb-score">{{ formatScore(store.currentGenTop[0]!.score) }}</span>
     </button>
 
     <!-- Mode toggle -->
-    <div v-if="store.top.length" class="mode-toggle">
+    <div
+      v-if="store.top.length"
+      class="mode-toggle">
       <Button
         label="Best"
         size="small"
@@ -113,12 +113,12 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         :key="i"
         class="thumb-btn"
         :class="{ active: isActive({ kind: 'allTime', index: i + 1 }) }"
-        @mouseenter="
-          tooltip?.show($event, () => `Top #${i + 2}\nScore: ${formatFullScore(entry.score)}`)
-        "
+        @mouseenter="tooltip?.show($event, () => `Top #${i + 2}\nScore: ${formatFullScore(entry.score)}`)"
         @mouseleave="tooltip?.hide()"
         @click="store.selection = { kind: 'allTime', index: i + 1 }">
-        <div class="thumb-svg" v-html="entry.svg" />
+        <div
+          class="thumb-svg"
+          v-html="entry.svg" />
         <span class="thumb-label">#{{ i + 2 }}</span>
         <span class="thumb-score">{{ formatScore(entry.score) }}</span>
       </button>
@@ -129,18 +129,14 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         :key="i"
         class="thumb-btn"
         :class="{ active: isActive({ kind: 'current', index: i + 1 }) }"
-        @mouseenter="
-          tooltip?.show(
-            $event,
-            () => `Current ${ordinal(i + 2)}\nScore: ${formatFullScore(entry.score)}`,
-          )
-        "
+        @mouseenter="tooltip?.show($event, () => `Current ${ordinal(i + 2)}\nScore: ${formatFullScore(entry.score)}`)"
         @mouseleave="tooltip?.hide()"
         @click="store.selection = { kind: 'current', index: i + 1 }">
-        <div class="thumb-svg" v-html="entry.svg" />
+        <div
+          class="thumb-svg"
+          v-html="entry.svg" />
         <span class="thumb-label"
-          >{{ void (o = ordinal(i + 2)) }}{{ o.slice(0, o.length - 2)
-          }}<span class="thumb-label-ordinal">{{ o.slice(o.length - 2) }}</span>
+          >{{ void (o = ordinal(i + 2)) }}{{ o.slice(0, o.length - 2) }}<span class="thumb-label-ordinal">{{ o.slice(o.length - 2) }}</span>
         </span>
         <span class="thumb-score">{{ formatScore(entry.score) }}</span>
       </button>

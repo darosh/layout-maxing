@@ -7,10 +7,7 @@ import { main, type RNBO } from '../src/index.ts'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 test('optimizes single-group fixture with no lines', async () => {
-  const fixturePath2 = resolve(
-    __dirname,
-    '../../layout-maxing-cli/tests/fixtures/single-group.json',
-  )
+  const fixturePath2 = resolve(__dirname, '../../layout-maxing-cli/tests/fixtures/single-group.json')
   const rnbo: RNBO = { patcher: JSON.parse(readFileSync(fixturePath2, 'utf-8')) }
   const best = await main(rnbo, undefined, undefined, {
     keepGroups: true,
@@ -31,10 +28,7 @@ test('optimizes single-group fixture with no lines', async () => {
 })
 
 test('single-group fixture with ignoreOrphans:true and no lines returns empty', async () => {
-  const fixturePath2 = resolve(
-    __dirname,
-    '../../layout-maxing-cli/tests/fixtures/single-group.json',
-  )
+  const fixturePath2 = resolve(__dirname, '../../layout-maxing-cli/tests/fixtures/single-group.json')
   const rnbo: RNBO = { patcher: JSON.parse(readFileSync(fixturePath2, 'utf-8')) }
   const best = await main(rnbo, undefined, undefined, {
     keepGroups: true,

@@ -16,38 +16,13 @@ function ccw(Ax: number, Ay: number, Bx: number, By: number, Cx: number, Cy: num
 }
 
 // Proper intersection only (crossing, not just touching or overlapping collinearly)
-export function segmentsIntersect(
-  ax: number,
-  ay: number,
-  bx: number,
-  by: number,
-  cx: number,
-  cy: number,
-  dx: number,
-  dy: number,
-): boolean {
-  return (
-    ccw(ax, ay, bx, by, cx, cy) !== ccw(ax, ay, bx, by, dx, dy) &&
-    ccw(cx, cy, dx, dy, ax, ay) !== ccw(cx, cy, dx, dy, bx, by)
-  )
+export function segmentsIntersect(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): boolean {
+  return ccw(ax, ay, bx, by, cx, cy) !== ccw(ax, ay, bx, by, dx, dy) && ccw(cx, cy, dx, dy, ax, ay) !== ccw(cx, cy, dx, dy, bx, by)
 }
 
-export function segmentsOverlap(
-  ax: number,
-  ay: number,
-  bx: number,
-  by: number,
-  cx: number,
-  cy: number,
-  dx: number,
-  dy: number,
-): boolean {
+export function segmentsOverlap(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): boolean {
   // First: must be collinear
-  const collinear =
-    !ccw(ax, ay, bx, by, cx, cy) &&
-    !ccw(ax, ay, bx, by, dx, dy) &&
-    !ccw(cx, cy, dx, dy, ax, ay) &&
-    !ccw(cx, cy, dx, dy, bx, by)
+  const collinear = !ccw(ax, ay, bx, by, cx, cy) && !ccw(ax, ay, bx, by, dx, dy) && !ccw(cx, cy, dx, dy, ax, ay) && !ccw(cx, cy, dx, dy, bx, by)
 
   if (!collinear) return false
 
@@ -75,16 +50,7 @@ export function segmentsOverlap(
 }
 
 // Helper: check if two line segments intersect
-function linesIntersect(
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  x3: number,
-  y3: number,
-  x4: number,
-  y4: number,
-): boolean {
+function linesIntersect(x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, x4: number, y4: number): boolean {
   const den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
   if (den === 0) return false // parallel
 
@@ -118,26 +84,14 @@ export function boxLineCollision(box: Box, line: StartEnd, zone: number): boolea
 }
 
 export function getIntersectionArea(a: Box, b: Box, x: number): number {
-  const xOverlap = Math.max(
-    0,
-    Math.min(a.x + a.width + x, b.x + b.width + x) - Math.max(a.x - x, b.x - x),
-  )
+  const xOverlap = Math.max(0, Math.min(a.x + a.width + x, b.x + b.width + x) - Math.max(a.x - x, b.x - x))
 
   const yOverlap = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
 
   return xOverlap * yOverlap
 }
 
-export function bezierLength(
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  x3: number,
-  y3: number,
-): number {
+export function bezierLength(x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): number {
   let length = 0
   let prevX = x0
   let prevY = y0
@@ -166,8 +120,7 @@ export function getOutletPos(box: Box, outletIdx: number, cfg: Required<Config>)
     return [box.x + cfg.letOffest, box.y + box.height]
   }
 
-  const portX =
-    box.x + cfg.letOffest + (outletIdx / (box.numOutlets - 1)) * (box.width - cfg.letOffest * 2)
+  const portX = box.x + cfg.letOffest + (outletIdx / (box.numOutlets - 1)) * (box.width - cfg.letOffest * 2)
   return [portX, box.y + box.height]
 }
 
@@ -176,16 +129,11 @@ export function getInletPos(box: Box, inletIdx: number, cfg: Required<Config>): 
     return [box.x + cfg.letOffest, box.y]
   }
 
-  const portX =
-    box.x + cfg.letOffest + (inletIdx / (box.numInlets - 1)) * (box.width - cfg.letOffest * 2)
+  const portX = box.x + cfg.letOffest + (inletIdx / (box.numInlets - 1)) * (box.width - cfg.letOffest * 2)
   return [portX, box.y]
 }
 
-export function getStraightLinePoints(
-  line: Line,
-  boxMap: Map<BoxId, Box>,
-  cfg: Required<Config>,
-): StartEnd {
+export function getStraightLinePoints(line: Line, boxMap: Map<BoxId, Box>, cfg: Required<Config>): StartEnd {
   const p = line.patchline
   const [sourceId, outletIdx] = p.source
   const [destId, inletIdx] = p.destination

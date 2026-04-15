@@ -1,23 +1,5 @@
-import {
-  main,
-  toSvg,
-  defaultConfig,
-  createInitialLayouts,
-  applyBestLayout,
-  fillDepths,
-  stripOrphans,
-  preserveGroupMembers,
-  stampGroupIdx,
-} from 'layout-maxing'
-import type {
-  RNBO,
-  Config,
-  Box,
-  Line,
-  Fitness,
-  GenerationSnapshot,
-  RunMonitor,
-} from 'layout-maxing'
+import { main, toSvg, defaultConfig, createInitialLayouts, applyBestLayout, fillDepths, stripOrphans, preserveGroupMembers, stampGroupIdx } from 'layout-maxing'
+import type { RNBO, Config, Box, Line, Fitness, GenerationSnapshot, RunMonitor } from 'layout-maxing'
 
 type Position = { id: string; x: number; y: number }
 type TopEntry = { score: number; svg: string; fitness: Fitness; positions: Position[] }
@@ -203,16 +185,7 @@ self.onmessage = async (e: MessageEvent) => {
     passNum?: number
   }[] = []
 
-  function updateTop(
-    score: number,
-    layouts: Box[],
-    fitness: Fitness,
-    popId?: number,
-    popGen?: number,
-    prevId?: number,
-    prevGen?: number,
-    passNum?: number,
-  ) {
+  function updateTop(score: number, layouts: Box[], fitness: Fitness, popId?: number, popGen?: number, prevId?: number, prevGen?: number, passNum?: number) {
     const worst = top.length >= topN ? top[top.length - 1]!.score : Infinity
     if (score < worst || top.length < topN) {
       // Avoid near-duplicate scores (within 0.01%)
@@ -393,10 +366,7 @@ self.onmessage = async (e: MessageEvent) => {
           if (snapshotBuffer.length > MAX_SNAPSHOTS * 1.2) {
             const keep = MAX_SNAPSHOTS
             const step = snapshotBuffer.length / keep
-            const downsampled = Array.from(
-              { length: keep },
-              (_, i) => <GenerationSnapshot>snapshotBuffer[Math.round(i * step)],
-            )
+            const downsampled = Array.from({ length: keep }, (_, i) => <GenerationSnapshot>snapshotBuffer[Math.round(i * step)])
             snapshotBuffer.length = 0
             snapshotBuffer.push(...downsampled)
           }
@@ -435,10 +405,7 @@ self.onmessage = async (e: MessageEvent) => {
     applyBestLayout(rnbo, bestIndividual, c)
     const finalLayouts = buildLayoutsForView()
     const svg = toSvg(finalLayouts, lines, cfg, rnbo.patcher.boxgroups)
-    if (c.logInfo)
-      console.log(
-        `[optimizer] done — ${evalCount} evals, best=${bestScore == null ? 'n/a' : (bestScore as number).toFixed(2)}`,
-      )
+    if (c.logInfo) console.log(`[optimizer] done — ${evalCount} evals, best=${bestScore == null ? 'n/a' : (bestScore as number).toFixed(2)}`)
     post({
       type: 'done',
       svg,

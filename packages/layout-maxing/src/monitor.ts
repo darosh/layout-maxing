@@ -66,16 +66,8 @@ export const mutationMeta: Record<string, MutationMetaEntry> = {
 }
 
 export const crossoverMeta: Record<string, MutationMetaEntry> = {
-  crossover: [
-    'Positional',
-    'CROR',
-    'Randomly mix genes from two parents based on crossoverMix probability',
-  ],
-  crossoverStructural: [
-    'Structural',
-    'CROS',
-    'Copy one box and all its descendants from parent2 into parent1',
-  ],
+  crossover: ['Positional', 'CROR', 'Randomly mix genes from two parents based on crossoverMix probability'],
+  crossoverStructural: ['Structural', 'CROS', 'Copy one box and all its descendants from parent2 into parent1'],
 }
 
 // Maps config key → shortcut strings it relates to (for cross-highlighting)
@@ -132,17 +124,9 @@ export const mutationConfigMap: Record<string, string> = {
 
 export const statMeta: Record<string, MutationMetaEntry> = {
   att: ['Attempts', 'ATT', 'How many times this mutation was selected by roulette wheel'],
-  imp: [
-    'Improvement %',
-    'IMP',
-    'Percentage of attempts that produced a better score than the parent',
-  ],
+  imp: ['Improvement %', 'IMP', 'Percentage of attempts that produced a better score than the parent'],
   davg: ['Avg Δ Score', 'ΔAVG', 'Average fitness change per attempt (negative = improvement)'],
-  best: [
-    'Best lineage',
-    'BEST',
-    'How many times this mutation found a new all-time best individual. Zero = dead weight (never improved the best).',
-  ],
+  best: ['Best lineage', 'BEST', 'How many times this mutation found a new all-time best individual. Zero = dead weight (never improved the best).'],
 }
 
 export function createMutationStat(): MutationStat {
@@ -252,10 +236,7 @@ export function buildGenerationSnapshot(
   }
 }
 
-export function accumulateMutStats(
-  totals: Record<string, MutationStat>,
-  genStats: Record<string, MutationStat>,
-): void {
+export function accumulateMutStats(totals: Record<string, MutationStat>, genStats: Record<string, MutationStat>): void {
   for (const [name, stat] of Object.entries(genStats)) {
     if (!totals[name]) totals[name] = createMutationStat()
     totals[name].attempts += stat.attempts
@@ -265,10 +246,7 @@ export function accumulateMutStats(
   }
 }
 
-export function computeDeadWeightMutations(
-  population: { lastMutation?: string }[],
-  runTotals: Record<string, MutationStat>,
-): string[] {
+export function computeDeadWeightMutations(population: { lastMutation?: string }[], runTotals: Record<string, MutationStat>): string[] {
   const topN = Math.max(1, Math.ceil(population.length * 0.1))
   // population is assumed sorted best-first when this is called
   const topMutations = new Set<string>()

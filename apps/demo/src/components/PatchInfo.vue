@@ -37,7 +37,9 @@ const fullScore = computed(() => {
 </script>
 
 <template>
-  <FlyingTooltip ref="tooltip" :max-width="240" />
+  <FlyingTooltip
+    ref="tooltip"
+    :max-width="240" />
   <div class="svg-renderer">
     <!-- Bottom-left: score + selection label -->
     <div class="overlay overlay-bl">
@@ -46,13 +48,13 @@ const fullScore = computed(() => {
     </div>
 
     <div class="overlay overlay-tl">
-      <div v-if="selectionLabel" class="selection-label">
+      <div
+        v-if="selectionLabel"
+        class="selection-label">
         <template v-if="store.selection.kind === 'current'">
           <template v-if="store.selection?.index === 0">{{ CURRENT_LABEL }}</template>
           {{ selectionLabel.slice(0, selectionLabel.length - 2)
-          }}<span class="selection-label-ordinal">{{
-            selectionLabel.slice(selectionLabel.length - 2)
-          }}</span>
+          }}<span class="selection-label-ordinal">{{ selectionLabel.slice(selectionLabel.length - 2) }}</span>
         </template>
         <template v-else-if="store.selection.kind === 'allTime'">
           <template v-if="store.selection?.index === 0">{{ BEST_LABEL }}</template>
@@ -65,40 +67,28 @@ const fullScore = computed(() => {
       <template v-if="store.progress.numPasses > 1 && store.displayedEntry?.passNum != null">
         PASS {{ store.displayedEntry.passNum.toLocaleString() }}
       </template>
-      <template
-        v-if="
-          store.showStats &&
-          store.displayedEntry?.popId != null &&
-          store.displayedEntry?.popGen != null &&
-          store.displayedEntry?.prevGen != null
-        ">
+      <template v-if="store.showStats && store.displayedEntry?.popId != null && store.displayedEntry?.popGen != null && store.displayedEntry?.prevGen != null">
         <br />
-        THIS: ID-{{ store.displayedEntry.popId }} GEN-{{ store.displayedEntry.popGen }} ({{
-          store.displayedEntry.popGen - store.progress.generation
-        }})
+        THIS: ID-{{ store.displayedEntry.popId }} GEN-{{ store.displayedEntry.popGen }} ({{ store.displayedEntry.popGen - store.progress.generation }})
         <br />
-        PREV: ID-{{ store.displayedEntry.prevId }} GEN-{{ store.displayedEntry.prevGen }} ({{
-          store.displayedEntry.prevGen - store.progress.generation
-        }})
+        PREV: ID-{{ store.displayedEntry.prevId }} GEN-{{ store.displayedEntry.prevGen }} ({{ store.displayedEntry.prevGen - store.progress.generation }})
       </template>
     </div>
 
     <div
       class="all-stats"
       v-if="store.showStats && store.snapshots?.length >= 2"
-      style="
-        position: absolute;
-        right: 0.75rem;
-        top: 1rem;
-        flex-direction: column;
-        align-items: flex-end;
-      ">
-      <div class="stat-bg" style="padding-right: 0.4rem">
+      style="position: absolute; right: 0.75rem; top: 1rem; flex-direction: column; align-items: flex-end">
+      <div
+        class="stat-bg"
+        style="padding-right: 0.4rem">
         <GenerationChart :snapshots="store.snapshots" />
       </div>
       <div style="margin-right: 0; display: flex; flex-direction: column; align-items: end">
         <div class="stat-bg">
-          <MutationStats :snapshots="store.snapshots" :run-monitor="store.runMonitor" />
+          <MutationStats
+            :snapshots="store.snapshots"
+            :run-monitor="store.runMonitor" />
         </div>
         <div class="stat-bg">
           <SelectionStats
@@ -121,8 +111,7 @@ const fullScore = computed(() => {
         class="metric metric-interactive"
         @mouseenter="tooltip?.show($event, fitnessTooltip('singleSelfCollisions'))"
         @mouseleave="tooltip?.hide()"
-        ><span class="metric-label">ssc</span
-        >{{ fmt(store.displayedFitness?.singleSelfCollisions) }}</span
+        ><span class="metric-label">ssc</span>{{ fmt(store.displayedFitness?.singleSelfCollisions) }}</span
       >
       <span
         class="metric metric-interactive"
@@ -158,8 +147,7 @@ const fullScore = computed(() => {
         class="metric metric-interactive"
         @mouseenter="tooltip?.show($event, fitnessTooltip('misalignedFirst'))"
         @mouseleave="tooltip?.hide()"
-        ><span class="metric-label">mst</span
-        >{{ fmt(store.displayedFitness?.misalignedFirst) }}</span
+        ><span class="metric-label">mst</span>{{ fmt(store.displayedFitness?.misalignedFirst) }}</span
       >
     </div>
   </div>
