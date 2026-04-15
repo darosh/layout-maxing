@@ -331,12 +331,7 @@ function entitiesOverlap(a: LayoutEntity, b: LayoutEntity): boolean {
 
 // True when the required gap between a and b is not satisfied (counts actual overlap too).
 function gapViolated(a: LayoutEntity, b: LayoutEntity, minDistX: number, minDistY: number): boolean {
-  return (
-    a.x < b.x + b.width + minDistX &&
-    b.x < a.x + a.width + minDistX &&
-    a.y < b.y + b.height + minDistY &&
-    b.y < a.y + a.height + minDistY
-  )
+  return a.x < b.x + b.width + minDistX && b.x < a.x + a.width + minDistX && a.y < b.y + b.height + minDistY && b.y < a.y + a.height + minDistY
 }
 
 function layoutShrinkEntities(entities: LayoutEntity[], stepY: number): void {
