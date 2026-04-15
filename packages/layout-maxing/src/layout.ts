@@ -383,7 +383,7 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
 
   // Final grid snap
   for (const e of entities) {
-    moveEntityTo(e, Math.ceil(e.x / cfg.gridX) * cfg.gridX, Math.round(e.y / cfg.gridY) * cfg.gridY)
+    moveEntityTo(e, Math.round(e.x / cfg.gridX) * cfg.gridX, Math.round(e.y / cfg.gridY) * cfg.gridY)
   }
 
   layoutShrinkEntities(entities, cfg.gridY)
@@ -413,7 +413,7 @@ export function simpleFlow(baseLayouts: Box[], cfg: Required<Config>) {
   for (const l of baseLayouts) {
     l.y = l.depth! * cfg.gridY
     cols[l.depth!] = cols[l.depth!] || []
-    const last = cols[l.depth!].at(-1) ?? { x: 0, width: 0 }
+    const last = cols[l.depth!].at(-1) ?? { x: -cfg.gridX, width: 0 }
     l.x = last.x + last.width + cfg.gridX
     cols[l.depth!].push(l)
   }

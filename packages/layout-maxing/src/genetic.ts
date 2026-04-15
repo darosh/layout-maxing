@@ -346,8 +346,8 @@ function mutateChild(child: Box[], rand: () => number, cfg: Required<Config>, ef
   const [_x, _y, w, h] = getViewPort(child)
   const mutateX = w * effectiveMutate
   const mutateY = h * effectiveMutate
-  const maxX = Math.round((0.5 * mutateX) / cfg.gridX)
-  const maxY = Math.round((0.5 * mutateY) / cfg.gridY)
+  const maxX = Math.max(Math.round((0.5 * mutateX) / cfg.gridX), 1)
+  const maxY = Math.max(Math.round((0.5 * mutateY) / cfg.gridY), 1)
 
   const half = cfg.mutateXYOverlap / 2
   const x = mxy < 0.5 + half || mutIdx === 8 ? randGausInt(1, maxX, rand) * cfg.gridX : 0
