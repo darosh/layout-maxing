@@ -59,6 +59,7 @@ test('two-groups fixture: all 8 boxes preserved and DST=0', async () => {
     generations: 100,
     stop: 30,
     popSize: 8,
+    viewExponent: 1,
     logInfo: false,
     logProgress: false,
     writeSvg: false,

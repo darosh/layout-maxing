@@ -20,23 +20,14 @@ import { cloneLayouts } from './mutation.ts'
 import { type Fitness, fitness } from './fitness.ts'
 import runGenetic from './genetic.ts'
 import type { RunMonitor, GenerationSnapshot } from './monitor.ts'
+import { getRandomXoshiro } from './random-xoshiro256.ts'
+import { getRandomMulberry } from './random-mulberry-32.ts'
 
 type BoxId = string
 
 export interface RNBO {
   patcher: Patcher
   best?: number
-}
-
-// Deterministic random (Mulberry32 - fixed seed guarantees identical runs)
-function createDeterministicRandom(seed: number): () => number {
-  let state = seed
-  return () => {
-    let t = (state += 0x6d2b79f5)
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
 }
 
 export function applyBestLayout(rnbo: RNBO, best: Box[], cfg: Required<Config>) {
@@ -172,7 +163,7 @@ export async function main(
 
   for (let pass = 0; pass < numPasses; pass++) {
     const passNum = pass + 1
-    const rand = c.deterministic ? createDeterministicRandom(c.seed + pass) : Math.random
+    const rand = c.deterministic ? getRandomMulberry(c.seed + pass) : Math.random
 
     const wrappedLogProgress =
       numPasses > 1 && logProgress ? (...args: any[]) => logProgress(`PASS: ${passNum}/${numPasses} | ` + args[0], ...args.slice(1)) : logProgress

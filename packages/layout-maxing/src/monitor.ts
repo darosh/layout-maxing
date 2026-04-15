@@ -260,3 +260,48 @@ export function computeDeadWeightMutations(population: { lastMutation?: string }
   }
   return Object.keys(runTotals).filter((name) => !topMutations.has(name) && name !== 'crossover')
 }
+
+export function summarizeRun(monitor: RunMonitor, passes?: number): string {
+  const { snapshots, runTotals, deadWeightMutations } = monitor
+  if (snapshots.length === 0) return 'No generations recorded.'
+
+  const totalGens = snapshots.length
+  const gensWithImprovement = snapshots.filter((s, i) => i === 0 || s.best < snapshots[i - 1].best).length
+  const stagnationPct = (((totalGens - gensWithImprovement) / totalGens) * 100).toFixed(1)
+
+  const stagnationThresholdSnaps = snapshots.filter((s) => s.stagnation >= 11)
+
+  const lines: string[] = []
+  lines.push(`=== Run Summary${passes != null ? ` (${passes} pass${passes !== 1 ? 'es' : ''})` : ''} ===`)
+  lines.push(`Generations: ${totalGens} total, ${gensWithImprovement} with improvement (${stagnationPct}% stagnant)`)
+  lines.push(`Stagnation bursts: ${stagnationThresholdSnaps.length}`)
+
+  if (snapshots.length > 0) {
+    lines.push(`Best score: ${snapshots[snapshots.length - 1].best.toFixed(0)}`)
+  }
+
+  const operators = Object.entries(runTotals)
+    .filter(([name]) => name !== 'crossover' && name !== 'crossoverStructural' && name !== 'none')
+    .map(([name, s]) => ({
+      name,
+      rate: s.attempts > 0 ? s.improvements / s.attempts : 0,
+      delta: s.totalDelta,
+      attempts: s.attempts,
+    }))
+    .sort((a, b) => b.rate - a.rate)
+
+  if (operators.length > 0) {
+    const best = operators[0]
+    const worst = operators[operators.length - 1]
+    lines.push(`Best operator:  ${best.name} (${(best.rate * 100).toFixed(1)}% improvement rate, delta ${best.delta.toFixed(0)})`)
+    lines.push(`Worst operator: ${worst.name} (${(worst.rate * 100).toFixed(1)}% improvement rate, delta ${worst.delta.toFixed(0)})`)
+  }
+
+  if (deadWeightMutations.length > 0) {
+    lines.push(`Dead-weight operators: ${deadWeightMutations.join(', ')}`)
+  } else {
+    lines.push(`Dead-weight operators: none`)
+  }
+
+  return lines.join('\n')
+}
