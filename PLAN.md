@@ -12,19 +12,19 @@ Cross-session work tracker. Each item has target anchors (fn name + code pattern
   Issue: Box-Muller spare value persists across `runGenetic` calls. With `deterministic=true`, pass N+1 consumes pass N's leftover → non-reproducible results.
   Fix: Reset `spare = null` at start of `runGenetic`, or move it into a closure.
 
-- [ ] **B2 — `maxX`/`maxY` zero guard**
+- [x] **B2 — `maxX`/`maxY` zero guard**
   File: `packages/layout-maxing/src/genetic.ts`
   Anchor: inside `mutateChild`, lines `const maxX = Math.round((0.5 * mutateX) / cfg.gridX)` and same for `maxY`
   Issue: If viewport is tiny (all boxes at origin before first fixOverlaps), `maxX` or `maxY` can be 0. `randGausInt(1, 0, rand)` called with min>max → nonsense result.
   Fix: `const safeMaxX = Math.max(maxX, 1)` before calling `randGausInt`.
 
-- [ ] **B3 — `fixOverlaps` asymmetric final rounding**
+- [x] **B3 — `fixOverlaps` asymmetric final rounding**
   File: `packages/layout-maxing/src/layout.ts`
   Anchor: inside `fixOverlaps`, the "Final grid snap" comment block — `Math.ceil(e.x / cfg.gridX)` vs `Math.round(e.y / cfg.gridY)`
   Issue: x uses ceil (always rounds up), y uses round → layout drifts rightward each repair call.
   Fix: Use `Math.round` for both axes in the final snap.
 
-- [ ] **B4 — `simpleFlow` off-by-one (first box at x=gridX instead of 0)**
+- [x] **B4 — `simpleFlow` off-by-one (first box at x=gridX instead of 0)**
   File: `packages/layout-maxing/src/layout.ts`
   Anchor: `simpleFlow` fn, `const last = cols[l.depth!].at(-1) ?? { x: 0, width: 0 }`
   Issue: First box placed at `0 + 0 + gridX = gridX`. Should start at origin.
