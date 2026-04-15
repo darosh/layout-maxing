@@ -34,14 +34,14 @@ Cross-session work tracker. Each item has target anchors (fn name + code pattern
 
 ## GA Inefficiencies
 
-- [ ] **G1 — `view` exponent vanishes for large patches**
+- [x] **G1 — `view` exponent vanishes for large patches**
   File: `packages/layout-maxing/src/fitness.ts`
   Anchor: `view ** (1 / layouts.length)` in the `score` return expression
   Issue: For n=100, exponent=0.01 → `view^0.01 ≈ 1` regardless of viewport size. View pressure disappears.
   Fix: Add `viewExponent` config param (default `1/20` = 0.05); use `view ** c.viewExponent`.
   Also update `packages/layout-maxing/src/config.ts` — add `viewExponent` to `Config` interface and `configMeta`.
 
-- [ ] **G2 — Multipass doesn't feed globalBest into next pass**
+- [x] **G2 — Multipass doesn't feed globalBest into next pass**
   File: `packages/layout-maxing/src/core.ts`
   Anchor: `for (let pass = 0; pass < numPasses; pass++)` loop; `startingLayouts` is never updated
   Issue: Each pass starts from same seeds with different RNG. Best from pass N never used as seed for pass N+1.
