@@ -32,5 +32,4 @@ dist-ssr
 .agents
 .claude
 skills-lock.json
-PLAN.md
-
+PLAN-*.md
