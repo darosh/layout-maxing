@@ -329,6 +329,16 @@ function entitiesOverlap(a: LayoutEntity, b: LayoutEntity): boolean {
   return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 }
 
+// True when the required gap between a and b is not satisfied (counts actual overlap too).
+function gapViolated(a: LayoutEntity, b: LayoutEntity, minDistX: number, minDistY: number): boolean {
+  return (
+    a.x < b.x + b.width + minDistX &&
+    b.x < a.x + a.width + minDistX &&
+    a.y < b.y + b.height + minDistY &&
+    b.y < a.y + a.height + minDistY
+  )
+}
+
 function layoutShrinkEntities(entities: LayoutEntity[], stepY: number): void {
   const rows = new Map<number, LayoutEntity[]>()
   for (const e of entities) {
@@ -383,6 +393,25 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>, maxIter = 2):
   // Final grid snap
   for (const e of entities) {
     moveEntityTo(e, Math.round(e.x / cfg.gridX) * cfg.gridX, Math.round(e.y / cfg.gridY) * cfg.gridY)
+  }
+
+  // Post-snap gap-repair: Math.round on x can shrink a gap below minDistX.
+  // One more sorted pass re-establishes the invariant, ceil-snapping any push so boxes stay on grid.
+  entities.sort((a, b) => a.y - b.y || a.x - b.x)
+  for (let i = 0; i < entities.length; i++) {
+    for (let j = 0; j < i; j++) {
+      const curr = entities[i]
+      const prev = entities[j]
+      if (gapViolated(curr, prev, cfg.minDistX, cfg.minDistY)) {
+        const overlapX = Math.min(curr.x + curr.width, prev.x + prev.width) - Math.max(curr.x, prev.x)
+        const overlapY = Math.min(curr.y + curr.height, prev.y + prev.height) - Math.max(curr.y, prev.y)
+        if (overlapX <= overlapY || overlapY === 0) {
+          moveEntityTo(curr, Math.ceil((prev.x + prev.width + cfg.minDistX) / cfg.gridX) * cfg.gridX, curr.y)
+        } else {
+          moveEntityTo(curr, curr.x, Math.ceil((prev.y + prev.height + cfg.minDistY) / cfg.gridY) * cfg.gridY)
+        }
+      }
+    }
   }
 
   if (cfg.shrinkRows) layoutShrinkEntities(entities, cfg.gridY)
