@@ -28,6 +28,7 @@ import {
   buildGenerationSnapshot,
   accumulateMutStats,
   computeDeadWeightMutations,
+  summarizeRun,
 } from './monitor.ts'
 import { applyFitnessSharing } from './niching.ts'
 
@@ -708,6 +709,7 @@ async function runGenetic(
   const sortedFinal = [...population].filter((ind) => ind.fitness !== undefined).sort((a, b) => a.fitness!.score - b.fitness!.score)
   monitor.deadWeightMutations = computeDeadWeightMutations(sortedFinal, monitor.runTotals)
   onMonitorEnd?.(monitor)
+  if (logInfo) logInfo(summarizeRun(monitor))
 
   return bestIndividual
 }
