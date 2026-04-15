@@ -101,7 +101,7 @@ Cross-session work tracker. Each item has target anchors (fn name + code pattern
 
 ## Presets
 
-- [ ] **Create `packages/layout-maxing/presets/` folder with preset JSONs**
+- [x] **Create `packages/layout-maxing/presets/` folder with preset JSONs**
 
   **`small.json`** (≤20 boxes)
 
