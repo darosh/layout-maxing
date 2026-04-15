@@ -1,4 +1,4 @@
-import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg, fitness, help, applyBestLayout } from 'layout-maxing'
+import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg, fitness, help, applyBestLayout, PRESETS } from 'layout-maxing'
 import type { Box, Config, Fitness, RNBO } from 'layout-maxing'
 import { runCalibrate, getNumericParams, printCalibrateResults } from './calibrate.ts'
 import { cpus } from 'node:os'
@@ -37,9 +37,18 @@ function parseArgs(args: string[]): { positional: string[]; cfg: Config } {
   const cfgPath = flags.get('cfg')
   if (cfgPath && cfgPath !== true) {
     const text = Deno.readTextFileSync(cfgPath)
-    fileCfg = JSON.parse(text) as Config
+    const parsed = JSON.parse(text) as Config & { preset?: string }
+    const { preset: fileParsedPreset, ...fileRest } = parsed
+    fileCfg = fileRest
+    // allow preset in config file if not already set via CLI
+    if (fileParsedPreset && !flags.has('preset')) flags.set('preset', fileParsedPreset)
     flags.delete('cfg')
   }
+
+  const presetRaw = flags.get('preset')
+  flags.delete('preset')
+  const presetName = typeof presetRaw === 'string' && presetRaw in PRESETS ? (presetRaw as keyof typeof PRESETS) : null
+  const presetCfg: Config = presetName ? (PRESETS[presetName] as Config) : {}
 
   const cliCfg: Config = {}
   for (const [key, raw] of flags) {
@@ -54,7 +63,7 @@ function parseArgs(args: string[]): { positional: string[]; cfg: Config } {
     }
   }
 
-  return { positional, cfg: { ...fileCfg, ...cliCfg } }
+  return { positional, cfg: { ...presetCfg, ...fileCfg, ...cliCfg } }
 }
 
 function getWorkers(workers = 0) {
@@ -228,10 +237,12 @@ async function cli() {
       terminateWorkers()
     } else if (command === 'help') {
       console.log(help())
+      console.log(`\nPresets: ${Object.keys(PRESETS).join(', ')}`)
+      console.log('Use --preset <name> to apply a preset. Available in: layout, fitness, config.')
     } else if (command === 'config') {
-      console.log(JSON.stringify(defaultConfig, null, 2))
+      console.log(JSON.stringify({ ...defaultConfig, ...cfg }, null, 2))
     } else {
-      console.log('Commands: layout <input.json> [output.json], fitness <input.json>, calibrate <input.json> [--depth N], config, help')
+      console.log('Commands: layout <input.json> [output.json], fitness <input.json>, calibrate <input.json> [--depth N], config [--preset <name>], help')
     }
   }
 }

@@ -9,9 +9,11 @@ import AccordionContent from 'primevue/accordioncontent'
 import InputNumber from 'primevue/inputnumber'
 import ToggleSwitch from 'primevue/toggleswitch'
 import Button from 'primevue/button'
+import Select from 'primevue/select'
 import FlyingTooltip from './FlyingTooltip.vue'
 import { useOptimizerStore } from '@/stores/optimizer'
-import { configMeta, configFeatureTags, defaultConfig } from 'layout-maxing'
+import type { PresetName } from '@/stores/optimizer'
+import { configMeta, configFeatureTags, defaultConfig, PRESETS } from 'layout-maxing'
 import type { Config } from 'layout-maxing'
 import { useHighlight } from '@/composables/useHighlight.ts'
 
@@ -52,7 +54,9 @@ function configTip(key: keyof Config): TipBinding {
 }
 
 const store = useOptimizerStore()
-const { config: cfg, progressInterval, topN, isConfigDefault } = storeToRefs(store)
+const { config: cfg, progressInterval, topN, isConfigDefault, preset, presetConfig } = storeToRefs(store)
+
+const presetNames = Object.keys(PRESETS) as PresetName[]
 
 function numProps(key: keyof Config) {
   const [, min, max, step] = configMeta[key]
@@ -67,21 +71,28 @@ function numProps(key: keyof Config) {
 }
 
 function copyConfig() {
-  const nonDefault: Record<string, unknown> = {}
+  const out: Record<string, unknown> = {}
+  if (preset.value !== 'Default') out.preset = preset.value
   for (const k of Object.keys(defaultConfig) as (keyof Config)[]) {
-    if (cfg.value[k] !== defaultConfig[k]) nonDefault[k] = cfg.value[k]
+    if (cfg.value[k] !== presetConfig.value[k]) out[k] = cfg.value[k]
   }
-  navigator.clipboard.writeText(JSON.stringify(nonDefault, null, 2))
+  navigator.clipboard.writeText(JSON.stringify(out, null, 2))
 }
 
 async function pasteConfig() {
   const text = await navigator.clipboard.readText()
-  const parsed = JSON.parse(text)
-  Object.assign(cfg.value, parsed)
+  const parsed = JSON.parse(text) as Record<string, unknown>
+  if (parsed.preset && typeof parsed.preset === 'string' && parsed.preset in PRESETS) {
+    store.setPreset(parsed.preset as PresetName)
+    const { preset: _p, ...rest } = parsed
+    Object.assign(cfg.value, rest)
+  } else {
+    Object.assign(cfg.value, parsed)
+  }
 }
 
 function isNonDefault(key: keyof Config): boolean {
-  return cfg.value[key] !== defaultConfig[key]
+  return cfg.value[key] !== presetConfig.value[key]
 }
 
 function isBoolean(key: keyof Config): boolean {
@@ -246,7 +257,7 @@ function isGroupNonDefault(fields: FieldDef[]): boolean {
 }
 
 function resetProp(key: keyof Config) {
-  ;(cfg.value as Record<keyof Config, unknown>)[key] = defaultConfig[key]
+  ;(cfg.value as Record<keyof Config, unknown>)[key] = presetConfig.value[key]
 }
 
 function handleShiftKey(event: KeyboardEvent, key: keyof Config) {
@@ -264,13 +275,18 @@ function handleShiftKey(event: KeyboardEvent, key: keyof Config) {
   }
 }
 
+function onPresetChange(name: PresetName) {
+  store.setPreset(name)
+}
+
 function copyCli() {
   const parts = ['deno run -A packages/layout-maxing-cli/src/index.ts layout <input.json>']
+  if (preset.value !== 'Default') parts.push(`--preset ${preset.value}`)
   for (const k of Object.keys(defaultConfig) as (keyof Config)[]) {
     const val = cfg.value[k]
-    const def = defaultConfig[k]
-    if (val === def) continue
-    if (typeof def === 'boolean') {
+    const base = presetConfig.value[k]
+    if (val === base) continue
+    if (typeof base === 'boolean') {
       parts.push(val ? `--${k}` : `--${k} false`)
     } else {
       parts.push(`--${k} ${val}`)
@@ -306,12 +322,19 @@ function copyCli() {
           text
           v-tip.top="'Copy CLI command'"
           @click="copyCli" />
+        <Select
+          :model-value="preset"
+          :options="presetNames"
+          size="small"
+          class="preset-select"
+          v-tip.top="'Select preset'"
+          @update:model-value="onPresetChange($event)" />
         <Button
-          label="Reset"
           icon="pi pi-refresh"
           size="small"
           :severity="isConfigDefault ? 'secondary' : 'warning'"
           text
+          v-tip.top="'Reset to preset'"
           @click="store.resetConfig()" />
       </div>
     </div>
@@ -444,6 +467,13 @@ function copyCli() {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+.preset-select {
+  font-size: 0.75rem;
+  height: 1.75rem;
+  --p-select-padding-y: 0.2rem;
+  --p-select-padding-x: 0.4rem;
 }
 
 .config-title {

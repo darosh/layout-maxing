@@ -1,10 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed, toRaw, watch } from 'vue'
-import { defaultConfig, applyBestLayout } from 'layout-maxing'
+import { defaultConfig, applyBestLayout, PRESETS } from 'layout-maxing'
 import type { RNBO, Config, Fitness, Box, Line, GenerationSnapshot, RunMonitor } from 'layout-maxing'
 
 const CONFIG_KEY = 'layout-maxing-config'
+const PRESET_KEY = 'layout-maxing-preset'
 const RUN_KEY = 'layout-maxing-run'
+
+export type PresetName = keyof typeof PRESETS
 
 export type Status = 'idle' | 'running' | 'paused' | 'done' | 'error'
 
@@ -28,6 +31,14 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const fileName = ref('')
   const inputSource = ref<'file' | 'clipboard' | null>(null)
   // Load persisted config from localStorage
+  const savedPreset = (localStorage.getItem(PRESET_KEY) ?? 'Default') as PresetName
+  const preset = ref<PresetName>(savedPreset in PRESETS ? savedPreset : 'Default')
+
+  const presetConfig = computed<Required<Config>>(() => ({
+    ...defaultConfig,
+    ...(PRESETS[preset.value] as Partial<Config>),
+  }))
+
   const savedConfig = (() => {
     try {
       return JSON.parse(localStorage.getItem(CONFIG_KEY) ?? 'null')
@@ -35,7 +46,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
       return null
     }
   })()
-  const config = ref<Config>({ ...defaultConfig, ...(savedConfig ?? undefined) })
+  const config = ref<Config>({ ...presetConfig.value, ...(savedConfig ?? undefined) })
 
   // Load persisted run settings from localStorage
   const savedRun = (() => {
@@ -53,6 +64,11 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const allTimeTop = computed(() => displayMode.value === 'allTime')
   const showStats = ref<boolean>(savedRun?.showStats ?? false)
   const showGrid = ref<boolean>(savedRun?.showGrid ?? false)
+  // Persist preset changes
+  watch(preset, (val) => {
+    localStorage.setItem(PRESET_KEY, val)
+  })
+
   // Persist config changes
   watch(
     config,
@@ -76,7 +92,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     )
   })
 
-  const isConfigDefault = computed(() => (Object.keys(defaultConfig) as (keyof Config)[]).every((k) => config.value[k] === defaultConfig[k]))
+  const isConfigDefault = computed(() => (Object.keys(defaultConfig) as (keyof Config)[]).every((k) => config.value[k] === presetConfig.value[k]))
 
   const status = ref<Status>('idle')
   const progress = ref({
@@ -114,8 +130,12 @@ export const useOptimizerStore = defineStore('optimizer', () => {
 
   let worker: Worker | null = null
 
+  // Snapshot of config at the moment a run is submitted — used for progress/eta so
+  // changes to the config panel mid-run don't affect displayed metrics.
+  const runConfig = ref<Required<Config>>({ ...defaultConfig })
+
   const canStart = computed(() => rnbo.value !== null && status.value !== 'running' && status.value !== 'paused')
-  const totalEvals = computed(() => (config.value.generations ?? defaultConfig.generations) * (config.value.popSize ?? defaultConfig.popSize))
+  const totalEvals = computed(() => (runConfig.value.generations ?? defaultConfig.generations) * (runConfig.value.popSize ?? defaultConfig.popSize))
   const progressPercent = computed(() => {
     if (totalEvals.value === 0) return 0
     return Math.min(100, (progress.value.evalCount / totalEvals.value) * 100)
@@ -236,6 +256,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     if (!rnbo.value || status.value === 'running') return
     stopOptimization()
 
+    runConfig.value = { ...defaultConfig, ...toRaw(config.value) }
     status.value = 'running'
     error.value = null
     resultRnbo.value = null
@@ -363,7 +384,13 @@ export const useOptimizerStore = defineStore('optimizer', () => {
 
   function resetConfig() {
     localStorage.removeItem(CONFIG_KEY)
-    config.value = { ...defaultConfig }
+    config.value = { ...presetConfig.value }
+  }
+
+  function setPreset(name: PresetName) {
+    preset.value = name
+    localStorage.removeItem(CONFIG_KEY)
+    config.value = { ...presetConfig.value }
   }
 
   function applyPositions(positions: { id: string; x: number; y: number }[]): RNBO {
@@ -399,6 +426,9 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     fileName,
     inputSource,
     config,
+    preset,
+    presetConfig,
+    setPreset,
     progressInterval,
     runId,
     topN,
@@ -438,6 +468,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     pauseOptimization,
     resumeOptimization,
     resetConfig,
+    PRESETS,
     showStats,
     showGrid,
   }
