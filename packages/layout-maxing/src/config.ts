@@ -175,7 +175,7 @@ export const configMeta: ConfigMeta = {
   showStraightLines: [false, false, true, null, 'Render straight lines instead of curves'],
   removeLineSegments: [true, false, true, null, 'Remove patchline midpoints after applying layout'],
   deterministic: [true, false, true, null, 'Use a fixed random seed for reproducible results'],
-  seed: [123456789, 0, 2147483647, 1, 'Seed for deterministic random (ignored unless deterministic=true)'],
+  seed: [1, 0, 2147483647, 1, 'Seed for deterministic random (ignored unless deterministic=true)'],
   normalize: [true, false, true, null, 'Normalize layouts to origin [0,0] after each generation'],
   normalizeExport: [true, false, true, null, 'Normalize layouts to origin when applying positions back to patch'],
   ignoreOrphans: [true, false, true, null, 'Skip boxes with no incoming or outgoing lines'],
