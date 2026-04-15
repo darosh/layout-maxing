@@ -322,13 +322,6 @@ function copyCli() {
           text
           v-tip.top="'Copy CLI command'"
           @click="copyCli" />
-        <Select
-          :model-value="preset"
-          :options="presetNames"
-          size="small"
-          class="preset-select"
-          v-tip.top="'Select preset'"
-          @update:model-value="onPresetChange($event)" />
         <Button
           icon="pi pi-refresh"
           size="small"
@@ -336,6 +329,14 @@ function copyCli() {
           text
           v-tip.top="'Reset to preset'"
           @click="store.resetConfig()" />
+        <Select
+          :model-value="preset"
+          :options="presetNames"
+          size="small"
+          variant="filled"
+          class="preset-select"
+          v-tip.top="'Select preset'"
+          @update:model-value="onPresetChange($event)" />
       </div>
     </div>
 
@@ -470,10 +471,18 @@ function copyCli() {
 }
 
 .preset-select {
-  font-size: 0.75rem;
-  height: 1.75rem;
-  --p-select-padding-y: 0.2rem;
-  --p-select-padding-x: 0.4rem;
+  --p-select-padding-y: 0;
+  --p-select-padding-x: 0;
+  --p-select-sm-font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.preset-select:deep(.p-select-dropdown) {
+  display: none;
+}
+
+.preset-select:deep(.p-select-label) {
+  padding: 0.3rem 0.4rem;
 }
 
 .config-title {
