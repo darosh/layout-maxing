@@ -19,11 +19,15 @@ function isActive(sel: Selection): boolean {
   if (cur.kind !== sel.kind) return false
   if (sel.kind === 'allTime' && cur.kind === 'allTime') return cur.index === sel.index
   if (sel.kind === 'current' && cur.kind === 'current') return cur.index === sel.index
+  if (sel.kind === 'pass' && cur.kind === 'pass') return cur.index === sel.index
   return true
 }
 
-// 2nd…Nth entries in the currently active mode
-const displaySet = computed(() => (store.allTimeTop ? store.top.slice(1) : store.currentGenTop.slice(1)))
+// 2nd…Nth entries in the currently active mode (passes mode shows all entries)
+const displaySet = computed(() => {
+  if (store.displayMode === 'passes') return store.passesBest
+  return store.allTimeTop ? store.top.slice(1) : store.currentGenTop.slice(1)
+})
 
 let o: string
 
@@ -95,19 +99,42 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
       <Button
         label="Best"
         size="small"
-        :severity="store.allTimeTop ? 'info' : 'secondary'"
+        :severity="store.displayMode === 'allTime' ? 'info' : 'secondary'"
         variant="outlined"
-        @click="store.switchMode(true)" />
+        @click="store.switchMode('allTime')" />
       <Button
         label="Current"
         size="small"
-        :severity="!store.allTimeTop ? 'info' : 'secondary'"
+        :severity="store.displayMode === 'current' ? 'info' : 'secondary'"
         variant="outlined"
-        @click="store.switchMode(false)" />
+        @click="store.switchMode('current')" />
+      <Button
+        v-if="store.progress.numPasses > 1"
+        label="Passes"
+        size="small"
+        :severity="store.displayMode === 'passes' ? 'info' : 'secondary'"
+        variant="outlined"
+        @click="store.switchMode('passes')" />
     </div>
 
     <!-- 2…N entries -->
-    <template v-if="store.allTimeTop">
+    <template v-if="store.displayMode === 'passes'">
+      <button
+        v-for="(entry, i) in displaySet"
+        :key="i"
+        class="thumb-btn"
+        :class="{ active: isActive({ kind: 'pass', index: i }) }"
+        @mouseenter="tooltip?.show($event, () => `Pass ${entry.passNum ?? i + 1}\nScore: ${formatFullScore(entry.score)}`)"
+        @mouseleave="tooltip?.hide()"
+        @click="store.selection = { kind: 'pass', index: i }">
+        <div
+          class="thumb-svg"
+          v-html="entry.svg" />
+        <span class="thumb-label">P{{ entry.passNum ?? i + 1 }}</span>
+        <span class="thumb-score">{{ formatScore(entry.score) }}</span>
+      </button>
+    </template>
+    <template v-else-if="store.allTimeTop">
       <button
         v-for="(entry, i) in displaySet"
         :key="i"

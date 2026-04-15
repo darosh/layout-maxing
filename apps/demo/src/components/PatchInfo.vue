@@ -28,6 +28,7 @@ const selectionLabel = computed(() => {
   if (sel.kind === 'original') return INPUT_LABEL
   if (sel.kind === 'allTime') return `#${sel.index + 1}`
   if (sel.kind === 'current') return ordinal(sel.index + 1)
+  if (sel.kind === 'pass') return `Pass ${store.displayedEntry?.passNum ?? sel.index + 1}`
   return null
 })
 
@@ -60,11 +61,14 @@ const fullScore = computed(() => {
           <template v-if="store.selection?.index === 0">{{ BEST_LABEL }}</template>
           {{ selectionLabel }}
         </template>
+        <template v-else-if="store.selection.kind === 'pass'">
+          {{ selectionLabel }}
+        </template>
         <template v-else>{{ INPUT_LABEL }}</template>
       </div>
     </div>
     <div class="overlay overlay-tl-2 selection-label">
-      <template v-if="store.progress.numPasses > 1 && store.displayedEntry?.passNum != null">
+      <template v-if="store.progress.numPasses > 1 && store.displayedEntry?.passNum != null && store.selection.kind !== 'pass'">
         PASS {{ store.displayedEntry.passNum.toLocaleString() }}
       </template>
       <template v-if="store.showStats && store.displayedEntry?.popId != null && store.displayedEntry?.popGen != null && store.displayedEntry?.prevGen != null">

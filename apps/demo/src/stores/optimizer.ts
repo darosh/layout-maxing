@@ -21,7 +21,7 @@ export interface TopEntry {
   passNum?: number
 }
 
-export type Selection = { kind: 'original' } | { kind: 'allTime'; index: number } | { kind: 'current'; index: number }
+export type Selection = { kind: 'original' } | { kind: 'allTime'; index: number } | { kind: 'current'; index: number } | { kind: 'pass'; index: number }
 
 export const useOptimizerStore = defineStore('optimizer', () => {
   const rnbo = ref<RNBO | null>(null)
@@ -49,7 +49,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   // UI-only run settings (not part of Config)
   const progressInterval = ref<number>(savedRun?.progressInterval ?? 200)
   const topN = ref<number>(savedRun?.topN ?? 15)
-  const allTimeTop = ref<boolean>(savedRun?.allTimeTop ?? true)
+  const displayMode = ref<'allTime' | 'current' | 'passes'>(savedRun?.displayMode ?? 'allTime')
+  const allTimeTop = computed(() => displayMode.value === 'allTime')
   const showStats = ref<boolean>(savedRun?.showStats ?? false)
   const showGrid = ref<boolean>(savedRun?.showGrid ?? false)
   // Persist config changes
@@ -62,13 +63,13 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   )
 
   // Persist run settings changes
-  watch([progressInterval, topN, allTimeTop, showStats, showGrid], () => {
+  watch([progressInterval, topN, displayMode, showStats, showGrid], () => {
     localStorage.setItem(
       RUN_KEY,
       JSON.stringify({
         progressInterval: progressInterval.value,
         topN: topN.value,
-        allTimeTop: allTimeTop.value,
+        displayMode: displayMode.value,
         showStats: showStats.value,
         showGrid: showGrid.value,
       }),
@@ -93,6 +94,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   })
   const top = ref<TopEntry[]>([])
   const currentGenTop = ref<TopEntry[]>([])
+  const passBest = ref<TopEntry[]>([])
   const snapshots = ref<GenerationSnapshot[]>([])
   const runMonitor = ref<RunMonitor | null>(null)
   const resultRnbo = ref<RNBO | null>(null)
@@ -126,28 +128,21 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     return Math.max(0, remaining / rate) // ms
   })
 
+  const passesBest = computed<TopEntry[]>(() => passBest.value.slice(0, topN.value))
+
   function resolveEntry(sel: Selection): TopEntry | null {
     if (sel.kind === 'allTime') return top.value[sel.index] ?? null
     if (sel.kind === 'current') return currentGenTop.value[sel.index] ?? null
+    if (sel.kind === 'pass') return passesBest.value[sel.index] ?? null
     return null
   }
 
-  // Switch between all-time/current-gen mode, preserving index, clamping to last
-  function switchMode(toAllTime: boolean) {
-    allTimeTop.value = toAllTime
-    const sel = selection.value
-    if (sel.kind !== 'allTime' && sel.kind !== 'current') return
-    if (sel.index === 0) return
-
-    const idx = sel.index
-
-    if (toAllTime) {
-      const max = topN.value
-      selection.value = { kind: 'allTime', index: Math.min(idx, max) }
-    } else {
-      const max = Math.max(0, currentGenTop.value.length - 1)
-      selection.value = { kind: 'current', index: Math.min(idx, max) }
-    }
+  // Switch between all-time/current-gen/passes mode
+  function switchMode(mode: 'allTime' | 'current' | 'passes') {
+    displayMode.value = mode
+    if (mode === 'allTime') selection.value = { kind: 'allTime', index: 0 }
+    else if (mode === 'current') selection.value = { kind: 'current', index: 0 }
+    else selection.value = { kind: 'pass', index: 0 }
   }
 
   watch(topN, (val) => {
@@ -156,6 +151,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
       selection.value = { kind: 'allTime', index: Math.max(0, val - 1) }
     } else if (sel.kind === 'current' && sel.index >= val) {
       selection.value = { kind: 'current', index: Math.max(0, val - 1) }
+    } else if (sel.kind === 'pass' && sel.index >= val) {
+      selection.value = { kind: 'pass', index: Math.max(0, val - 1) }
     }
   })
 
@@ -243,6 +240,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     error.value = null
     resultRnbo.value = null
     snapshots.value = []
+    passBest.value = []
     runMonitor.value = null
     runId.value++
     progress.value = {
@@ -286,16 +284,19 @@ export const useOptimizerStore = defineStore('optimizer', () => {
             numPasses: msg.numPasses ?? progress.value.numPasses,
           }
           if (msg.top?.length) top.value = msg.top
+          if (msg.passBest?.length) passBest.value = msg.passBest
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
           if (msg.snapshots?.length) snapshots.value = msg.snapshots
           break
         case 'svg':
           if (msg.top?.length) top.value = msg.top
+          if (msg.passBest?.length) passBest.value = msg.passBest
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
           break
         case 'done':
           status.value = 'done'
           if (msg.top?.length) top.value = msg.top
+          if (msg.passBest?.length) passBest.value = msg.passBest
           if (msg.currentGenTop?.length) currentGenTop.value = msg.currentGenTop
           if (msg.runMonitor) runMonitor.value = msg.runMonitor
           resultRnbo.value = msg.rnbo ?? null
@@ -402,6 +403,8 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     runId,
     topN,
     allTimeTop,
+    displayMode,
+    passesBest,
     snapshots,
     runMonitor,
     switchMode,

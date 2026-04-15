@@ -19,6 +19,7 @@ type ProgressMsg = {
   numPasses: number
   svg: string | null
   top: TopEntry[] | null
+  passBest: TopEntry[] | null
   currentGenTop: TopEntry[] | null
   layouts: Box[] | null
   snapshots: GenerationSnapshot[] | null
@@ -34,6 +35,7 @@ type DoneMsg = {
   type: 'done'
   svg: string
   top: TopEntry[]
+  passBest: TopEntry[]
   currentGenTop: TopEntry[]
   rnbo: RNBO
   layouts: Box[]
@@ -173,6 +175,8 @@ self.onmessage = async (e: MessageEvent) => {
     prevGen?: number
     passNum?: number
   }[] = []
+  // Best entry per pass (independent of topN — never evicted)
+  const passBestMap = new Map<number, (typeof top)[0]>()
   // Sliding window of current population (last popSize evaluations)
   const currentPop: {
     score: number
@@ -205,6 +209,12 @@ self.onmessage = async (e: MessageEvent) => {
         if (top.length > topN) top.pop()
       }
     }
+    // Track best per pass independently (never evicted by topN)
+    const p = passNum ?? 1
+    const prev = passBestMap.get(p)
+    if (prev === undefined || score < prev.score) {
+      passBestMap.set(p, { score, layouts: cloneForSvg(layouts), fitness, popId, popGen, prevId, prevGen, passNum })
+    }
   }
 
   function aggregateMutations(layouts: Box[]): Record<string, number> {
@@ -231,6 +241,23 @@ self.onmessage = async (e: MessageEvent) => {
       prevGen: t.prevGen,
       passNum: t.passNum,
     }))
+  }
+
+  function buildPassBestEntries(): TopEntry[] {
+    return [...passBestMap.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([, t]) => ({
+        score: t.score,
+        svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups),
+        fitness: t.fitness,
+        positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
+        mutations: aggregateMutations(t.layouts),
+        popId: t.popId,
+        popGen: t.popGen,
+        prevId: t.prevId,
+        prevGen: t.prevGen,
+        passNum: t.passNum,
+      }))
   }
 
   function buildCurrentGenEntries(): TopEntry[] {
@@ -345,6 +372,7 @@ self.onmessage = async (e: MessageEvent) => {
             numPasses: currentNumPasses,
             svg: svgNow,
             top: buildTopEntries(),
+            passBest: buildPassBestEntries(),
             currentGenTop: buildCurrentGenEntries(),
             layouts: bestLayouts ? [...bestLayouts] : null,
             snapshots: snapshotBuffer.length ? [...snapshotBuffer] : null,
@@ -398,6 +426,7 @@ self.onmessage = async (e: MessageEvent) => {
       numPasses: currentNumPasses,
       svg: bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups) : null,
       top: buildTopEntries(),
+      passBest: buildPassBestEntries(),
       currentGenTop: buildCurrentGenEntries(),
       layouts: bestLayouts ? [...bestLayouts] : null,
       snapshots: snapshotBuffer.length ? [...snapshotBuffer] : null,
@@ -410,6 +439,7 @@ self.onmessage = async (e: MessageEvent) => {
       type: 'done',
       svg,
       top: buildTopEntries(),
+      passBest: buildPassBestEntries(),
       currentGenTop: buildCurrentGenEntries(),
       rnbo,
       layouts: finalLayouts,
@@ -427,6 +457,7 @@ self.onmessage = async (e: MessageEvent) => {
         type: 'done',
         svg,
         top: buildTopEntries(),
+        passBest: buildPassBestEntries(),
         currentGenTop: buildCurrentGenEntries(),
         rnbo,
         layouts: layouts ?? [],
