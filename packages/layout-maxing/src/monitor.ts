@@ -106,6 +106,8 @@ export const configFeatureTags: Partial<Record<keyof Config, string[]>> = {
   multiMutRate: ['stagnation'],
   useDagre: ['dagre'],
   dagreLR: ['dagre'],
+  repairOffspring: ['repair'],
+  shrinkRows: ['repair'],
 }
 
 // Maps mutation/crossover key → primary config weight key

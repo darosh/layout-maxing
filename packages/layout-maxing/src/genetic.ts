@@ -321,9 +321,18 @@ function applyOneMutation(
   }
 }
 
-function mutateChild(child: Box[], rand: () => number, cfg: Required<Config>, effectiveMutate: number, mutWeights?: number[], multiMutRate?: number) {
-  const entities = toEntities(child)
-  const boxEntityMap = buildBoxEntityIndex(entities)
+function mutateChild(
+  child: Box[],
+  rand: () => number,
+  cfg: Required<Config>,
+  effectiveMutate: number,
+  mutWeights?: number[],
+  multiMutRate?: number,
+  entities?: LayoutEntity[],
+  boxEntityMap?: Map<number, LayoutEntity>,
+) {
+  entities ??= toEntities(child)
+  boxEntityMap ??= buildBoxEntityIndex(entities)
   const targetEntity: LayoutEntity = entities[Math.floor(rand() * entities.length)]
   const mutatedBox = targetEntity.members[0].box
 
@@ -624,7 +633,9 @@ async function runGenetic(
           childMutation = 'crossoverStructural'
         }
         if (rand() < effectiveMutationRate) {
-          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate)
+          const childEntities = toEntities(child)
+          const childBoxEntityMap = buildBoxEntityIndex(childEntities)
+          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate, childEntities, childBoxEntityMap)
           child = __ret.child
           mutatedBox = __ret.mutatedBox
           childMutation = __ret.childMutation
@@ -633,7 +644,9 @@ async function runGenetic(
         child = cloneLayouts(p1.layouts)
 
         if (rand() < effectiveMutationRate) {
-          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate)
+          const childEntities = toEntities(child)
+          const childBoxEntityMap = buildBoxEntityIndex(childEntities)
+          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate, childEntities, childBoxEntityMap)
           child = __ret.child
           mutatedBox = __ret.mutatedBox
           childMutation = __ret.childMutation

@@ -135,6 +135,7 @@ const groups: GroupDef[] = [
       { key: 'tournamentSize' },
       { key: 'normalize' },
       { key: 'repairOffspring' },
+      { key: 'shrinkRows' },
       { key: 'crowdingTieBreak' },
       { key: 'nsgaEnabled' },
     ],

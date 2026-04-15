@@ -342,7 +342,7 @@ function layoutShrinkEntities(entities: LayoutEntity[], stepY: number): void {
   }
 }
 
-export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
+export function fixOverlaps(layouts: Box[], cfg: Required<Config>, maxIter = 2): Box[] {
   const fixed = layouts.map((l) => ({ ...l }))
   const entities = toEntities(fixed)
 
@@ -353,9 +353,8 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
 
   let changed = true
   let iterations = 0
-  const MAX_ITER = 30
 
-  while (changed && iterations < MAX_ITER) {
+  while (changed && iterations < maxIter) {
     changed = false
     iterations++
 
@@ -386,7 +385,7 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
     moveEntityTo(e, Math.round(e.x / cfg.gridX) * cfg.gridX, Math.round(e.y / cfg.gridY) * cfg.gridY)
   }
 
-  layoutShrinkEntities(entities, cfg.gridY)
+  if (cfg.shrinkRows) layoutShrinkEntities(entities, cfg.gridY)
 
   return fixed
 }

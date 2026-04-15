@@ -85,6 +85,7 @@ export interface Config {
   useZero?: boolean
   useSquare?: boolean
   useCircle?: boolean
+  shrinkRows?: boolean
   initialMutation?: boolean
   // Logging / debug output
   logInfo?: boolean
@@ -187,6 +188,7 @@ export const configMeta: ConfigMeta = {
   useZero: [false, false, true, null, 'Place all boxes at position 0,0 as starting layout'],
   useSquare: [false, false, true, null, 'Arrange boxes in a square grid (side = sqrt(count)) snapped to gridX/gridY'],
   useCircle: [false, false, true, null, 'Arrange boxes on a circle (circumference = count × diagonal of grid cell), snapped to grid'],
+  shrinkRows: [true, false, true, null, 'Collapse rows to densely packed after overlap repair (can undo GA-found vertical spacing; off by default)'],
   initialMutation: [true, false, true, null, 'Mutate extra individuals in the initial population beyond the seed layouts'],
   // Logging / debug output
   logInfo: [true, false, true, null, 'Log info messages to console'],
