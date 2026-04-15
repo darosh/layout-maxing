@@ -6,7 +6,7 @@ Cross-session work tracker. Each item has target anchors (fn name + code pattern
 
 ## Bugs
 
-- [ ] **B1 — `spare` leaks across passes**
+- [x] **B1 — `spare` leaks across passes**
   File: `packages/layout-maxing/src/genetic.ts`
   Anchor: `let spare: number | null = null` (module-level, before `randGaussian`)
   Issue: Box-Muller spare value persists across `runGenetic` calls. With `deterministic=true`, pass N+1 consumes pass N's leftover → non-reproducible results.

@@ -390,6 +390,7 @@ async function runGenetic(
   logInfo?: (...args: any) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
 ): Promise<Box[]> {
+  spare = null
   // Create population
   let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
 
