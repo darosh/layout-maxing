@@ -3393,6 +3393,7 @@
             "npm:@vue/eslint-config-typescript@^14.7.0",
             "npm:@vue/test-utils@^2.4.6",
             "npm:@vue/tsconfig@~0.9.1",
+            "npm:elkjs@~0.11.1",
             "npm:eslint-config-prettier@^10.1.8",
             "npm:eslint-plugin-oxlint@1.57",
             "npm:eslint-plugin-playwright@^2.10.1",
