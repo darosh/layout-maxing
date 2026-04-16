@@ -175,6 +175,17 @@ export const configFeatureTags: Partial<Record<keyof Config, string[]>> = {
   dagreLR: ['dagre'],
   repairOffspring: ['repair'],
   shrinkRows: ['repair'],
+  deterministic: ['rand'],
+  seed: ['rand'],
+  popSize: ['run'],
+  generations: ['run'],
+  stop: ['run'],
+  arPenalty: ['ar'],
+  arMax: ['ar'],
+  gridX: ['grid'],
+  gridY: ['grid'],
+  minDistX: ['minDist'],
+  minDistY: ['minDist'],
 }
 
 // Maps mutation/crossover key → primary config weight key
