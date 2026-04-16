@@ -169,6 +169,8 @@ async function cli() {
         undefined,
         c.logProgress ? console.log : undefined,
         c.logInfo ? console.log : undefined,
+        undefined,
+        () => new Worker(import.meta.resolve('elkjs/lib/elk-worker.min.js'), { type: 'module' }),
       )
       applyBestLayout(rnbo, bestIndividual, c)
 

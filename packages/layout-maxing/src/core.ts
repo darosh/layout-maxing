@@ -6,6 +6,7 @@ import {
   createInitialLayouts,
   fillDepths,
   dagreFlow,
+  elkFlow,
   simpleFlow,
   zeroFlow,
   squareFlow,
@@ -76,6 +77,9 @@ export async function main(
   logProgress?: (...args: any) => void,
   logInfo?: (...args: any) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
+  // Optional worker factory passed through to elkFlow(). In browsers this should create a Worker
+  // from the elk-worker.min.js URL; in CLI/Node the web-worker package is used automatically.
+  workerFactory?: (url?: string) => unknown,
 ) {
   if (logInfo && cfg) {
     logInfo(`Configuration\n${JSON.stringify(jsonDiff<Config>(defaultConfig, cfg))}`)
@@ -114,6 +118,13 @@ export async function main(
     const preferredDir = c.dagreLR ? 'LR' : 'TB'
     const clone = cloneLayouts(baseLayouts)
     dagreFlow(clone, lines, preferredDir)
+    startingLayouts.push(clone)
+  }
+
+  if (c.useElk) {
+    const clone = cloneLayouts(baseLayouts)
+    const preferredDir = c.elkLR ? 'RIGHT' : 'DOWN'
+    await elkFlow(clone, lines, preferredDir, workerFactory)
     startingLayouts.push(clone)
   }
 

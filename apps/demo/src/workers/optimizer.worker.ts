@@ -405,6 +405,10 @@ self.onmessage = async (e: MessageEvent) => {
       (monitor: RunMonitor) => {
         finalRunMonitor = monitor
       },
+      () => {
+        const url = new URL('elkjs/lib/elk-worker.min.js', import.meta.url)
+        return new Worker(url, { type: 'classic' })
+      },
     )
 
     pool.terminate()

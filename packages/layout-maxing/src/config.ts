@@ -81,6 +81,8 @@ export interface Config {
   keepGroups?: boolean
   useDagre?: boolean
   dagreLR?: boolean
+  useElk?: boolean
+  elkLR?: boolean
   useInput?: boolean
   usePassBest?: boolean
   useSimpleFlow?: boolean

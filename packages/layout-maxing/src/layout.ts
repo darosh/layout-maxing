@@ -1,4 +1,8 @@
 import dagre from '@dagrejs/dagre'
+import type { ELK as ELKInstance, ElkNode } from 'elkjs/lib/elk-api.js'
+import _ELKCtor from 'elkjs/lib/elk-api.js'
+// elk-api.js is CJS — TS doesn't see the construct signature; cast explicitly.
+const ELKCtor = _ELKCtor as unknown as new (args: { workerFactory: (url: string) => unknown; workerUrl: string }) => ELKInstance
 import { type Config } from './config.ts'
 
 type BoxId = string
@@ -468,6 +472,59 @@ export function circleFlow(layouts: Box[], cfg: Required<Config>) {
     b.x = Math.round(rawX / cfg.gridX) * cfg.gridX
     b.y = Math.round(rawY / cfg.gridY) * cfg.gridY
   })
+}
+
+export async function elkFlow(layouts: Box[], lines: Line[], rankdir: 'DOWN' | 'RIGHT' = 'DOWN', workerFactory?: (url: string) => unknown) {
+  if (!workerFactory) throw new Error('elkFlow: workerFactory is required — provide one appropriate for your environment')
+  const elk = new ELKCtor({ workerFactory, workerUrl: '' })
+
+  const inletSide = rankdir === 'RIGHT' ? 'WEST' : 'NORTH'
+  const outletSide = rankdir === 'RIGHT' ? 'EAST' : 'SOUTH'
+
+  const elkNodes: ElkNode[] = layouts.map((b) => ({
+    id: b.id,
+    width: b.width,
+    height: b.height,
+    ports: [
+      ...Array.from({ length: b.numInlets }, (_, i) => ({
+        id: `${b.id}_in_${i}`,
+        layoutOptions: { 'port.side': inletSide, 'port.index': String(i) },
+      })),
+      ...Array.from({ length: b.numOutlets }, (_, i) => ({
+        id: `${b.id}_out_${i}`,
+        layoutOptions: { 'port.side': outletSide, 'port.index': String(i) },
+      })),
+    ],
+  }))
+
+  const elkEdges = lines.map((l, i) => ({
+    id: `e${i}`,
+    sources: [`${l.patchline.source[0]}_out_${l.patchline.source[1]}`],
+    targets: [`${l.patchline.destination[0]}_in_${l.patchline.destination[1]}`],
+  }))
+
+  const graph: ElkNode = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': rankdir,
+      'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
+      'elk.portConstraints': 'FIXED_SIDE',
+    },
+    children: elkNodes,
+    edges: elkEdges,
+  }
+
+  const result = await elk.layout(graph)
+
+  const posById = new Map((result.children ?? []).map((n: ElkNode) => [n.id, { x: n.x ?? 0, y: n.y ?? 0 }]))
+  for (const b of layouts) {
+    const pos = posById.get(b.id)
+    if (pos) {
+      b.x = Math.round(pos.x)
+      b.y = Math.round(pos.y)
+    }
+  }
 }
 
 export function dagreFlow(layouts: Box[], lines: Line[], rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB') {

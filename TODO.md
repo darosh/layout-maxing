@@ -4,6 +4,8 @@
 
 - [ ] automate best setting search
 - [ ] preset tuning
+- [ ] add initial layout to monitor
+- [ ] try elk algos
 - [x] little green dots fix+fl
 - [x] best of pass
 - [x] use summarizeRun

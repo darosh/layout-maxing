@@ -31,7 +31,8 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@dagrejs/dagre": "^3.0.0"
+    "@dagrejs/dagre": "^3.0.0",
+    "elkjs": "^0.11.1"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
