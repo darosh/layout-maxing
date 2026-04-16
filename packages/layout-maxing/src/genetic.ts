@@ -62,6 +62,7 @@ interface Population {
   fitness?: Fitness
   prevId?: number
   prevGen?: number
+  origins?: string[] // layout algorithm(s) that seeded this individual
   // monitoring fields — do not affect algorithm behavior
   _mutation?: string
   _mutatedBoxId?: string
@@ -214,6 +215,7 @@ export async function createPopulation(
   rand: () => number,
   cfg: Required<Config>,
   getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
+  startingLayoutNames?: string[],
 ) {
   const individuals: Population[] = []
 
@@ -234,13 +236,15 @@ export async function createPopulation(
 
     if (cfg.normalize) normalizeLayouts(ind)
 
-    individuals.push({ id: i, gen: 0, layouts: ind })
+    const originName = startingLayoutNames?.[i % startingLayouts.length]
+    individuals.push({ id: i, gen: 0, layouts: ind, origins: originName ? [originName] : undefined })
   }
 
   if (getFitness) {
     const fitnessPromises = individuals.map((ind) => {
       ;(ind.layouts as any)._popId = ind.id
       ;(ind.layouts as any)._popGen = ind.gen
+      ;(ind.layouts as any)._popOrigins = ind.origins
       return getFitness(ind.layouts, lines, cfg).then((value) => {
         ind.fitness = value
         return value
@@ -251,6 +255,7 @@ export async function createPopulation(
     for (const ind of individuals) {
       ;(ind.layouts as any)._popId = ind.id
       ;(ind.layouts as any)._popGen = ind.gen
+      ;(ind.layouts as any)._popOrigins = ind.origins
       ind.fitness = fitness(ind.layouts, lines, cfg)
     }
   }
@@ -399,10 +404,11 @@ async function runGenetic(
   logProgress?: (...args: any) => void,
   logInfo?: (...args: any) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
+  startingLayoutNames?: string[],
 ): Promise<Box[]> {
   spare = null
   // Create population
-  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
+  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness, startingLayoutNames)
 
   // If all boxes were stripped (e.g. ignoreOrphans + no lines), return empty
   if (population[0].layouts.length === 0) {
@@ -450,6 +456,7 @@ async function runGenetic(
             ;(ind.layouts as any)._popGen = ind.gen
             ;(ind.layouts as any)._popPrevId = ind.prevId
             ;(ind.layouts as any)._popPrevGen = ind.prevGen
+            ;(ind.layouts as any)._popOrigins = ind.origins
             ind.fitness = await getFitness(ind.layouts, lines, cfg)
           }
           return ind.fitness
@@ -462,6 +469,7 @@ async function runGenetic(
           ;(ind.layouts as any)._popGen = ind.gen
           ;(ind.layouts as any)._popPrevId = ind.prevId
           ;(ind.layouts as any)._popPrevGen = ind.prevGen
+          ;(ind.layouts as any)._popOrigins = ind.origins
           ind.fitness = fitness(ind.layouts, lines, cfg)
         }
       }
@@ -618,19 +626,21 @@ async function runGenetic(
       let child: Box[]
       let childMutation: string = 'none'
       let mutatedBox: Box | undefined
+      let childOrigins: string[] | undefined
       if (rand() < cfg.crossoverRate) {
         const prop2 = props[(newPopulation.length + 1) % props.length]
         const i2 = tournamentSelect(population, prop2, rand, cfg, [i1], nsgaRanks ? nsgaCrowding : crowdingCache?.get(prop2), nsgaRanks)
+        const p2 = population[i2]
 
         const crossWeights = [cfg.crossWeightRandom, cfg.crossWeightStruct]
         const sw = singleWeight(crossWeights)
         const crossoverIdx = sw !== -1 ? sw : roulette(crossWeights, rand)
 
         if (crossoverIdx === 0) {
-          child = crossover(p1.layouts, population[i2].layouts, rand, cfg)
+          child = crossover(p1.layouts, p2.layouts, rand, cfg)
           childMutation = 'crossover'
         } else {
-          child = crossoverStructural(p1.layouts, population[i2].layouts, rand)
+          child = crossoverStructural(p1.layouts, p2.layouts, rand)
           childMutation = 'crossoverStructural'
         }
         if (rand() < effectiveMutationRate) {
@@ -641,6 +651,8 @@ async function runGenetic(
           mutatedBox = __ret.mutatedBox
           childMutation = __ret.childMutation
         }
+        const merged = [...(p1.origins ?? []), ...(p2.origins ?? [])]
+        childOrigins = merged.length ? [...new Set(merged)] : undefined
       } else {
         child = cloneLayouts(p1.layouts)
 
@@ -652,6 +664,7 @@ async function runGenetic(
           mutatedBox = __ret.mutatedBox
           childMutation = __ret.childMutation
         }
+        childOrigins = p1.origins
       }
 
       // Increment per-box mutation counts (monitoring, doesn't affect algorithm)
@@ -671,6 +684,7 @@ async function runGenetic(
         gen: gen + 1,
         prevId: p1.id,
         prevGen: p1.gen,
+        origins: childOrigins,
         layouts: child,
         _mutation: childMutation,
         _mutatedBoxId: mutatedBox?.id ?? '',

@@ -113,12 +113,14 @@ export async function main(
   }
 
   let startingLayouts: Box[][] = []
+  const startingLayoutNames: string[] = []
 
   if (c.useDagre) {
     const preferredDir = c.dagreLR ? 'LR' : 'TB'
     const clone = cloneLayouts(baseLayouts)
     dagreFlow(clone, lines, preferredDir)
     startingLayouts.push(clone)
+    startingLayoutNames.push(c.dagreLR ? 'dagre-lr' : 'dagre')
   }
 
   if (c.useElk) {
@@ -126,35 +128,41 @@ export async function main(
     const preferredDir = c.elkLR ? 'RIGHT' : 'DOWN'
     await elkFlow(clone, lines, preferredDir, workerFactory)
     startingLayouts.push(clone)
+    startingLayoutNames.push(c.elkLR ? 'elk-lr' : 'elk')
   }
 
   if (c.useSimpleFlow) {
     const clone = cloneLayouts(baseLayouts)
     simpleFlow(clone, c)
     startingLayouts.push(clone)
+    startingLayoutNames.push('simple')
   }
 
   if (c.useZero) {
     const clone = cloneLayouts(baseLayouts)
     zeroFlow(clone)
     startingLayouts.push(clone)
+    startingLayoutNames.push('zero')
   }
 
   if (c.useSquare) {
     const clone = cloneLayouts(baseLayouts)
     squareFlow(clone, c)
     startingLayouts.push(clone)
+    startingLayoutNames.push('square')
   }
 
   if (c.useCircle) {
     const clone = cloneLayouts(baseLayouts)
     circleFlow(clone, c)
     startingLayouts.push(clone)
+    startingLayoutNames.push('circle')
   }
 
   if (c.useInput || !startingLayouts.length) {
     const clone = cloneLayouts(baseLayouts)
     startingLayouts.push(clone)
+    startingLayoutNames.push('input')
   }
 
   // Normalize starting layouts so they satisfy the same invariants the GA enforces each generation.
@@ -193,6 +201,7 @@ export async function main(
       wrappedLogProgress,
       logInfo,
       onMonitorEnd,
+      startingLayoutNames,
     )
 
     if (result.length > 0) {

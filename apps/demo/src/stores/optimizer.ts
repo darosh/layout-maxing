@@ -21,6 +21,7 @@ export interface TopEntry {
   popGen?: number
   prevId?: number
   prevGen?: number
+  origins?: string[]
   passNum?: number
 }
 

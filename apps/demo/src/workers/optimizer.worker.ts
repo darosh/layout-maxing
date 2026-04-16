@@ -173,6 +173,7 @@ self.onmessage = async (e: MessageEvent) => {
     popGen?: number
     prevId?: number
     prevGen?: number
+    origins?: string[]
     passNum?: number
   }[] = []
   // Best entry per pass (independent of topN — never evicted)
@@ -186,10 +187,21 @@ self.onmessage = async (e: MessageEvent) => {
     popGen?: number
     prevId?: number
     prevGen?: number
+    origins?: string[]
     passNum?: number
   }[] = []
 
-  function updateTop(score: number, layouts: Box[], fitness: Fitness, popId?: number, popGen?: number, prevId?: number, prevGen?: number, passNum?: number) {
+  function updateTop(
+    score: number,
+    layouts: Box[],
+    fitness: Fitness,
+    popId?: number,
+    popGen?: number,
+    prevId?: number,
+    prevGen?: number,
+    origins?: string[],
+    passNum?: number,
+  ) {
     const worst = top.length >= topN ? top[top.length - 1]!.score : Infinity
     if (score < worst || top.length < topN) {
       // Avoid near-duplicate scores (within 0.01%)
@@ -203,6 +215,7 @@ self.onmessage = async (e: MessageEvent) => {
           popGen,
           prevId,
           prevGen,
+          origins,
           passNum,
         })
         top.sort((a, b) => a.score - b.score)
@@ -213,7 +226,7 @@ self.onmessage = async (e: MessageEvent) => {
     const p = passNum ?? 1
     const prev = passBestMap.get(p)
     if (prev === undefined || score < prev.score) {
-      passBestMap.set(p, { score, layouts: cloneForSvg(layouts), fitness, popId, popGen, prevId, prevGen, passNum })
+      passBestMap.set(p, { score, layouts: cloneForSvg(layouts), fitness, popId, popGen, prevId, prevGen, origins, passNum })
     }
   }
 
@@ -239,6 +252,7 @@ self.onmessage = async (e: MessageEvent) => {
       popGen: t.popGen,
       prevId: t.prevId,
       prevGen: t.prevGen,
+      origins: t.origins,
       passNum: t.passNum,
     }))
   }
@@ -256,6 +270,7 @@ self.onmessage = async (e: MessageEvent) => {
         popGen: t.popGen,
         prevId: t.prevId,
         prevGen: t.prevGen,
+        origins: t.origins,
         passNum: t.passNum,
       }))
   }
@@ -274,6 +289,7 @@ self.onmessage = async (e: MessageEvent) => {
         popGen: t.popGen,
         prevId: t.prevId,
         prevGen: t.prevGen,
+        origins: t.origins,
         passNum: t.passNum,
       }))
   }
@@ -332,7 +348,8 @@ self.onmessage = async (e: MessageEvent) => {
         const popGen: number | undefined = (layouts as any)._popGen
         const prevId: number | undefined = (layouts as any)._popPrevId
         const prevGen: number | undefined = (layouts as any)._popPrevGen
-        updateTop(result.score, layouts, result, popId, popGen, prevId, prevGen, currentPassNum)
+        const origins: string[] | undefined = (layouts as any)._popOrigins
+        updateTop(result.score, layouts, result, popId, popGen, prevId, prevGen, origins, currentPassNum)
         // Sliding window for current population
         currentPop.push({
           score: result.score,
@@ -342,6 +359,7 @@ self.onmessage = async (e: MessageEvent) => {
           popGen,
           prevId,
           prevGen,
+          origins,
           passNum: currentPassNum,
         })
         if (currentPop.length > c.popSize) currentPop.shift()

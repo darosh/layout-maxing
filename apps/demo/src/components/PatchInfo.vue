@@ -71,6 +71,10 @@ const fullScore = computed(() => {
       <template v-if="store.progress.numPasses > 1 && store.displayedEntry?.passNum != null && store.selection.kind !== 'pass'">
         PASS {{ store.displayedEntry.passNum.toLocaleString() }}
       </template>
+      <template v-if="store.displayedEntry?.origins?.length">
+        <br />
+        ORIGIN: {{ store.displayedEntry.origins.join(', ') }}
+      </template>
       <template v-if="store.showStats && store.displayedEntry?.popId != null && store.displayedEntry?.popGen != null && store.displayedEntry?.prevGen != null">
         <br />
         THIS: ID-{{ store.displayedEntry.popId }} GEN-{{ store.displayedEntry.popGen }} ({{ store.displayedEntry.popGen - store.progress.generation }})
