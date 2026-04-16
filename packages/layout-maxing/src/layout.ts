@@ -69,6 +69,10 @@ export function normalizeLayouts(layouts: Box[]): void {
   }
 }
 
+export function isSnapped(layouts: Box[], { gridX, gridY }: Required<Config>): boolean {
+  return layouts.every((l) => l.x % gridX === 0 && l.y % gridY === 0)
+}
+
 // Stamp groupIdx on layouts from raw boxgroups so fitness can skip same-group
 // pairs. Safe to call before fillDepths/stripOrphans.
 export function stampGroupIdx(layouts: Box[], boxgroups: Array<{ boxes: BoxId[] }> | undefined): void {
@@ -408,6 +412,66 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>, maxIter = 2):
           moveEntityTo(curr, Math.ceil((prev.x + prev.width + cfg.minDistX) / cfg.gridX) * cfg.gridX, curr.y)
         } else {
           moveEntityTo(curr, curr.x, Math.ceil((prev.y + prev.height + cfg.minDistY) / cfg.gridY) * cfg.gridY)
+        }
+      }
+    }
+  }
+
+  if (cfg.shrinkRows) layoutShrinkEntities(entities, cfg.gridY)
+
+  return fixed
+}
+
+export function snapToGridNoOverlaps(layouts: Box[], cfg: Required<Config>): Box[] {
+  const fixed = layouts.map((l) => ({ ...l }))
+  const entities = toEntities(fixed)
+
+  // Single pass: top-left → bottom-right.
+  // When curr needs to move (snap or conflict), apply delta to curr and everything
+  // in its bottom-right quadrant (e.x >= curr.x AND e.y >= curr.y).
+  // x and y are handled independently so a y-only snap doesn't cause an x-shift.
+  entities.sort((a, b) => a.y - b.y || a.x - b.x)
+
+  for (let i = 0; i < entities.length; i++) {
+    const curr = entities[i]
+
+    // Snap x to grid independently
+    const snappedX = Math.ceil(curr.x / cfg.gridX) * cfg.gridX
+    if (snappedX !== curr.x) {
+      const dx = snappedX - curr.x
+      for (const e of entities) {
+        if (e.x >= curr.x || e.y >= curr.y) moveEntityTo(e, e.x + dx, e.y)
+      }
+    }
+
+    // Snap y to grid independently
+    const snappedY = Math.ceil(curr.y / cfg.gridY) * cfg.gridY
+    if (snappedY !== curr.y) {
+      const dy = snappedY - curr.y
+      for (const e of entities) {
+        if (e.x >= curr.x || e.y >= curr.y) moveEntityTo(e, e.x, e.y + dy)
+      }
+    }
+
+    // Resolve conflicts with already-placed entities
+    for (let j = 0; j < i; j++) {
+      const prev = entities[j]
+      if (!gapViolated(curr, prev, cfg.minDistX, cfg.minDistY)) continue
+
+      const neededX = prev.x + prev.width + cfg.minDistX
+      const neededY = prev.y + prev.height + cfg.minDistY
+      const moveX = neededX - curr.x
+      const moveY = neededY - curr.y
+
+      if (moveX > 0 && (moveX <= moveY || moveY <= 0)) {
+        const dx = Math.ceil(neededX / cfg.gridX) * cfg.gridX - curr.x
+        for (const e of entities) {
+          if (e.x >= curr.x || e.y >= curr.y) moveEntityTo(e, e.x + dx, e.y)
+        }
+      } else if (moveY > 0) {
+        const dy = Math.ceil(neededY / cfg.gridY) * cfg.gridY - curr.y
+        for (const e of entities) {
+          if (e.x >= curr.x || e.y >= curr.y) moveEntityTo(e, e.x, e.y + dy)
         }
       }
     }
