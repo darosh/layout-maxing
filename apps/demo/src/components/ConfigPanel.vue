@@ -383,10 +383,15 @@ function copyCli() {
                   @click="isNonDefault(f.key) && resetProp(f.key)"
                   >{{ f.key }}</label
                 >
-                <ToggleSwitch
-                  :model-value="cfgBool(f.key)"
-                  @update:model-value="setCfgBool(f.key, $event)"
-                  v-tip.right="configTip(f.key)" />
+                <div class="field-with-dot">
+                  <ToggleSwitch
+                    :model-value="cfgBool(f.key)"
+                    @update:model-value="setCfgBool(f.key, $event)"
+                    v-tip.right="configTip(f.key)" />
+                  <span
+                    v-if="isHighlighted(configFeatureTags[f.key] ?? [])"
+                    class="hl-dot" />
+                </div>
               </template>
               <!-- numeric input with optional hl-dot -->
               <template v-else>
