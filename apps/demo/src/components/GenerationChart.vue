@@ -109,10 +109,10 @@ const scoreLabels = computed(() => chart.value?.seriesLabels[hoveredSeries.value
 
 const seriesColor: Record<SeriesKey, string> = {
   best: 'var(--p-primary-400)',
-  median: 'var(--p-surface-400)',
-  diversity: 'var(--p-cyan-500)',
-  'eff-mut-rate': 'var(--p-amber-500)',
-  'eff-mutate': 'var(--p-orange-500)',
+  median: 'var(--p-surface-300)',
+  diversity: 'var(--p-sky-400)',
+  'eff-mut-rate': 'var(--p-yellow-400)',
+  'eff-mutate': 'var(--p-purple-600)',
 }
 const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
 </script>
@@ -170,7 +170,7 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
         <path
           :d="chart!.medianPath"
           fill="none"
-          stroke="var(--p-surface-400)"
+          :stroke="seriesColor.median"
           stroke-width="1"
           stroke-opacity=".75" />
 
@@ -178,7 +178,7 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
         <path
           :d="chart!.divPath"
           fill="none"
-          stroke="var(--p-cyan-600)"
+          :stroke="seriesColor.diversity"
           stroke-width="1"
           stroke-opacity=".75" />
 
@@ -186,7 +186,7 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
         <path
           :d="chart!.effMutRatePath"
           fill="none"
-          stroke="var(--p-amber-500)"
+          :stroke="seriesColor['eff-mut-rate']"
           stroke-width="1"
           stroke-opacity=".75" />
 
@@ -194,7 +194,7 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
         <path
           :d="chart!.effMutatePath"
           fill="none"
-          stroke="var(--p-orange-500)"
+          :stroke="seriesColor['eff-mutate']"
           stroke-width="1"
           stroke-opacity=".75" />
 
@@ -202,7 +202,7 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
         <path
           :d="chart!.bestPath"
           fill="none"
-          stroke="var(--p-primary-400)"
+          :stroke="seriesColor.best"
           stroke-width="1" />
       </g>
 
@@ -255,11 +255,6 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
       >
       <!--      <span class="legend-item p75">p75</span>-->
       <span
-        class="legend-item diversity"
-        @mouseenter="hoveredSeries = 'diversity'"
-        >diversity</span
-      >
-      <span
         class="legend-item eff-mut-rate"
         @mouseenter="hoveredSeries = 'eff-mut-rate'"
         >mut rate</span
@@ -268,6 +263,11 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
         class="legend-item eff-mutate"
         @mouseenter="hoveredSeries = 'eff-mutate'"
         >mutate</span
+      >
+      <span
+        class="legend-item diversity"
+        @mouseenter="hoveredSeries = 'diversity'"
+        >diversity</span
       >
     </div>
   </div>
@@ -327,10 +327,12 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
 }
 
 .legend-item.median {
-  color: var(--p-surface-400);
+  color: var(--p-surface-300);
+  opacity: 0.87;
 }
 .legend-item.median::before {
-  background: var(--p-surface-400);
+  background: var(--p-surface-300);
+  opacity: 0.87;
 }
 
 .legend-item.p75 {
@@ -341,26 +343,27 @@ const scoreLabelColor = computed(() => seriesColor[hoveredSeries.value])
 }
 
 .legend-item.diversity {
-  color: var(--p-cyan-500);
+  color: var(--p-sky-400);
 }
 .legend-item.diversity::before {
-  background: var(--p-cyan-500);
-  opacity: 0.7;
+  background: var(--p-sky-400);
 }
 
 .legend-item.eff-mut-rate {
-  color: var(--p-amber-500);
+  color: var(--p-yellow-300);
+  opacity: 0.87;
 }
 .legend-item.eff-mut-rate::before {
-  background: var(--p-amber-500);
-  opacity: 0.7;
+  background: var(--p-yellow-300);
+  opacity: 0.87;
 }
 
 .legend-item.eff-mutate {
-  color: var(--p-orange-500);
+  color: var(--p-purple-400);
+  opacity: 0.87;
 }
 .legend-item.eff-mutate::before {
-  background: var(--p-orange-500);
-  opacity: 0.7;
+  background: var(--p-purple-400);
+  opacity: 0.87;
 }
 </style>
