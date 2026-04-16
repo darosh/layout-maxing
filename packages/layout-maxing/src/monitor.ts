@@ -1,4 +1,3 @@
-import type { Config } from './config.ts'
 import type { Box } from './layout.ts'
 
 export type MutationStat = {
@@ -34,103 +33,6 @@ export type RunMonitor = {
   runTotals: Record<string, MutationStat> // aggregated across all generations
   bestLineage: LineageEvent[] // events that produced each new best individual
   deadWeightMutations: string[] // mutations with 0 representation in top-10% at end
-}
-
-export const MUTATION_NAMES = [
-  'quadrant',
-  'single',
-  'children',
-  'parents',
-  'swapSibling',
-  'swapRandom',
-  'swapInRow',
-  'swapInCol',
-  'shiftRow',
-  'shiftCol',
-] as const
-
-// Tuple: [label, shortcut, description]
-export type MutationMetaEntry = [label: string, shortcut: string, description: string]
-
-export const mutationMeta: Record<string, MutationMetaEntry> = {
-  quadrant: ['Quadrant', 'QUAD', 'Move a box to a different quadrant of the canvas'],
-  single: ['Single', 'SNGL', 'Nudge one box by a small random grid offset'],
-  children: ['Children', 'CHLD', 'Relocate a box near one of its downstream children'],
-  parents: ['Parents', 'PRNT', 'Relocate a box near one of its upstream parents'],
-  swapSibling: ['Swap Sibling', 'SWSB', 'Swap positions with a box that shares a parent or child'],
-  swapRandom: ['Swap Random', 'SWRN', 'Swap positions with any random box'],
-  swapInRow: ['Swap In Row', 'SWRW', 'Swap positions with a box on the same grid row'],
-  swapInCol: ['Swap In Col', 'SWCL', 'Swap positions with a box on the same grid column'],
-  shiftRow: ['Shift Row', 'SHRW', 'Shift an entire row of boxes horizontally'],
-  shiftCol: ['Shift Col', 'SHCL', 'Shift an entire column of boxes vertically'],
-}
-
-export const crossoverMeta: Record<string, MutationMetaEntry> = {
-  crossover: ['Positional', 'CROR', 'Randomly mix genes from two parents based on crossoverMix probability'],
-  crossoverStructural: ['Structural', 'CROS', 'Copy one box and all its descendants from parent2 into parent1'],
-}
-
-// Maps config key → shortcut strings it relates to (for cross-highlighting)
-export const configFeatureTags: Partial<Record<keyof Config, string[]>> = {
-  mutWeightQuadrant: ['QUAD', 'bandit', 'xy'],
-  mutWeightSingle: ['SNGL', 'bandit', 'xy'],
-  mutWeightChildren: ['CHLD', 'bandit', 'xy'],
-  mutWeightParents: ['PRNT', 'bandit', 'xy'],
-  mutWeightSwapSibling: ['SWSB', 'bandit'],
-  mutWeightSwapRandom: ['SWRN', 'bandit'],
-  mutWeightSwapInRow: ['SWRW', 'bandit'],
-  mutWeightSwapInCol: ['SWCL', 'bandit'],
-  mutWeightShiftRow: ['SHRW', 'bandit'],
-  mutWeightShiftCol: ['SHCL', 'bandit'],
-  maxChildren: ['CHLD'],
-  maxParents: ['PRNT'],
-  mutate: ['QUAD', 'SNGL', 'CHLD', 'PRNT', 'SHRW', 'SHCL'],
-  mutationRate: ['QUAD', 'SNGL', 'CHLD', 'PRNT', 'SWSB', 'SWRN', 'SWRW', 'SWCL', 'SHRW', 'SHCL'],
-  mutateXYOverlap: ['xy'],
-  crossoverRate: ['CROR', 'CROS'],
-  crossoverMix: ['CROR'],
-  crossWeightRandom: ['CROR'],
-  crossWeightStruct: ['CROS'],
-  banditEnabled: ['bandit'],
-  banditK: ['bandit'],
-  banditExploration: ['bandit'],
-  catastropheThreshold: ['catastrophe'],
-  catastropheFraction: ['catastrophe'],
-  diversityBoost: ['diversity'],
-  diversityBoostCap: ['diversity'],
-  nichingEnabled: ['niching'],
-  nichingRadius: ['niching'],
-  nichingExponent: ['niching'],
-  stagnationThreshold: ['stagnation'],
-  stagnationRate: ['stagnation'],
-  multiMutRate: ['stagnation'],
-  useDagre: ['dagre'],
-  dagreLR: ['dagre'],
-  repairOffspring: ['repair'],
-  shrinkRows: ['repair'],
-}
-
-// Maps mutation/crossover key → primary config weight key
-export const mutationConfigMap: Record<string, string> = {
-  quadrant: 'mutWeightQuadrant',
-  single: 'mutWeightSingle',
-  children: 'mutWeightChildren',
-  parents: 'mutWeightParents',
-  swapSibling: 'mutWeightSwapSibling',
-  swapRandom: 'mutWeightSwapRandom',
-  swapInRow: 'mutWeightSwapInRow',
-  swapInCol: 'mutWeightSwapInCol',
-  shiftRow: 'mutWeightShiftRow',
-  shiftCol: 'mutWeightShiftCol',
-  crossover: 'crossoverWeightPositional',
-  crossoverStructural: 'crossoverWeightStructural',
-}
-
-export const statMeta: Record<string, MutationMetaEntry> = {
-  att: ['Attempts', 'ATT', 'How many times this mutation was selected by roulette wheel'],
-  imp: ['Improvement %', 'IMP', 'Percentage of attempts that produced a better score than the parent'],
-  davg: ['Avg Δ Score', 'ΔAVG', 'Average fitness change per attempt (negative = improvement)'],
-  best: ['Best lineage', 'BEST', 'How many times this mutation found a new all-time best individual. Zero = dead weight (never improved the best).'],
 }
 
 export function createMutationStat(): MutationStat {

@@ -21,7 +21,6 @@ import { getViewPort } from './geometry.ts'
 import {
   type GenerationSnapshot,
   type RunMonitor,
-  MUTATION_NAMES,
   createMutationStat,
   createRunMonitor,
   computePopulationDiversity,
@@ -31,6 +30,7 @@ import {
   summarizeRun,
 } from './monitor.ts'
 import { applyFitnessSharing } from './niching.ts'
+import { MUTATION_NAMES } from './meta.ts'
 
 export type { GenerationSnapshot, RunMonitor }
 

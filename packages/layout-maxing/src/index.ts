@@ -1,4 +1,6 @@
 export * from './config.ts'
+export * from './meta.ts'
+export * from './help.ts'
 export * from './layout.ts'
 export * from './geometry.ts'
 export * from './fitness.ts'
