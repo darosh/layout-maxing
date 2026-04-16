@@ -300,7 +300,23 @@ function copyCli() {
   <div class="config-panel">
     <div class="config-header">
       <span class="config-title">Config</span>
-      <div class="config-actions">
+      <div class="preset-select">
+        <Select
+          :model-value="preset"
+          :options="presetNames"
+          size="small"
+          variant="filled"
+          v-tip.top="'Select configuration preset'"
+          @update:model-value="onPresetChange($event)" /> </div
+      ><div class="config-actions">
+        <Button
+          icon="pi pi-refresh"
+          size="small"
+          :severity="isConfigDefault ? 'secondary' : 'warning'"
+          text
+          :disabled="isConfigDefault"
+          v-tip.top="'Reset to preset'"
+          @click="store.resetConfig()" />
         <Button
           icon="pi pi-copy"
           size="small"
@@ -309,13 +325,6 @@ function copyCli() {
           v-tip.top="'Copy config JSON'"
           @click="copyConfig" />
         <Button
-          icon="pi pi-clipboard"
-          size="small"
-          severity="secondary"
-          text
-          v-tip.top="'Paste config JSON'"
-          @click="pasteConfig" />
-        <Button
           icon="pi pi-chevron-right"
           size="small"
           severity="secondary"
@@ -323,20 +332,12 @@ function copyCli() {
           v-tip.top="'Copy CLI command'"
           @click="copyCli" />
         <Button
-          icon="pi pi-refresh"
+          icon="pi pi-clipboard"
           size="small"
-          :severity="isConfigDefault ? 'secondary' : 'warning'"
+          severity="secondary"
           text
-          v-tip.top="'Reset to preset'"
-          @click="store.resetConfig()" />
-        <Select
-          :model-value="preset"
-          :options="presetNames"
-          size="small"
-          variant="filled"
-          class="preset-select"
-          v-tip.top="'Select preset'"
-          @update:model-value="onPresetChange($event)" />
+          v-tip.top="'Paste config JSON'"
+          @click="pasteConfig" />
       </div>
     </div>
 
@@ -461,7 +462,18 @@ function copyCli() {
 .config-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+}
+
+.config-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-surface-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-right: 1rem;
 }
 
 .config-actions {
@@ -474,23 +486,18 @@ function copyCli() {
   --p-select-padding-y: 0;
   --p-select-padding-x: 0;
   --p-select-sm-font-size: 0.75rem;
-  margin-left: 0.5rem;
+  margin-right: 0.75rem;
+  text-align: right;
+  flex-grow: 1;
 }
 
 .preset-select:deep(.p-select-dropdown) {
   display: none;
+  min-width: 4rem;
 }
 
 .preset-select:deep(.p-select-label) {
   padding: 0.3rem 0.4rem;
-}
-
-.config-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--p-surface-500);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .fields-grid {

@@ -3,9 +3,11 @@
 ### Misc
 
 - [ ] automate best setting search
+- [ ] preset tuning
+- [ ] little green dots fix+fl
 - [x] best of pass
 - [x] use summarizeRun
-- [ ] presets to cli and UI
+- [x] presets to cli and UI
 - [x] try another prng
 - [x] cli bench deno/bun/node (bun is 50% slower, workers = perf cores)
 - [x] fix main layout
