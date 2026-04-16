@@ -594,7 +594,8 @@ function copyCli() {
   flex-shrink: 0;
   position: relative;
   margin-left: -9px;
-  top: -1.5px;
+  top: 0px;
   left: 12px;
+  z-index: 10000;
 }
 </style>

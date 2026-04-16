@@ -3,11 +3,24 @@ import { ref } from 'vue'
 const highlightedFeatures = ref<string[]>([])
 
 export function useHighlight() {
+  let timer: null | number = null
+
+  function clear() {
+    if (timer) {
+      clearTimeout(timer)
+      timer = null
+    }
+  }
+
   function setHighlight(features: string[]) {
+    clear()
     highlightedFeatures.value = features
   }
-  function clearHighlight() {
-    highlightedFeatures.value = []
+  function clearHighlight(timeout = 200) {
+    timer = setTimeout(() => {
+      highlightedFeatures.value = []
+      timer = null
+    }, timeout)
   }
   function isHighlighted(features: string[]): boolean {
     if (!highlightedFeatures.value.length || !features.length) return false
