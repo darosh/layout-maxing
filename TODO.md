@@ -4,7 +4,7 @@
 
 - [ ] automate best setting search
 - [ ] preset tuning
-- [ ] little green dots fix+fl
+- [x] little green dots fix+fl
 - [x] best of pass
 - [x] use summarizeRun
 - [x] presets to cli and UI
