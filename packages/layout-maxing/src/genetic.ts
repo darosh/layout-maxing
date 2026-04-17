@@ -715,7 +715,7 @@ async function runGenetic(
         }
       }
       stagnation = 0
-      stop = Math.min(stop + Math.floor(cfg.stop * cfg.catastropheFraction), cfg.stop)
+      // stop = Math.min(stop + Math.floor(cfg.stop * cfg.catastropheFraction), cfg.stop)
     }
 
     population = newPopulation
