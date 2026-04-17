@@ -1,10 +1,10 @@
-import Default from './default.json' with { type: 'json' }
-import Fast from './fast.json' with { type: 'json' }
-import Small from './small.json' with { type: 'json' }
-import Medium from './medium.json' with { type: 'json' }
-import Large from './large.json' with { type: 'json' }
-import ElkRaw from './elk-raw.json' with { type: 'json' }
-import DagreRaw from './dagre-raw.json' with { type: 'json' }
+import Default from './default.ts'
+import Fast from './fast.ts'
+import Small from './small.ts'
+import Medium from './medium.ts'
+import Large from './large.ts'
+import ElkRaw from './elk-raw.ts'
+import DagreRaw from './dagre-raw.ts'
 
 export const PRESETS = {
   Default,
@@ -13,5 +13,5 @@ export const PRESETS = {
   Medium,
   Large,
   DagreRaw,
-  ElkRaw
+  ElkRaw,
 }

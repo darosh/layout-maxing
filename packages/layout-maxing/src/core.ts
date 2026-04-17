@@ -117,23 +117,40 @@ export async function main(
   let startingLayouts: Box[][] = []
   const startingLayoutNames: string[] = []
 
-  if (c.useDagre) {
-    const preferredDir = c.dagreLR ? 'LR' : 'TB'
-    const clone = cloneLayouts(baseLayouts)
-    dagreFlow(clone, lines, c, preferredDir)
-    startingLayouts.push(clone)
-    startingLayoutNames.push(c.dagreLR ? 'dagre-lr' : 'dagre')
+  const dagreRankers: Array<['network-simplex' | 'tight-tree' | 'longest-path', boolean]> = [
+    ['longest-path', c.dagreLongestPath || (c.useDagre && !c.dagreNetworkSimplex && !c.dagreTightTree && !c.dagreLongestPath)],
+    ['network-simplex', !!c.dagreNetworkSimplex],
+    ['tight-tree', !!c.dagreTightTree],
+  ]
+  for (const [ranker, enabled] of dagreRankers) {
+    if (enabled) {
+      const preferredDir = c.dagreLR ? 'LR' : 'TB'
+      const clone = cloneLayouts(baseLayouts)
+      dagreFlow(clone, lines, c, preferredDir, ranker)
+      startingLayouts.push(clone)
+      startingLayoutNames.push(c.dagreLR ? `dagre-${ranker}-lr` : `dagre-${ranker}`)
+    }
   }
 
-  if (c.useElk) {
-    if (workerFactory) {
-      const clone = cloneLayouts(baseLayouts)
-      const preferredDir = c.elkLR ? 'RIGHT' : 'DOWN'
-      await elkFlow(clone, lines, c, workerFactory, preferredDir)
-      startingLayouts.push(clone)
-      startingLayoutNames.push(c.elkLR ? 'elk-lr' : 'elk')
-    } else {
-      console.warn('Skipping ELK, worker factory not provided')
+  const elkAlgos: Array<[keyof typeof c, string]> = [
+    ['elkLayered', 'layered'],
+    ['elkMrTree', 'mrtree'],
+    ['elkForce', 'force'],
+    ['elkStress', 'stress'],
+    ['elkBox', 'box'],
+    ['elkRectPacking', 'rectpacking'],
+  ]
+  for (const [flag, algo] of elkAlgos) {
+    if (c[flag]) {
+      if (workerFactory) {
+        const clone = cloneLayouts(baseLayouts)
+        const preferredDir = c.elkLR ? 'RIGHT' : 'DOWN'
+        await elkFlow(clone, lines, c, workerFactory, preferredDir, algo)
+        startingLayouts.push(clone)
+        startingLayoutNames.push(c.elkLR ? `elk-${algo}-lr` : `elk-${algo}`)
+      } else {
+        console.warn('Skipping ELK, worker factory not provided')
+      }
     }
   }
 

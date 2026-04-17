@@ -539,7 +539,14 @@ export function circleFlow(layouts: Box[], cfg: Required<Config>) {
   })
 }
 
-export async function elkFlow(layouts: Box[], lines: Line[], cfg: Required<Config>, workerFactory: (url: string) => unknown, rankdir: 'DOWN' | 'RIGHT' = 'DOWN', ) {
+export async function elkFlow(
+  layouts: Box[],
+  lines: Line[],
+  cfg: Required<Config>,
+  workerFactory: (url: string) => unknown,
+  rankdir: 'DOWN' | 'RIGHT' = 'DOWN',
+  algorithm = 'layered',
+) {
   if (!workerFactory) throw new Error('elkFlow: workerFactory is required — provide one appropriate for your environment')
   const elk = <ELK>new ELKCtor({ workerFactory })
 
@@ -570,25 +577,21 @@ export async function elkFlow(layouts: Box[], lines: Line[], cfg: Required<Confi
 
   const graph: ElkNode = {
     id: 'root',
-    layoutOptions: <LayoutOptions><unknown>{
-      'elk.algorithm': 'layered',
-      // 'elk.algorithm': 'mrtree',
-      // 'elk.algorithm': 'force',
-      // 'elk.algorithm': 'stress',
-      // 'elk.algorithm': 'box',
-      // 'elk.algorithm': 'rectpacking',
+    layoutOptions: <LayoutOptions>(<unknown>{
+      'elk.algorithm': algorithm,
+      // working: layered, mrtree, force, stress, box, rectpacking
       /** For the record these do not work well
-      'elk.algorithm': 'fixed', NO!
-      'elk.algorithm': 'random', NO!
-      'elk.algorithm': 'sporeOverlap', NO!
-      'elk.algorithm': 'sporeCompaction', NO!
-      'elk.algorithm': 'radial', NO!
-      **/
+       'elk.algorithm': 'fixed', NO!
+       'elk.algorithm': 'random', NO!
+       'elk.algorithm': 'sporeOverlap', NO!
+       'elk.algorithm': 'sporeCompaction', NO!
+       'elk.algorithm': 'radial', NO!
+       **/
       'elk.direction': rankdir,
       'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
       'elk.portConstraints': 'FIXED_SIDE',
-      'elk.spacing.nodeNode': Math.max(cfg.gridX, cfg.gridY)
-    },
+      'elk.spacing.nodeNode': Math.max(cfg.gridX, cfg.gridY),
+    }),
     children: elkNodes,
     edges: elkEdges,
   }
@@ -612,15 +615,21 @@ export async function elkFlow(layouts: Box[], lines: Line[], cfg: Required<Confi
   }
 }
 
-export function dagreFlow(layouts: Box[], lines: Line[], cfg: Required<Config>, rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB') {
+export function dagreFlow(
+  layouts: Box[],
+  lines: Line[],
+  cfg: Required<Config>,
+  rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB',
+  ranker: 'network-simplex' | 'tight-tree' | 'longest-path' = 'longest-path',
+) {
   // Create a new directed graph
   const g = new dagre.graphlib.Graph()
 
-  const ranksep = rankdir.includes('T') ?  cfg.gridY : cfg.gridX
+  const ranksep = rankdir.includes('T') ? cfg.gridY : cfg.gridX
   const nodesep = rankdir.includes('T') ? cfg.gridX : cfg.gridY
 
-    // Set an object for the graph label
-  g.setGraph({ align: 'UL', rankdir, ranker: 'longest-path', ranksep, nodesep, edgesep: 0 })
+  // Set an object for the graph label
+  g.setGraph({ align: 'UL', rankdir, ranker, ranksep, nodesep, edgesep: 0 })
 
   // Default to assigning a new object as a label for each new edge.
   g.setDefaultEdgeLabel(function () {
