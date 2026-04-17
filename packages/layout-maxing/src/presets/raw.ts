@@ -1,7 +1,7 @@
 import type { Config } from '../config.ts'
 
 export default {
-  popSize: 3,
+  popSize: 14,
   generations: 1,
   repairOffspring: false,
   shrinkRows: false,
@@ -9,7 +9,18 @@ export default {
   passes: 1,
   normalizeExport: false,
   initialMutation: false,
+  elkLayered: true,
+  elkBox: true,
+  elkForce: true,
+  elkMrTree: true,
+  elkRectPacking: true,
+  elkStress: true,
   dagreLongestPath: true,
   dagreNetworkSimplex: true,
   dagreTightTree: true,
+  useCircle: true,
+  useSimpleFlow: true,
+  useSquare: true,
+  useInput: true,
+  useZero: true,
 } satisfies Config

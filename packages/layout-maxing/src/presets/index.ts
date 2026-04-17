@@ -3,8 +3,7 @@ import Fast from './fast.ts'
 import Small from './small.ts'
 import Medium from './medium.ts'
 import Large from './large.ts'
-import ElkRaw from './elk-raw.ts'
-import DagreRaw from './dagre-raw.ts'
+import Raw from './raw.ts'
 
 export const PRESETS = {
   Default,
@@ -12,6 +11,5 @@ export const PRESETS = {
   Small,
   Medium,
   Large,
-  DagreRaw,
-  ElkRaw,
+  Raw,
 }
