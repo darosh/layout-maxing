@@ -2,7 +2,6 @@ import type { Config } from '../config.ts'
 
 export default {
   popSize: 30,
-  stop: 499,
   generations: 70000,
   stagnationThreshold: 20,
   catastropheThreshold: 60,

@@ -430,6 +430,7 @@ async function runGenetic(
   let lastProgressLog = 0
   const monitor = createRunMonitor()
   let stagnation = 0
+  let allowCatastropheRestart = true
   let nextPopId = cfg.popSize
   let effectiveMutWeights = [
     cfg.mutWeightQuadrant,
@@ -513,6 +514,7 @@ async function runGenetic(
       ;(bestIndividual as any)._popOrigins = newBest.origins
       stop = cfg.stop
       stagnation = 0
+      allowCatastropheRestart = true
       // record lineage event
       monitor.bestLineage.push({
         gen,
@@ -698,7 +700,7 @@ async function runGenetic(
     }
 
     // Catastrophe restart: reinitialise bottom fraction of non-elite slots
-    if (cfg.catastropheThreshold > 0 && stagnation >= cfg.catastropheThreshold) {
+    if (allowCatastropheRestart && cfg.catastropheThreshold > 0 && stagnation >= cfg.catastropheThreshold) {
       const numElite = Math.min(cfg.eliteSize, newPopulation.length)
       const numToReplace = Math.floor(cfg.catastropheFraction * (cfg.popSize - numElite))
       for (let r = 0; r < numToReplace; r++) {
@@ -712,10 +714,12 @@ async function runGenetic(
           layouts: freshLayouts,
           _mutation: 'catastrophe',
           lastMutation: 'catastrophe',
+          origins: (bestIndividual as any)._popOrigins,
         }
       }
       stagnation = 0
-      // stop = Math.min(stop + Math.floor(cfg.stop * cfg.catastropheFraction), cfg.stop)
+      allowCatastropheRestart = false
+      stop = Math.min(stop + Math.floor(cfg.stop * cfg.catastropheFraction), cfg.stop)
     }
 
     population = newPopulation
