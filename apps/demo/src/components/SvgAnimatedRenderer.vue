@@ -176,7 +176,7 @@ const rootTransform = computed(() => {
   const ty = cy - y * scale
   return `translate(${tx}px, ${ty}px) scale(${scale})`
 })
-const gridStrokeWidth = computed(() => 1 / rootScale.value)
+const gridStrokeWidth = computed(() => 1 / (rootScale.value * userScale.value))
 
 // --- User zoom/pan ---
 const userScale = ref(1)
@@ -325,14 +325,13 @@ function onDblClick() {
   userScale.value = 1
   userPan.value = { x: 0, y: 0 }
 }
-const MIN_GRID_PX = 5
+const MIN_GRID_PX = 15
 const showGrid = computed(() => {
   if (!store.showGrid) return false
-  const { w, h } = containerSize.value
-  const { width, height } = viewport.value
-  const scaleX = w / width
-  const scaleY = h / height
-  const cellPx = Math.min(cfg.value.gridX * scaleX, cfg.value.gridY * scaleY)
+  const svp = stableVP.value
+  if (!svp) return false
+  const svgToScreen = containerSize.value.w / svp.w
+  const cellPx = cfg.value.gridX * rootScale.value * userScale.value * svgToScreen
   return cellPx >= MIN_GRID_PX
 })
 
