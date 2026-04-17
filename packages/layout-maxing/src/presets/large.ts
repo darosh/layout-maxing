@@ -2,16 +2,15 @@ import type { Config } from '../config.ts'
 
 export default {
   popSize: 40,
-  stop: 300,
-  passes: 2,
-  repairOffspring: false,
+  stop: 299,
+  passes: 1,
   stagnationThreshold: 15,
   catastropheThreshold: 40,
   catastropheFraction: 0.3,
-  dagreLongestPath: true,
-  viewExponent: 0.05,
+  viewExponent: 1.05,
   diversityBoost: 1.0,
   diversityBoostCap: 4,
   mutWeightSwapSibling: 40,
   mutWeightChildren: 50,
+  elkMrTree: true
 } satisfies Config
