@@ -199,6 +199,10 @@ export async function main(
     logInfo('No lines!')
   }
 
+  // if (logInfo) {
+  //   logInfo(`Starting layouts: ${startingLayouts.map((x: any) => x._layoutName).join(', ')}`)
+  // }
+
   const numPasses = c.passes
 
   let globalBest: Box[] = []

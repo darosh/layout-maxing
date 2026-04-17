@@ -55,7 +55,7 @@ function singleWeight(weights: number[]): number {
   return weights.findIndex(Boolean)
 }
 
-interface Population {
+export interface Population {
   id: number
   gen: number
   layouts: Box[]
@@ -569,6 +569,7 @@ async function runGenetic(
       genMutStats,
       effectiveMutationRate,
       effectiveMutate,
+      population,
     )
     monitor.snapshots.push(snapshot)
     accumulateMutStats(monitor.runTotals, genMutStats)

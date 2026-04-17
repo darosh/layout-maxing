@@ -1,5 +1,5 @@
 import { main, toSvg, defaultConfig, createInitialLayouts, applyBestLayout, fillDepths, stripOrphans, preserveGroupMembers, stampGroupIdx } from 'layout-maxing'
-import type { RNBO, Config, Box, Line, Fitness, GenerationSnapshot, RunMonitor } from 'layout-maxing'
+import type { RNBO, Config, Box, Line, Fitness, GenerationSnapshot, RunMonitor, Population } from 'layout-maxing'
 
 type Position = { id: string; x: number; y: number }
 type TopEntry = { score: number; svg: string; fitness: Fitness; positions: Position[] }
@@ -328,105 +328,128 @@ self.onmessage = async (e: MessageEvent) => {
     console.error('[optimizer] original evaluation failed:', err)
   }
 
+  const elkWorker = () => {
+    const url = new URL('elkjs/lib/elk-worker.min.js', import.meta.url)
+    return new Worker(url, { type: 'classic' })
+  }
+
+  const onMonitorEnd = (monitor: RunMonitor) => {
+    finalRunMonitor = monitor
+  }
+
+  const getFitness = async (layouts: Box[], batchLines: Line[], batchCfg: Config) => {
+    await waitUntilResumed()
+    if (stopped) throw new Error('stopped')
+
+    return await pool.getFitness(layouts, batchLines, batchCfg)
+  }
+
+  function updateUi({ fitness, layouts }: Required<Population>) {
+    evalCount++
+
+    // Track best / worst
+    if (bestScore === null || fitness.score < bestScore) {
+      bestScore = fitness.score
+      bestFitness = fitness
+      bestLayouts = cloneForSvg(layouts)
+    }
+
+    // Track top-N
+    const popId: number | undefined = (layouts as any)._popId
+    const popGen: number | undefined = (layouts as any)._popGen
+    const prevId: number | undefined = (layouts as any)._popPrevId
+    const prevGen: number | undefined = (layouts as any)._popPrevGen
+    const origins: string[] | undefined = (layouts as any)._popOrigins
+
+    updateTop(fitness.score, layouts, fitness, popId, popGen, prevId, prevGen, origins, currentPassNum)
+
+    // Sliding window for current population
+    currentPop.push({
+      score: fitness.score,
+      layouts: cloneForSvg(layouts),
+      fitness: fitness,
+      popId,
+      popGen,
+      prevId,
+      prevGen,
+      origins,
+      passNum: currentPassNum,
+    })
+
+    if (currentPop.length > c.popSize) currentPop.shift()
+
+    const now = Date.now()
+
+    // Progress + SVG update, every progressInterval ms
+    if (now - lastProgressTime >= progressInterval) {
+      lastProgressTime = now
+      const generation = currentGen
+      const elapsed = now - startTime
+      const sortedGen = [...currentPop].sort((a, b) => a.score - b.score)
+      const gen1stScore = sortedGen[0]?.score ?? null
+      const gen2ndScore = sortedGen[1]?.score ?? null
+      const genLastScore = sortedGen[sortedGen.length - 1]?.score ?? null
+      const svgNow = bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups) : null
+      post({
+        type: 'progress',
+        evalCount,
+        generation,
+        elapsed,
+        bestScore,
+        gen1stScore,
+        gen2ndScore,
+        genLastScore,
+        bestFitness,
+        stopIn,
+        passNum: currentPassNum,
+        numPasses: currentNumPasses,
+        svg: svgNow,
+        top: buildTopEntries(),
+        passBest: buildPassBestEntries(),
+        currentGenTop: buildCurrentGenEntries(),
+        layouts: bestLayouts ? [...bestLayouts] : null,
+        snapshots: snapshotBuffer.length ? [...snapshotBuffer] : null,
+      })
+    }
+  }
+
+  const onGenerationEnd = (stop: number, snapshot?: GenerationSnapshot, passNum?: number, numPasses?: number) => {
+    if (snapshot?.population) {
+      for (const p of snapshot.population) {
+        updateUi(<Required<Population>>p)
+      }
+
+      snapshot.population = undefined
+    }
+
+    stopIn = stop
+    if (passNum != null) currentPassNum = passNum
+    if (numPasses != null) currentNumPasses = numPasses
+    if (snapshot) {
+      currentGen = snapshot.gen
+      snapshotBuffer.push(snapshot)
+      // Downsample: keep evenly-spaced subset when buffer grows too large
+      if (snapshotBuffer.length > MAX_SNAPSHOTS * 1.2) {
+        const keep = MAX_SNAPSHOTS
+        const step = snapshotBuffer.length / keep
+        const downsampled = Array.from({ length: keep }, (_, i) => <GenerationSnapshot>snapshotBuffer[Math.round(i * step)])
+        snapshotBuffer.length = 0
+        snapshotBuffer.push(...downsampled)
+      }
+    }
+  }
+
   try {
     const bestIndividual = await main(
       rnbo,
-      async (layouts: Box[], batchLines: Line[], batchCfg: Config) => {
-        await waitUntilResumed()
-        if (stopped) throw new Error('stopped')
-        const result = await pool.getFitness(layouts, batchLines, batchCfg)
-        evalCount++
-
-        // Track best / worst
-        if (bestScore === null || result.score < bestScore) {
-          bestScore = result.score
-          bestFitness = result
-          bestLayouts = cloneForSvg(layouts)
-        }
-        // Track top-N
-        const popId: number | undefined = (layouts as any)._popId
-        const popGen: number | undefined = (layouts as any)._popGen
-        const prevId: number | undefined = (layouts as any)._popPrevId
-        const prevGen: number | undefined = (layouts as any)._popPrevGen
-        const origins: string[] | undefined = (layouts as any)._popOrigins
-        updateTop(result.score, layouts, result, popId, popGen, prevId, prevGen, origins, currentPassNum)
-        // Sliding window for current population
-        currentPop.push({
-          score: result.score,
-          layouts: cloneForSvg(layouts),
-          fitness: result,
-          popId,
-          popGen,
-          prevId,
-          prevGen,
-          origins,
-          passNum: currentPassNum,
-        })
-        if (currentPop.length > c.popSize) currentPop.shift()
-        const now = Date.now()
-
-        // Progress + SVG update, every progressInterval ms
-        if (now - lastProgressTime >= progressInterval) {
-          lastProgressTime = now
-          const generation = currentGen
-          const elapsed = now - startTime
-          const sortedGen = [...currentPop].sort((a, b) => a.score - b.score)
-          const gen1stScore = sortedGen[0]?.score ?? null
-          const gen2ndScore = sortedGen[1]?.score ?? null
-          const genLastScore = sortedGen[sortedGen.length - 1]?.score ?? null
-          const svgNow = bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups) : null
-          post({
-            type: 'progress',
-            evalCount,
-            generation,
-            elapsed,
-            bestScore,
-            gen1stScore,
-            gen2ndScore,
-            genLastScore,
-            bestFitness,
-            stopIn,
-            passNum: currentPassNum,
-            numPasses: currentNumPasses,
-            svg: svgNow,
-            top: buildTopEntries(),
-            passBest: buildPassBestEntries(),
-            currentGenTop: buildCurrentGenEntries(),
-            layouts: bestLayouts ? [...bestLayouts] : null,
-            snapshots: snapshotBuffer.length ? [...snapshotBuffer] : null,
-          })
-        }
-
-        return result
-      },
+      getFitness,
       undefined,
       cfg,
-      (stop: number, snapshot?: GenerationSnapshot, passNum?: number, numPasses?: number) => {
-        stopIn = stop
-        if (passNum != null) currentPassNum = passNum
-        if (numPasses != null) currentNumPasses = numPasses
-        if (snapshot) {
-          currentGen = snapshot.gen
-          snapshotBuffer.push(snapshot)
-          // Downsample: keep evenly-spaced subset when buffer grows too large
-          if (snapshotBuffer.length > MAX_SNAPSHOTS * 1.2) {
-            const keep = MAX_SNAPSHOTS
-            const step = snapshotBuffer.length / keep
-            const downsampled = Array.from({ length: keep }, (_, i) => <GenerationSnapshot>snapshotBuffer[Math.round(i * step)])
-            snapshotBuffer.length = 0
-            snapshotBuffer.push(...downsampled)
-          }
-        }
-      },
+      onGenerationEnd,
       c.logProgress ? console.log : undefined,
       c.logInfo ? console.log : undefined,
-      (monitor: RunMonitor) => {
-        finalRunMonitor = monitor
-      },
-      () => {
-        const url = new URL('elkjs/lib/elk-worker.min.js', import.meta.url)
-        return new Worker(url, { type: 'classic' })
-      },
+      onMonitorEnd,
+      elkWorker,
     )
 
     pool.terminate()

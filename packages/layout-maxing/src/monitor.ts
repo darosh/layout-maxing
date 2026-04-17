@@ -1,4 +1,5 @@
 import type { Box } from './layout.ts'
+import type { Population } from './genetic.ts'
 
 export type MutationStat = {
   attempts: number // times selected by roulette
@@ -19,6 +20,7 @@ export type GenerationSnapshot = {
   effectiveMutRate: number // actual mutationRate used this gen (after stagnation boost)
   effectiveMutate: number // actual mutate value used this gen (after diversity boost)
   mutations: Record<string, MutationStat>
+  population?: Population[]
 }
 
 export type LineageEvent = {
@@ -121,6 +123,7 @@ export function buildGenerationSnapshot(
   mutations: Record<string, MutationStat>,
   effectiveMutRate: number,
   effectiveMutate: number,
+  population: Population[],
 ): GenerationSnapshot {
   const sorted = [...scores].sort((a, b) => a - b)
   let totalAttempts = 0
@@ -128,6 +131,7 @@ export function buildGenerationSnapshot(
     totalAttempts += s.attempts
   }
   return {
+    population,
     gen,
     best: sorted[0] ?? 0,
     worst: sorted[sorted.length - 1] ?? 0,
