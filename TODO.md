@@ -3,6 +3,7 @@
 ### Misc
 
 - [ ] automate best setting search
+- [ ] svg zoom/pan
 - [x] preset tuning
 - [x] try elk algos
 - [x] add initial layout to monitor
