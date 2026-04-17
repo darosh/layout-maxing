@@ -41,8 +41,10 @@ export function applyBestLayout(rnbo: RNBO, best: Box[], cfg: Required<Config>) 
     const data = b.box
     const layout = map.get(data.id as BoxId)
     if (!layout) continue // orphan stripped upstream, or unknown — skip
-    data.patching_rect[0] = Math.round(layout.x)
-    data.patching_rect[1] = Math.round(layout.y)
+    // data.patching_rect[0] = Math.round(layout.x)
+    // data.patching_rect[1] = Math.round(layout.y)
+    data.patching_rect[0] = layout.x
+    data.patching_rect[1] = layout.y
     // width/height unchanged
   }
   if (cfg.removeLineSegments) {
@@ -118,17 +120,21 @@ export async function main(
   if (c.useDagre) {
     const preferredDir = c.dagreLR ? 'LR' : 'TB'
     const clone = cloneLayouts(baseLayouts)
-    dagreFlow(clone, lines, preferredDir)
+    dagreFlow(clone, lines, c, preferredDir)
     startingLayouts.push(clone)
     startingLayoutNames.push(c.dagreLR ? 'dagre-lr' : 'dagre')
   }
 
   if (c.useElk) {
-    const clone = cloneLayouts(baseLayouts)
-    const preferredDir = c.elkLR ? 'RIGHT' : 'DOWN'
-    await elkFlow(clone, lines, preferredDir, workerFactory)
-    startingLayouts.push(clone)
-    startingLayoutNames.push(c.elkLR ? 'elk-lr' : 'elk')
+    if (workerFactory) {
+      const clone = cloneLayouts(baseLayouts)
+      const preferredDir = c.elkLR ? 'RIGHT' : 'DOWN'
+      await elkFlow(clone, lines, c, workerFactory, preferredDir)
+      startingLayouts.push(clone)
+      startingLayoutNames.push(c.elkLR ? 'elk-lr' : 'elk')
+    } else {
+      console.warn('Skipping ELK, worker factory not provided')
+    }
   }
 
   if (c.useSimpleFlow) {
@@ -166,8 +172,12 @@ export async function main(
   }
 
   // Normalize starting layouts so they satisfy the same invariants the GA enforces each generation.
-  for (const sl of startingLayouts) {
-    if (c.normalize) normalizeLayouts(sl)
+  if (c.normalize) {
+    if (logInfo) logInfo('Normalizing starting layout')
+
+    for (const sl of startingLayouts) {
+      normalizeLayouts(sl)
+    }
   }
 
   if (lines.length === 0 && logInfo) {

@@ -1,9 +1,10 @@
 import dagre from '@dagrejs/dagre'
-import type { ELK as ELKInstance, ElkNode } from 'elkjs/lib/elk-api.js'
+import type { ELK, ELK as ELKInstance, ElkNode } from 'elkjs/lib/elk-api.js'
 import _ELKCtor from 'elkjs/lib/elk-api.js'
 // elk-api.js is CJS — TS doesn't see the construct signature; cast explicitly.
-const ELKCtor = _ELKCtor as unknown as new (args: { workerFactory: (url: string) => unknown; workerUrl: string }) => ELKInstance
+const ELKCtor = _ELKCtor as unknown as new (args: { workerFactory: (url: string) => unknown }) => ELKInstance
 import { type Config } from './config.ts'
+import { LayoutOptions } from 'elkjs/lib/elk-api.d.ts'
 
 type BoxId = string
 
@@ -538,9 +539,9 @@ export function circleFlow(layouts: Box[], cfg: Required<Config>) {
   })
 }
 
-export async function elkFlow(layouts: Box[], lines: Line[], rankdir: 'DOWN' | 'RIGHT' = 'DOWN', workerFactory?: (url: string) => unknown) {
+export async function elkFlow(layouts: Box[], lines: Line[], cfg: Required<Config>, workerFactory: (url: string) => unknown, rankdir: 'DOWN' | 'RIGHT' = 'DOWN', ) {
   if (!workerFactory) throw new Error('elkFlow: workerFactory is required — provide one appropriate for your environment')
-  const elk = new ELKCtor({ workerFactory, workerUrl: '' })
+  const elk = <ELK>new ELKCtor({ workerFactory })
 
   const inletSide = rankdir === 'RIGHT' ? 'WEST' : 'NORTH'
   const outletSide = rankdir === 'RIGHT' ? 'EAST' : 'SOUTH'
@@ -569,15 +570,33 @@ export async function elkFlow(layouts: Box[], lines: Line[], rankdir: 'DOWN' | '
 
   const graph: ElkNode = {
     id: 'root',
-    layoutOptions: {
+    layoutOptions: <LayoutOptions><unknown>{
       'elk.algorithm': 'layered',
+      // 'elk.algorithm': 'mrtree',
+      // 'elk.algorithm': 'force',
+      // 'elk.algorithm': 'stress',
+      // 'elk.algorithm': 'box',
+      // 'elk.algorithm': 'rectpacking',
+      /** For the record these do not work well
+      'elk.algorithm': 'fixed', NO!
+      'elk.algorithm': 'random', NO!
+      'elk.algorithm': 'sporeOverlap', NO!
+      'elk.algorithm': 'sporeCompaction', NO!
+      'elk.algorithm': 'radial', NO!
+      **/
       'elk.direction': rankdir,
       'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
       'elk.portConstraints': 'FIXED_SIDE',
+      'elk.spacing.nodeNode': Math.max(cfg.gridX, cfg.gridY)
     },
     children: elkNodes,
     edges: elkEdges,
   }
+  // console.log(JSON.stringify({
+  //   knownLayoutCategories: await elk.knownLayoutCategories(),
+  //   knownLayoutAlgorithms: await elk.knownLayoutAlgorithms(),
+  //   knownLayoutOptions: await elk.knownLayoutOptions()
+  // }, null, 2))
 
   const result = await elk.layout(graph)
 
@@ -585,18 +604,23 @@ export async function elkFlow(layouts: Box[], lines: Line[], rankdir: 'DOWN' | '
   for (const b of layouts) {
     const pos = posById.get(b.id)
     if (pos) {
-      b.x = Math.round(pos.x)
-      b.y = Math.round(pos.y)
+      // b.x = Math.round(pos.x)
+      // b.y = Math.round(pos.y)
+      b.x = pos.x
+      b.y = pos.y
     }
   }
 }
 
-export function dagreFlow(layouts: Box[], lines: Line[], rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB') {
+export function dagreFlow(layouts: Box[], lines: Line[], cfg: Required<Config>, rankdir: 'TB' | 'LR' | 'BT' | 'RL' = 'TB') {
   // Create a new directed graph
   const g = new dagre.graphlib.Graph()
 
-  // Set an object for the graph label
-  g.setGraph({ align: 'UL', rankdir, ranker: 'longest-path' })
+  const ranksep = rankdir.includes('T') ?  cfg.gridY : cfg.gridX
+  const nodesep = rankdir.includes('T') ? cfg.gridX : cfg.gridY
+
+    // Set an object for the graph label
+  g.setGraph({ align: 'UL', rankdir, ranker: 'longest-path', ranksep, nodesep, edgesep: 0 })
 
   // Default to assigning a new object as a label for each new edge.
   g.setDefaultEdgeLabel(function () {

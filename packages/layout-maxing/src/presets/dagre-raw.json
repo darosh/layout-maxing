@@ -1,0 +1,10 @@
+{
+  "popSize": 1,
+  "generations": "1",
+  "repairOffspring": false,
+  "shrinkRows": false,
+  "normalize": false,
+  "passes": 1,
+  "normalizeExport": false,
+  "initialMutation": false
+}

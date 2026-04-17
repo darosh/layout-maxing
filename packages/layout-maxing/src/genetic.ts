@@ -232,7 +232,7 @@ export async function createPopulation(
       }
     }
 
-    ind = fixOverlaps(ind, cfg)
+    if(cfg.repairOffspring) ind = fixOverlaps(ind, cfg)
 
     if (cfg.normalize) normalizeLayouts(ind)
 
