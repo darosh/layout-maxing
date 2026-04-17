@@ -136,21 +136,21 @@ export async function main(
     }
   }
 
-  const elkAlgos: Array<[keyof typeof c, string]> = [
-    ['elkLayered', 'layered'],
-    ['elkMrTree', 'mr-tree'],
-    ['elkForce', 'force'],
-    ['elkStress', 'stress'],
-    ['elkBox', 'box'],
-    ['elkRectPacking', 'rect-packing'],
+  const elkAlgos: Array<[keyof typeof c, string, string]> = [
+    ['elkLayered', 'layered', 'layered'],
+    ['elkMrTree', 'mrtree', 'mr-tree'],
+    ['elkForce', 'force', 'force'],
+    ['elkStress', 'stress', 'stress'],
+    ['elkBox', 'box', 'box'],
+    ['elkRectPacking', 'rectpacking', 'rect-packing'],
   ]
-  for (const [flag, algo] of elkAlgos) {
+  for (const [flag, algo, slug] of elkAlgos) {
     if (c[flag]) {
       if (workerFactory) {
         const clone = cloneLayouts(baseLayouts)
         const preferredDir = c.elkLR ? 'RIGHT' : 'DOWN'
         await elkFlow(clone, lines, c, workerFactory, preferredDir, algo)
-        pushStarting(clone, c.elkLR ? `elk-${algo}-lr` : `elk-${algo}`)
+        pushStarting(clone, c.elkLR ? `elk-${slug}-lr` : `elk-${slug}`)
       } else {
         console.warn('Skipping ELK, worker factory not provided')
       }
