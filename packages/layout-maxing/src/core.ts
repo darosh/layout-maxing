@@ -138,11 +138,11 @@ export async function main(
 
   const elkAlgos: Array<[keyof typeof c, string]> = [
     ['elkLayered', 'layered'],
-    ['elkMrTree', 'mrtree'],
+    ['elkMrTree', 'mr-tree'],
     ['elkForce', 'force'],
     ['elkStress', 'stress'],
     ['elkBox', 'box'],
-    ['elkRectPacking', 'rectpacking'],
+    ['elkRectPacking', 'rect-packing'],
   ]
   for (const [flag, algo] of elkAlgos) {
     if (c[flag]) {
