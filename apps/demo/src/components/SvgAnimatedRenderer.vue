@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onBeforeUnmount } from 'vue'
+
+const emit = defineEmits<{ tap: [] }>()
 import { useOptimizerStore } from '@/stores/optimizer'
 import { getOutletPos, getInletPos, getViewPort, normalizeLayouts, cloneLayouts, type Box } from 'layout-maxing'
 import { defaultConfig } from 'layout-maxing'
@@ -175,6 +177,154 @@ const rootTransform = computed(() => {
   return `translate(${tx}px, ${ty}px) scale(${scale})`
 })
 const gridStrokeWidth = computed(() => 1 / rootScale.value)
+
+// --- User zoom/pan ---
+const userScale = ref(1)
+const userPan = ref({ x: 0, y: 0 })
+const isPanning = ref(false)
+const panStart = ref<{ px: number; py: number; ux: number; uy: number } | null>(null)
+const pinchState = ref<{
+  midSvg: { x: number; y: number }
+  startDist: number
+  startScale: number
+  startPan: { x: number; y: number }
+} | null>(null)
+
+const userTransformCSS = computed(() => `translate(${userPan.value.x}px, ${userPan.value.y}px) scale(${userScale.value})`)
+
+watch(stableVP, (next, prev) => {
+  if (!prev || !next) return
+  userPan.value = {
+    x: userPan.value.x * (next.w / prev.w),
+    y: userPan.value.y * (next.h / prev.h),
+  }
+})
+
+function clientToSvg(svgEl: SVGSVGElement, clientX: number, clientY: number) {
+  const rect = svgEl.getBoundingClientRect()
+  const svp = stableVP.value ?? { w: 512, h: 512 }
+  return {
+    x: (clientX - rect.left) * (svp.w / rect.width),
+    y: (clientY - rect.top) * (svp.h / rect.height),
+  }
+}
+
+const ZOOM_FACTOR = 0.0012
+
+function onWheel(e: WheelEvent) {
+  const svgEl = e.currentTarget as SVGSVGElement
+  const pivot = clientToSvg(svgEl, e.clientX, e.clientY)
+  const raw = e.deltaMode === 1 ? e.deltaY * 20 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY
+  const factor = Math.exp(-raw * ZOOM_FACTOR)
+  const newScale = Math.max(0.05, Math.min(50, userScale.value * factor))
+  const af = newScale / userScale.value
+  userPan.value = {
+    x: userPan.value.x + (pivot.x - userPan.value.x) * (1 - af),
+    y: userPan.value.y + (pivot.y - userPan.value.y) * (1 - af),
+  }
+  userScale.value = newScale
+}
+
+const TAP_THRESHOLD_PX = 5
+let tapTimer: ReturnType<typeof setTimeout> | null = null
+
+function onPointerDown(e: PointerEvent) {
+  if (e.pointerType === 'touch' || e.button !== 0) return
+  isPanning.value = true
+  panStart.value = { px: e.clientX, py: e.clientY, ux: userPan.value.x, uy: userPan.value.y }
+  ;(e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId)
+  e.preventDefault()
+}
+
+function onPointerMove(e: PointerEvent) {
+  if (!isPanning.value || !panStart.value) return
+  const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect()
+  const svp = stableVP.value ?? { w: 512, h: 512 }
+  userPan.value = {
+    x: panStart.value.ux + (e.clientX - panStart.value.px) * (svp.w / rect.width),
+    y: panStart.value.uy + (e.clientY - panStart.value.py) * (svp.h / rect.height),
+  }
+}
+
+function onPointerUp(e: PointerEvent) {
+  if (e.pointerType === 'touch') return
+  if (panStart.value) {
+    const dx = e.clientX - panStart.value.px
+    const dy = e.clientY - panStart.value.py
+    if (Math.hypot(dx, dy) < TAP_THRESHOLD_PX) {
+      if (tapTimer) clearTimeout(tapTimer)
+      tapTimer = setTimeout(() => {
+        tapTimer = null
+        emit('tap')
+      }, 250)
+    }
+  }
+  isPanning.value = false
+  panStart.value = null
+}
+
+function onTouchStart(e: TouchEvent) {
+  e.preventDefault()
+  const svgEl = e.currentTarget as SVGSVGElement
+  const t = Array.from(e.touches)
+  if (t.length === 2) {
+    const mid = clientToSvg(svgEl, (t[0]!.clientX + t[1]!.clientX) / 2, (t[0]!.clientY + t[1]!.clientY) / 2)
+    const dist = Math.hypot(t[0]!.clientX - t[1]!.clientX, t[0]!.clientY - t[1]!.clientY)
+    pinchState.value = { midSvg: mid, startDist: dist, startScale: userScale.value, startPan: { ...userPan.value } }
+    isPanning.value = false
+    panStart.value = null
+  } else if (t.length === 1) {
+    pinchState.value = null
+    isPanning.value = true
+    panStart.value = { px: t[0]!.clientX, py: t[0]!.clientY, ux: userPan.value.x, uy: userPan.value.y }
+  }
+}
+
+function onTouchMove(e: TouchEvent) {
+  e.preventDefault()
+  const svgEl = e.currentTarget as SVGSVGElement
+  const t = Array.from(e.touches)
+  const svp = stableVP.value ?? { w: 512, h: 512 }
+  const rect = svgEl.getBoundingClientRect()
+  if (t.length === 2 && pinchState.value) {
+    const ps = pinchState.value
+    const dist = Math.hypot(t[0]!.clientX - t[1]!.clientX, t[0]!.clientY - t[1]!.clientY)
+    const newScale = Math.max(0.05, Math.min(50, ps.startScale * (dist / ps.startDist)))
+    const af = newScale / ps.startScale
+    userScale.value = newScale
+    userPan.value = {
+      x: ps.startPan.x + (ps.midSvg.x - ps.startPan.x) * (1 - af),
+      y: ps.startPan.y + (ps.midSvg.y - ps.startPan.y) * (1 - af),
+    }
+  } else if (t.length === 1 && isPanning.value && panStart.value) {
+    userPan.value = {
+      x: panStart.value.ux + (t[0]!.clientX - panStart.value.px) * (svp.w / rect.width),
+      y: panStart.value.uy + (t[0]!.clientY - panStart.value.py) * (svp.h / rect.height),
+    }
+  }
+}
+
+function onTouchEnd(e: TouchEvent) {
+  if (e.touches.length === 0) {
+    isPanning.value = false
+    panStart.value = null
+    pinchState.value = null
+  } else if (e.touches.length === 1 && pinchState.value) {
+    pinchState.value = null
+    const t = e.touches[0]!
+    isPanning.value = true
+    panStart.value = { px: t.clientX, py: t.clientY, ux: userPan.value.x, uy: userPan.value.y }
+  }
+}
+
+function onDblClick() {
+  if (tapTimer) {
+    clearTimeout(tapTimer)
+    tapTimer = null
+  }
+  userScale.value = 1
+  userPan.value = { x: 0, y: 0 }
+}
 const MIN_GRID_PX = 5
 const showGrid = computed(() => {
   if (!store.showGrid) return false
@@ -306,7 +456,17 @@ const portDots = computed<DotItem[]>(() => {
       v-if="layouts.length"
       :viewBox="viewBox"
       xmlns="http://www.w3.org/2000/svg"
-      class="svg-canvas">
+      class="svg-canvas"
+      :style="{ cursor: isPanning ? 'grabbing' : 'grab' }"
+      @wheel.prevent="onWheel"
+      @pointerdown="onPointerDown"
+      @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
+      @pointercancel="onPointerUp"
+      @touchstart="onTouchStart"
+      @touchmove="onTouchMove"
+      @touchend="onTouchEnd"
+      @dblclick="onDblClick">
       <defs>
         <pattern
           id="grid-pattern"
@@ -321,58 +481,62 @@ const portDots = computed<DotItem[]>(() => {
         </pattern>
       </defs>
       <g
-        :class="['layout-root', { 'layout-root--jump': skipRootTransition || skipAllTransitions }]"
-        :style="{ transform: rootTransform }">
-        <!-- Grid overlay -->
-        <rect
-          v-if="showGrid"
-          x="-100000"
-          y="-100000"
-          width="200000"
-          height="200000"
-          fill="url(#grid-pattern)"
-          class="grid-overlay" />
-        <!-- Group bounding boxes -->
-        <rect
-          v-for="gr in groupRects"
-          :key="gr.key"
-          :x="gr.x"
-          :y="gr.y"
-          :width="gr.width"
-          :height="gr.height"
-          rx="6"
-          :class="['group-bbox', { 'group-bbox--jump': skipAllTransitions }]" />
-
-        <!-- Boxes: animate position via CSS transform on the group -->
+        class="user-transform"
+        :style="{ transform: userTransformCSS }">
         <g
-          v-for="box in layouts"
-          :key="box.id"
-          :style="{ transform: `translate(${box.x}px, ${box.y}px)` }"
-          :class="['box-group', { 'box-group--jump': skipAllTransitions }]">
+          :class="['layout-root', { 'layout-root--jump': skipRootTransition || skipAllTransitions }]"
+          :style="{ transform: rootTransform }">
+          <!-- Grid overlay -->
           <rect
-            :width="box.width"
-            :height="box.height"
-            rx="4"
-            class="box" />
-        </g>
+            v-if="showGrid"
+            x="-100000"
+            y="-100000"
+            width="200000"
+            height="200000"
+            fill="url(#grid-pattern)"
+            class="grid-overlay" />
+          <!-- Group bounding boxes -->
+          <rect
+            v-for="gr in groupRects"
+            :key="gr.key"
+            :x="gr.x"
+            :y="gr.y"
+            :width="gr.width"
+            :height="gr.height"
+            rx="6"
+            :class="['group-bbox', { 'group-bbox--jump': skipAllTransitions }]" />
 
-        <!-- Lines: d attribute is CSS-animatable in modern browsers -->
-        <path
-          v-for="item in pathData"
-          :key="item.key"
-          :d="item.d"
-          :class="['line', { 'line--jump': skipAllTransitions }]" />
+          <!-- Boxes: animate position via CSS transform on the group -->
+          <g
+            v-for="box in layouts"
+            :key="box.id"
+            :style="{ transform: `translate(${box.x}px, ${box.y}px)` }"
+            :class="['box-group', { 'box-group--jump': skipAllTransitions }]">
+            <rect
+              :width="box.width"
+              :height="box.height"
+              rx="4"
+              class="box" />
+          </g>
 
-        <!-- Port dots -->
-        <g
-          v-for="dot in portDots"
-          :key="dot.key"
-          :style="{ transform: `translate(${dot.cx}px, ${dot.cy}px)` }"
-          :class="['port-group', { 'port-group--jump': skipAllTransitions }]">
+          <!-- Lines: d attribute is CSS-animatable in modern browsers -->
           <path
-            d="m 0 0 l 0 0"
-            stroke-width="6"
-            class="port" />
+            v-for="item in pathData"
+            :key="item.key"
+            :d="item.d"
+            :class="['line', { 'line--jump': skipAllTransitions }]" />
+
+          <!-- Port dots -->
+          <g
+            v-for="dot in portDots"
+            :key="dot.key"
+            :style="{ transform: `translate(${dot.cx}px, ${dot.cy}px)` }"
+            :class="['port-group', { 'port-group--jump': skipAllTransitions }]">
+            <path
+              d="m 0 0 l 0 0"
+              stroke-width="6"
+              class="port" />
+          </g>
         </g>
       </g>
     </svg>
@@ -411,6 +575,10 @@ svg rect {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.user-transform {
+  transform-origin: 0 0;
 }
 
 .layout-root {

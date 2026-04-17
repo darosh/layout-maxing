@@ -236,11 +236,12 @@ const btnPause = computed(() => store.status === 'running')
 
       <section class="canvas-col">
         <div class="canvas">
-          <SvgAnimatedRenderer v-if="animateSvg" />
+          <SvgAnimatedRenderer
+            v-if="animateSvg"
+            @tap="store.showStats = !store.showStats" />
           <SvgRenderer v-else />
           <div
             v-if="hasEverRendered"
-            @click="store.showStats = !store.showStats"
             class="canvas-overlay">
             <PatchInfo />
           </div>
@@ -451,6 +452,7 @@ const btnPause = computed(() => store.status === 'running')
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
 }
 
 .canvas-placeholder {
