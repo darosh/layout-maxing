@@ -79,12 +79,10 @@ export interface Config {
   normalizeExport?: boolean
   ignoreOrphans?: boolean
   keepGroups?: boolean
-  useDagre?: boolean
   dagreLR?: boolean
   dagreNetworkSimplex?: boolean
   dagreTightTree?: boolean
   dagreLongestPath?: boolean
-  useElk?: boolean
   elkLR?: boolean
   elkLayered?: boolean
   elkMrTree?: boolean

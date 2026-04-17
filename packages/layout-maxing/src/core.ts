@@ -100,6 +100,7 @@ export async function main(
     stampGroupIdx(baseLayouts, patcher.boxgroups)
     stampGroupOffsets(baseLayouts, patcher.boxgroups)
   }
+  ;(baseLayouts as any)._popOrigins = ['input']
   const inputFitness = getFitness ? await getFitness(baseLayouts, lines, c) : fitness(baseLayouts, lines, c)
 
   if (logInfo) logInfo(`Input fitness ${inputFitness.score.toFixed(0)}\n${JSON.stringify(inputFitness, null, 2)}`)
@@ -115,10 +116,14 @@ export async function main(
   }
 
   let startingLayouts: Box[][] = []
-  const startingLayoutNames: string[] = []
+
+  function pushStarting(clone: Box[], name: string) {
+    ;(clone as any)._layoutName = name
+    startingLayouts.push(clone)
+  }
 
   const dagreRankers: Array<['network-simplex' | 'tight-tree' | 'longest-path', boolean]> = [
-    ['longest-path', c.dagreLongestPath || (c.useDagre && !c.dagreNetworkSimplex && !c.dagreTightTree && !c.dagreLongestPath)],
+    ['longest-path', c.dagreLongestPath],
     ['network-simplex', !!c.dagreNetworkSimplex],
     ['tight-tree', !!c.dagreTightTree],
   ]
@@ -127,8 +132,7 @@ export async function main(
       const preferredDir = c.dagreLR ? 'LR' : 'TB'
       const clone = cloneLayouts(baseLayouts)
       dagreFlow(clone, lines, c, preferredDir, ranker)
-      startingLayouts.push(clone)
-      startingLayoutNames.push(c.dagreLR ? `dagre-${ranker}-lr` : `dagre-${ranker}`)
+      pushStarting(clone, c.dagreLR ? `dagre-${ranker}-lr` : `dagre-${ranker}`)
     }
   }
 
@@ -146,8 +150,7 @@ export async function main(
         const clone = cloneLayouts(baseLayouts)
         const preferredDir = c.elkLR ? 'RIGHT' : 'DOWN'
         await elkFlow(clone, lines, c, workerFactory, preferredDir, algo)
-        startingLayouts.push(clone)
-        startingLayoutNames.push(c.elkLR ? `elk-${algo}-lr` : `elk-${algo}`)
+        pushStarting(clone, c.elkLR ? `elk-${algo}-lr` : `elk-${algo}`)
       } else {
         console.warn('Skipping ELK, worker factory not provided')
       }
@@ -157,35 +160,30 @@ export async function main(
   if (c.useSimpleFlow) {
     const clone = cloneLayouts(baseLayouts)
     simpleFlow(clone, c)
-    startingLayouts.push(clone)
-    startingLayoutNames.push('simple')
+    pushStarting(clone, 'simple')
   }
 
   if (c.useZero) {
     const clone = cloneLayouts(baseLayouts)
     zeroFlow(clone)
-    startingLayouts.push(clone)
-    startingLayoutNames.push('zero')
+    pushStarting(clone, 'zero')
   }
 
   if (c.useSquare) {
     const clone = cloneLayouts(baseLayouts)
     squareFlow(clone, c)
-    startingLayouts.push(clone)
-    startingLayoutNames.push('square')
+    pushStarting(clone, 'square')
   }
 
   if (c.useCircle) {
     const clone = cloneLayouts(baseLayouts)
     circleFlow(clone, c)
-    startingLayouts.push(clone)
-    startingLayoutNames.push('circle')
+    pushStarting(clone, 'circle')
   }
 
   if (c.useInput || !startingLayouts.length) {
     const clone = cloneLayouts(baseLayouts)
-    startingLayouts.push(clone)
-    startingLayoutNames.push('input')
+    pushStarting(clone, 'input')
   }
 
   // Normalize starting layouts so they satisfy the same invariants the GA enforces each generation.
@@ -228,7 +226,6 @@ export async function main(
       wrappedLogProgress,
       logInfo,
       onMonitorEnd,
-      startingLayoutNames,
     )
 
     if (result.length > 0) {

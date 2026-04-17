@@ -215,7 +215,6 @@ export async function createPopulation(
   rand: () => number,
   cfg: Required<Config>,
   getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
-  startingLayoutNames?: string[],
 ) {
   const individuals: Population[] = []
 
@@ -236,7 +235,7 @@ export async function createPopulation(
 
     if (cfg.normalize) normalizeLayouts(ind)
 
-    const originName = startingLayoutNames?.[i % startingLayouts.length]
+    const originName: string | undefined = (startingLayouts[i % startingLayouts.length] as any)._layoutName
     individuals.push({ id: i, gen: 0, layouts: ind, origins: originName ? [originName] : undefined })
   }
 
@@ -404,11 +403,10 @@ async function runGenetic(
   logProgress?: (...args: any) => void,
   logInfo?: (...args: any) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
-  startingLayoutNames?: string[],
 ): Promise<Box[]> {
   spare = null
   // Create population
-  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness, startingLayoutNames)
+  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
 
   // If all boxes were stripped (e.g. ignoreOrphans + no lines), return empty
   if (population[0].layouts.length === 0) {
@@ -507,10 +505,15 @@ async function runGenetic(
       bestFitness = fitnessValues[currentBestIdx]
       bestFitnessScore = bestFitness.score
       bestIndividual = cloneLayouts(population[currentBestIdx].layouts)
+      const newBest = population[currentBestIdx]
+      ;(bestIndividual as any)._popId = newBest.id
+      ;(bestIndividual as any)._popGen = newBest.gen
+      ;(bestIndividual as any)._popPrevId = newBest.prevId
+      ;(bestIndividual as any)._popPrevGen = newBest.prevGen
+      ;(bestIndividual as any)._popOrigins = newBest.origins
       stop = cfg.stop
       stagnation = 0
       // record lineage event
-      const newBest = population[currentBestIdx]
       monitor.bestLineage.push({
         gen,
         mutation: newBest._mutation ?? 'unknown',

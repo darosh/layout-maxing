@@ -8,7 +8,7 @@ export default {
   stagnationThreshold: 15,
   catastropheThreshold: 40,
   catastropheFraction: 0.3,
-  useDagre: true,
+  dagreLongestPath: true,
   viewExponent: 0.05,
   diversityBoost: 1.0,
   diversityBoostCap: 4,

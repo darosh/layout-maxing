@@ -8,6 +8,6 @@ export default {
   stagnationThreshold: 30,
   catastropheThreshold: 100,
   catastropheFraction: 0.5,
-  useDagre: true,
+  dagreLongestPath: true,
   useSimpleFlow: true,
 } satisfies Config
