@@ -8,7 +8,7 @@ import type { RNBO } from 'layout-maxing'
 
 export const EXAMPLES: RNBO[] = <RNBO[]>(<unknown[]>[
   { patcher: E2, best: 3934 },
-  { patcher: E3, best: 13896 },
+  { patcher: E3, best: 13332 },
   { patcher: E5, best: 10014 },
   { patcher: E6, best: 10888 },
 ])
