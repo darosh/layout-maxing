@@ -8,5 +8,5 @@ export default {
   catastropheFraction: 0.4,
   diversityBoost: 0.8,
   diversityBoostCap: 3,
-  elkMrTree: true
+  elkMrTree: true,
 } satisfies Config

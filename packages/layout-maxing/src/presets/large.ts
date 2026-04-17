@@ -12,5 +12,5 @@ export default {
   diversityBoostCap: 4,
   mutWeightSwapSibling: 40,
   mutWeightChildren: 50,
-  elkMrTree: true
+  elkMrTree: true,
 } satisfies Config
