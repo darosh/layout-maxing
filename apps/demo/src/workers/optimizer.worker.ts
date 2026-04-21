@@ -202,6 +202,7 @@ self.onmessage = async (e: MessageEvent) => {
     prevGen?: number
     origins?: string[]
     passNum?: number
+    isClusterScore?: boolean
   }[] = []
 
   function updateTop(
@@ -290,6 +291,7 @@ self.onmessage = async (e: MessageEvent) => {
         prevGen: t.prevGen,
         origins: t.origins,
         passNum: t.passNum,
+        isClusterScore: t.isClusterScore,
       }))
   }
 
@@ -309,6 +311,7 @@ self.onmessage = async (e: MessageEvent) => {
         prevGen: t.prevGen,
         origins: t.origins,
         passNum: t.passNum,
+        isClusterScore: t.isClusterScore,
       }))
   }
 
@@ -358,6 +361,7 @@ self.onmessage = async (e: MessageEvent) => {
   const onClusteringInit = (info: ClusteringInfo) => {
     totalClusters = info.totalClusters
     currentClusterIndex = 0
+    isClusterFitness = true
     currentBoxClusterMap = info.boxClusterMap
     post({ type: 'clustering', totalClusters: info.totalClusters, boxClusterMap: info.boxClusterMap })
   }
@@ -399,6 +403,7 @@ self.onmessage = async (e: MessageEvent) => {
       prevGen,
       origins,
       passNum: currentPassNum,
+      isClusterScore: isClusterFitness || undefined,
     })
 
     if (currentPop.length > c.popSize) currentPop.shift()
