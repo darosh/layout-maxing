@@ -176,7 +176,7 @@ const rootTransform = computed(() => {
   const ty = cy - y * scale
   return `translate(${tx}px, ${ty}px) scale(${scale})`
 })
-const gridStrokeWidth = computed(() => 1 / (rootScale.value * userScale.value))
+const gridStrokeWidth = computed<number>(() => 1 / (rootScale.value * userScale.value))
 
 // --- User zoom/pan ---
 const userScale = ref(1)
@@ -385,18 +385,55 @@ const groupRects = computed<GroupRect[]>(() => {
 interface PathItem {
   key: string
   d: string
+  clusterIdx: number | undefined
 }
 
 interface DotItem {
   key: string
   cx: number
   cy: number
+  clusterIdx: number | undefined
+}
+
+const activeCluster = computed(() => store.progress.clusterIndex)
+const boxClusterMap = computed(() => store.clusteringInfo?.boxClusterMap)
+
+const HUES = ['var(--p-emerald-400)', 'var(--p-yellow-400)', 'var(--p-sky-400)', 'var(--p-purple-400)']
+
+function clusterColor(ci: number): string {
+  return HUES[ci % HUES.length]!
+}
+
+function clusterStyle(ci: number | undefined) {
+  const ac = activeCluster.value
+  const bcm = boxClusterMap.value
+  if (!bcm) return {}
+  const color = ci !== undefined ? clusterColor(ci) : undefined
+  const dimmed = ac != null && ci !== ac
+  return {
+    ...(color ? { stroke: color, 'stroke-dasharray': `${(1 / gridStrokeWidth.value) * 8} ${(1 / gridStrokeWidth.value) * 4}` } : {}),
+    opacity: dimmed ? '0.2' : '1',
+  }
+}
+
+function boxClusterStyle(boxId: string) {
+  const bcm = boxClusterMap.value
+  if (!bcm) return {}
+  const ci = bcm[boxId]
+  const ac = activeCluster.value
+  const color = ci !== undefined ? clusterColor(ci) : undefined
+  const dimmed = ac != null && ci !== ac
+  return {
+    ...(color ? { stroke: color } : {}),
+    opacity: dimmed ? '0.2' : '1',
+  }
 }
 
 const pathData = computed<PathItem[]>(() => {
   const result: PathItem[] = []
   const bm = boxMap.value
   const c = cfg.value
+  const bcm = boxClusterMap.value
 
   for (let i = 0; i < lines.value.length; i++) {
     const line = lines.value[i]!
@@ -414,9 +451,14 @@ const pathData = computed<PathItem[]>(() => {
     const c1y = sy + c.curveControl
     const c2y = ey - c.curveControl
 
+    const srcCi = bcm?.[sourceId]
+    const dstCi = bcm?.[destId]
+    const clusterIdx = srcCi !== undefined && srcCi === dstCi ? srcCi : undefined
+
     result.push({
       key: `l${i}`,
       d: `M ${sx},${sy} C ${sx},${c1y} ${ex},${c2y} ${ex},${ey}`,
+      clusterIdx,
     })
   }
   return result
@@ -426,6 +468,7 @@ const portDots = computed<DotItem[]>(() => {
   const result: DotItem[] = []
   const bm = boxMap.value
   const c = cfg.value
+  const bcm = boxClusterMap.value
 
   for (let i = 0; i < lines.value.length; i++) {
     const line = lines.value[i]!
@@ -440,8 +483,12 @@ const portDots = computed<DotItem[]>(() => {
     const [sx, sy] = getOutletPos(sourceBox, outletIdx, c)
     const [ex, ey] = getInletPos(destBox, inletIdx, c)
 
-    result.push({ key: `s${i}`, cx: sx, cy: sy })
-    result.push({ key: `d${i}`, cx: ex, cy: ey })
+    const srcCi = bcm?.[sourceId]
+    const dstCi = bcm?.[destId]
+    const clusterIdx = srcCi !== undefined && srcCi === dstCi ? srcCi : undefined
+
+    result.push({ key: `s${i}`, cx: sx, cy: sy, clusterIdx })
+    result.push({ key: `d${i}`, cx: ex, cy: ey, clusterIdx })
   }
   return result
 })
@@ -456,6 +503,7 @@ const portDots = computed<DotItem[]>(() => {
       :viewBox="viewBox"
       xmlns="http://www.w3.org/2000/svg"
       class="svg-canvas"
+      :class="{ clustered: !!boxClusterMap }"
       :style="{ cursor: isPanning ? 'grabbing' : 'grab' }"
       @wheel.prevent="onWheel"
       @pointerdown="onPointerDown"
@@ -515,7 +563,8 @@ const portDots = computed<DotItem[]>(() => {
               :width="box.width"
               :height="box.height"
               rx="4"
-              class="box" />
+              class="box"
+              :style="boxClusterStyle(box.id)" />
           </g>
 
           <!-- Lines: d attribute is CSS-animatable in modern browsers -->
@@ -523,13 +572,14 @@ const portDots = computed<DotItem[]>(() => {
             v-for="item in pathData"
             :key="item.key"
             :d="item.d"
-            :class="['line', { 'line--jump': skipAllTransitions }]" />
+            :class="['line', { 'line--jump': skipAllTransitions }]"
+            :style="clusterStyle(item.clusterIdx)" />
 
           <!-- Port dots -->
           <g
             v-for="dot in portDots"
             :key="dot.key"
-            :style="{ transform: `translate(${dot.cx}px, ${dot.cy}px)` }"
+            :style="{ transform: `translate(${dot.cx}px, ${dot.cy}px)`, ...clusterStyle(dot.clusterIdx) }"
             :class="['port-group', { 'port-group--jump': skipAllTransitions }]">
             <path
               d="m 0 0 l 0 0"
@@ -626,6 +676,11 @@ svg rect {
   transition: var(--t-d);
 }
 
+.clustered .line {
+  stroke: #fff;
+  stroke-opacity: 0.87;
+}
+
 .line--jump {
   transition: none;
 }
@@ -640,6 +695,11 @@ svg rect {
 
 .port {
   stroke: var(--p-sky-400);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.clustered .port {
+  stroke: #fff;
   stroke-linejoin: round;
   stroke-linecap: round;
 }

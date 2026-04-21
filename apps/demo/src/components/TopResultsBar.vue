@@ -8,6 +8,10 @@ import Button from 'primevue/button'
 
 const store = useOptimizerStore()
 
+function fmtScore(score: number, clusterScore = false): string {
+  return (clusterScore ? 'C ' : '') + formatScore(score)
+}
+
 function ordinal(n: number): string {
   const s = ['th', 'st', 'nd', 'rd']
   const v = n % 100
@@ -74,7 +78,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         class="thumb-svg"
         v-html="store.top[0]!.svg" />
       <span class="thumb-label">Best</span>
-      <span class="thumb-score">{{ formatScore(store.top[0]!.score) }}</span>
+      <span class="thumb-score">{{ fmtScore(store.top[0]!.score, !!store.top[0]!.isClusterScore) }}</span>
     </button>
 
     <!-- Current gen best (index 0) -->
@@ -89,7 +93,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         class="thumb-svg"
         v-html="store.currentGenTop[0]!.svg" />
       <span class="thumb-label">Current</span>
-      <span class="thumb-score">{{ formatScore(store.currentGenTop[0]!.score) }}</span>
+      <span class="thumb-score">{{ fmtScore(store.currentGenTop[0]!.score, !!store.currentGenTop[0]!.isClusterScore) }}</span>
     </button>
 
     <!-- Mode toggle -->
@@ -131,7 +135,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
           class="thumb-svg"
           v-html="entry.svg" />
         <span class="thumb-label">P{{ entry.passNum ?? i + 1 }}</span>
-        <span class="thumb-score">{{ formatScore(entry.score) }}</span>
+        <span class="thumb-score">{{ fmtScore(entry.score, !!entry.isClusterScore) }}</span>
       </button>
     </template>
     <template v-else-if="store.allTimeTop">
@@ -147,7 +151,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
           class="thumb-svg"
           v-html="entry.svg" />
         <span class="thumb-label">#{{ i + 2 }}</span>
-        <span class="thumb-score">{{ formatScore(entry.score) }}</span>
+        <span class="thumb-score">{{ fmtScore(entry.score, !!entry.isClusterScore) }}</span>
       </button>
     </template>
     <template v-else>
@@ -165,7 +169,7 @@ const tooltip = ref<InstanceType<typeof FlyingTooltip> | null>(null)
         <span class="thumb-label"
           >{{ void (o = ordinal(i + 2)) }}{{ o.slice(0, o.length - 2) }}<span class="thumb-label-ordinal">{{ o.slice(o.length - 2) }}</span>
         </span>
-        <span class="thumb-score">{{ formatScore(entry.score) }}</span>
+        <span class="thumb-score">{{ fmtScore(entry.score, !!entry.isClusterScore) }}</span>
       </button>
     </template>
   </div>

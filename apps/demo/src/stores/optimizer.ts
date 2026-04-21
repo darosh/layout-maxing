@@ -23,6 +23,7 @@ export interface TopEntry {
   prevGen?: number
   origins?: string[]
   passNum?: number
+  isClusterScore?: boolean
 }
 
 export type Selection = { kind: 'original' } | { kind: 'allTime'; index: number } | { kind: 'current'; index: number } | { kind: 'pass'; index: number }
@@ -96,6 +97,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
   const isConfigDefault = computed(() => (Object.keys(defaultConfig) as (keyof Config)[]).every((k) => config.value[k] === presetConfig.value[k]))
 
   const status = ref<Status>('idle')
+  const clusteringInfo = ref<{ totalClusters: number; boxClusterMap: Record<string, number> } | null>(null)
   const progress = ref({
     evalCount: 0,
     generation: 0,
@@ -108,6 +110,9 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     stopIn: defaultConfig.stop,
     passNum: 1,
     numPasses: 1,
+    clusterIndex: null as number | null,
+    totalClusters: null as number | null,
+    isClusterFitness: false,
   })
   const top = ref<TopEntry[]>([])
   const currentGenTop = ref<TopEntry[]>([])
@@ -234,6 +239,9 @@ export const useOptimizerStore = defineStore('optimizer', () => {
         stopIn: defaultConfig.stop,
         passNum: 1,
         numPasses: 1,
+        clusterIndex: null,
+        totalClusters: null,
+        isClusterFitness: false,
       }
     } catch {
       error.value = 'Invalid JSON file'
@@ -264,6 +272,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     snapshots.value = []
     passBest.value = []
     runMonitor.value = null
+    clusteringInfo.value = null
     runId.value++
     progress.value = {
       evalCount: 0,
@@ -277,6 +286,9 @@ export const useOptimizerStore = defineStore('optimizer', () => {
       stopIn: config.value.stop ?? defaultConfig.stop,
       passNum: 1,
       numPasses: config.value.passes ?? 1,
+      clusterIndex: null,
+      totalClusters: null,
+      isClusterFitness: false,
     }
     worker = new Worker(new URL('../workers/optimizer.worker.ts', import.meta.url), {
       type: 'module',
@@ -291,6 +303,9 @@ export const useOptimizerStore = defineStore('optimizer', () => {
           originalPositions.value = msg.positions
           originalLayouts.value = msg.layouts ?? []
           break
+        case 'clustering':
+          clusteringInfo.value = { totalClusters: msg.totalClusters, boxClusterMap: msg.boxClusterMap }
+          break
         case 'progress':
           progress.value = {
             evalCount: msg.evalCount,
@@ -304,6 +319,9 @@ export const useOptimizerStore = defineStore('optimizer', () => {
             stopIn: msg.stopIn ?? progress.value.stopIn,
             passNum: msg.passNum ?? progress.value.passNum,
             numPasses: msg.numPasses ?? progress.value.numPasses,
+            clusterIndex: msg.clusterIndex ?? null,
+            totalClusters: msg.totalClusters ?? progress.value.totalClusters,
+            isClusterFitness: msg.isClusterFitness ?? false,
           }
           if (msg.top?.length) top.value = msg.top
           if (msg.passBest?.length) passBest.value = msg.passBest
@@ -426,6 +444,7 @@ export const useOptimizerStore = defineStore('optimizer', () => {
     rnbo,
     fileName,
     inputSource,
+    clusteringInfo,
     config,
     preset,
     presetConfig,

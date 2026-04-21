@@ -105,6 +105,10 @@ export interface Config {
   writeSvg?: boolean
   writeJson?: boolean
   workers?: number
+  // Clustering
+  cluster?: number
+  clusterPolishFraction?: number
+  clusterPolishMutate?: number
 }
 
 export const defaultConfig: Required<Config> = Object.fromEntries(Object.entries(configMeta).map(([k, v]) => [k, v[0]])) as Required<Config>

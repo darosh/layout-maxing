@@ -6,7 +6,13 @@ type BoxId = string
 
 const GROUP_PAD = 5
 
-export function toSvg(layouts: Box[], lines: Line[] | undefined, cfg?: Config, boxgroups?: Array<{ boxes: BoxId[] }>): string {
+export function toSvg(
+  layouts: Box[],
+  lines: Line[] | undefined,
+  cfg?: Config,
+  boxgroups?: Array<{ boxes: BoxId[] }>,
+  boxClusterMap?: Record<string, number>,
+): string {
   lines ??= []
   const c = { ...defaultConfig, ...cfg }
   const boxMap = new Map<BoxId, Box>()
@@ -49,6 +55,7 @@ export function toSvg(layouts: Box[], lines: Line[] | undefined, cfg?: Config, b
 
   // Draw boxes (rectangles only - no text)
   for (const box of layouts) {
+    const clusterAttr = boxClusterMap && boxClusterMap[box.id] !== undefined ? ` data-cluster="${boxClusterMap[box.id]}"` : ''
     svg += `\n  <rect
     x="${box.x}"
     y="${box.y}"
@@ -58,7 +65,7 @@ export function toSvg(layouts: Box[], lines: Line[] | undefined, cfg?: Config, b
     fill="#ccc"
     fill-opacity=".15"
     stroke="#666"
-    stroke-width="3"/>`
+    stroke-width="3"${clusterAttr}/>`
   }
 
   // Draw lines with proper segmentation for intersection-aware rendering
@@ -81,6 +88,11 @@ export function toSvg(layouts: Box[], lines: Line[] | undefined, cfg?: Config, b
     const c2x = ex
     const c2y = ey - c.curveControl
 
+    const srcCluster = boxClusterMap?.[sourceId]
+    const dstCluster = boxClusterMap?.[destId]
+    const sameCluster = srcCluster !== undefined && srcCluster === dstCluster
+    const clusterAttr = sameCluster ? ` data-cluster="${srcCluster}"` : ''
+
     // Draw the curved connection using cubic bezier
     svg += `\n  <path
     d="M ${sx},${sy} C ${c1x},${c1y} ${c2x},${c2y} ${ex},${ey}"
@@ -88,11 +100,11 @@ export function toSvg(layouts: Box[], lines: Line[] | undefined, cfg?: Config, b
     stroke="#38bdf8"
     stroke-width="2.5"
     stroke-linecap="round"
-    stroke-linejoin="round"/>`
+    stroke-linejoin="round"${clusterAttr}/>`
 
     // Optional: small circles at connection points (ports)
-    svg += `\n  <circle cx="${sx}" cy="${sy}" r="3" fill="#38bdf8"/>`
-    svg += `\n  <circle cx="${ex}" cy="${ey}" r="3" fill="#38bdf8"/>`
+    svg += `\n  <circle cx="${sx}" cy="${sy}" r="3" fill="#38bdf8"${clusterAttr}/>`
+    svg += `\n  <circle cx="${ex}" cy="${ey}" r="3" fill="#38bdf8"${clusterAttr}/>`
   }
 
   if (c.showStraightLines) {

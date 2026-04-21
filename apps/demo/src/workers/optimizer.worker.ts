@@ -1,9 +1,14 @@
 import { main, toSvg, defaultConfig, createInitialLayouts, applyBestLayout, fillDepths, stripOrphans, preserveGroupMembers, stampGroupIdx } from 'layout-maxing'
-import type { RNBO, Config, Box, Line, Fitness, GenerationSnapshot, RunMonitor, Population } from 'layout-maxing'
+import type { RNBO, Config, Box, Line, Fitness, GenerationSnapshot, RunMonitor, Population, ClusteringInfo } from 'layout-maxing'
 
 type Position = { id: string; x: number; y: number }
 type TopEntry = { score: number; svg: string; fitness: Fitness; positions: Position[] }
 
+type ClusteringMsg = {
+  type: 'clustering'
+  totalClusters: number
+  boxClusterMap: Record<string, number>
+}
 type ProgressMsg = {
   type: 'progress'
   evalCount: number
@@ -17,6 +22,9 @@ type ProgressMsg = {
   stopIn: number
   passNum: number
   numPasses: number
+  clusterIndex: number | null
+  totalClusters: number | null
+  isClusterFitness: boolean
   svg: string | null
   top: TopEntry[] | null
   passBest: TopEntry[] | null
@@ -43,7 +51,7 @@ type DoneMsg = {
 }
 type ErrorMsg = { type: 'error'; message: string; stack?: string }
 
-type WorkerMsg = OriginalMsg | ProgressMsg | DoneMsg | ErrorMsg
+type WorkerMsg = OriginalMsg | ProgressMsg | ClusteringMsg | DoneMsg | ErrorMsg
 
 let stopped = false
 let paused = false
@@ -159,6 +167,10 @@ self.onmessage = async (e: MessageEvent) => {
   let stopIn = c.stop
   const startTime = Date.now()
   const snapshotBuffer: GenerationSnapshot[] = []
+  let currentClusterIndex: number | null = null
+  let totalClusters: number | null = null
+  let isClusterFitness = false
+  let currentBoxClusterMap: Record<string, number> | undefined = undefined
   const MAX_SNAPSHOTS = (240 - 40 - 40) * 3
   let currentGen = 0
   let currentPassNum = 1
@@ -175,6 +187,7 @@ self.onmessage = async (e: MessageEvent) => {
     prevGen?: number
     origins?: string[]
     passNum?: number
+    isClusterScore?: boolean
   }[] = []
   // Best entry per pass (independent of topN — never evicted)
   const passBestMap = new Map<number, (typeof top)[0]>()
@@ -217,16 +230,20 @@ self.onmessage = async (e: MessageEvent) => {
           prevGen,
           origins,
           passNum,
+          isClusterScore: isClusterFitness || undefined,
         })
         top.sort((a, b) => a.score - b.score)
         if (top.length > topN) top.pop()
       }
     }
-    // Track best per pass independently (never evicted by topN)
-    const p = passNum ?? 1
-    const prev = passBestMap.get(p)
-    if (prev === undefined || score < prev.score) {
-      passBestMap.set(p, { score, layouts: cloneForSvg(layouts), fitness, popId, popGen, prevId, prevGen, origins, passNum })
+    // Track best per pass independently — skip during cluster phases (scoped scores would
+    // permanently block real global scores since scoped values are tiny).
+    if (!isClusterFitness) {
+      const p = passNum ?? 1
+      const prev = passBestMap.get(p)
+      if (prev === undefined || score < prev.score) {
+        passBestMap.set(p, { score, layouts: cloneForSvg(layouts), fitness, popId, popGen, prevId, prevGen, origins, passNum })
+      }
     }
   }
 
@@ -244,7 +261,7 @@ self.onmessage = async (e: MessageEvent) => {
   function buildTopEntries(): TopEntry[] {
     return top.map((t) => ({
       score: t.score,
-      svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups),
+      svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups, currentBoxClusterMap),
       fitness: t.fitness,
       positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
       mutations: aggregateMutations(t.layouts),
@@ -254,6 +271,7 @@ self.onmessage = async (e: MessageEvent) => {
       prevGen: t.prevGen,
       origins: t.origins,
       passNum: t.passNum,
+      isClusterScore: t.isClusterScore,
     }))
   }
 
@@ -262,7 +280,7 @@ self.onmessage = async (e: MessageEvent) => {
       .sort(([a], [b]) => a - b)
       .map(([, t]) => ({
         score: t.score,
-        svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups),
+        svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups, currentBoxClusterMap),
         fitness: t.fitness,
         positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
         mutations: aggregateMutations(t.layouts),
@@ -281,7 +299,7 @@ self.onmessage = async (e: MessageEvent) => {
       .slice(0, topN)
       .map((t) => ({
         score: t.score,
-        svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups),
+        svg: toSvg(t.layouts, lines, cfg, rnbo.patcher.boxgroups, currentBoxClusterMap),
         fitness: t.fitness,
         positions: t.layouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
         mutations: aggregateMutations(t.layouts),
@@ -318,7 +336,7 @@ self.onmessage = async (e: MessageEvent) => {
     const origFitness = await pool.getFitness(origLayouts, lines, cfg)
     post({
       type: 'original',
-      svg: toSvg(origLayouts, lines, cfg, rnbo.patcher.boxgroups),
+      svg: toSvg(origLayouts, lines, cfg, rnbo.patcher.boxgroups, currentBoxClusterMap),
       fitness: origFitness,
       positions: origLayouts.map((l) => ({ id: l.id, x: l.x, y: l.y })),
       layouts: origLayouts,
@@ -335,6 +353,13 @@ self.onmessage = async (e: MessageEvent) => {
 
   const onMonitorEnd = (monitor: RunMonitor) => {
     finalRunMonitor = monitor
+  }
+
+  const onClusteringInit = (info: ClusteringInfo) => {
+    totalClusters = info.totalClusters
+    currentClusterIndex = 0
+    currentBoxClusterMap = info.boxClusterMap
+    post({ type: 'clustering', totalClusters: info.totalClusters, boxClusterMap: info.boxClusterMap })
   }
 
   const getFitness = async (layouts: Box[], batchLines: Line[], batchCfg: Config) => {
@@ -389,7 +414,7 @@ self.onmessage = async (e: MessageEvent) => {
       const gen1stScore = sortedGen[0]?.score ?? null
       const gen2ndScore = sortedGen[1]?.score ?? null
       const genLastScore = sortedGen[sortedGen.length - 1]?.score ?? null
-      const svgNow = bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups) : null
+      const svgNow = bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups, currentBoxClusterMap) : null
       post({
         type: 'progress',
         evalCount,
@@ -403,6 +428,9 @@ self.onmessage = async (e: MessageEvent) => {
         stopIn,
         passNum: currentPassNum,
         numPasses: currentNumPasses,
+        clusterIndex: currentClusterIndex,
+        isClusterFitness,
+        totalClusters,
         svg: svgNow,
         top: buildTopEntries(),
         passBest: buildPassBestEntries(),
@@ -425,6 +453,20 @@ self.onmessage = async (e: MessageEvent) => {
     stopIn = stop
     if (passNum != null) currentPassNum = passNum
     if (numPasses != null) currentNumPasses = numPasses
+    if (snapshot?.cluster != null) {
+      totalClusters = snapshot.cluster.total
+      const newClusterIndex = snapshot.cluster.index < snapshot.cluster.total ? snapshot.cluster.index : null
+      // Cluster boundary: clear pools so prior cluster's scoped scores don't pollute the new phase.
+      if (newClusterIndex !== currentClusterIndex) {
+        top.length = 0
+        currentPop.length = 0
+        bestScore = null
+        bestFitness = null
+        bestLayouts = null
+      }
+      currentClusterIndex = newClusterIndex
+      isClusterFitness = newClusterIndex !== null
+    }
     if (snapshot) {
       currentGen = snapshot.gen
       snapshotBuffer.push(snapshot)
@@ -450,6 +492,7 @@ self.onmessage = async (e: MessageEvent) => {
       c.logInfo ? console.log : undefined,
       onMonitorEnd,
       elkWorker,
+      onClusteringInit,
     )
 
     pool.terminate()
@@ -469,7 +512,10 @@ self.onmessage = async (e: MessageEvent) => {
       stopIn,
       passNum: currentPassNum,
       numPasses: currentNumPasses,
-      svg: bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups) : null,
+      clusterIndex: null,
+      totalClusters,
+      isClusterFitness: false,
+      svg: bestLayouts ? toSvg(bestLayouts, lines, cfg, rnbo.patcher.boxgroups, currentBoxClusterMap) : null,
       top: buildTopEntries(),
       passBest: buildPassBestEntries(),
       currentGenTop: buildCurrentGenEntries(),
@@ -478,7 +524,7 @@ self.onmessage = async (e: MessageEvent) => {
     })
     applyBestLayout(rnbo, bestIndividual, c)
     const finalLayouts = buildLayoutsForView()
-    const svg = toSvg(finalLayouts, lines, cfg, rnbo.patcher.boxgroups)
+    const svg = toSvg(finalLayouts, lines, cfg, rnbo.patcher.boxgroups, currentBoxClusterMap)
     if (c.logInfo) console.log(`[optimizer] done — ${evalCount} evals, best=${bestScore == null ? 'n/a' : (bestScore as number).toFixed(2)}`)
     post({
       type: 'done',
@@ -497,7 +543,7 @@ self.onmessage = async (e: MessageEvent) => {
       // main() threw before applyBestLayout — apply manually
       const layouts = bestLayouts as Box[] | null
       if (layouts) applyBestLayout(rnbo, layouts, c)
-      const svg = layouts ? toSvg(layouts, lines, cfg, rnbo.patcher.boxgroups) : ''
+      const svg = layouts ? toSvg(layouts, lines, cfg, rnbo.patcher.boxgroups, currentBoxClusterMap) : ''
       post({
         type: 'done',
         svg,

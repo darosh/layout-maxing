@@ -6,6 +6,10 @@ import { watch } from 'vue'
 
 const store = useOptimizerStore()
 
+function fmtScore(score: number | null): string {
+  return (store.progress.isClusterFitness && score !== null ? 'C ' : '') + formatScore(score)
+}
+
 function formatMs(ms: number | null): string {
   if (ms === null || !isFinite(ms) || ms < 0) return '--:--'
   const totalSec = Math.ceil(ms / 1000)
@@ -51,8 +55,8 @@ watch(
       <div class="stat">
         <span class="stat-label">Best</span>
         <span class="stat-value"
-          >{{ formatScore(store.progress.bestScore)
-          }}<template v-if="store.rnbo?.best != null && store.progress.bestScore != null"
+          ><template v-if="store.progress.isClusterFitness">C </template>{{ formatScore(store.progress.bestScore)
+          }}<template v-if="!store.progress.isClusterFitness && store.rnbo?.best != null && store.progress.bestScore != null"
             ><i
               v-if="Math.round(store.progress.bestScore) === store.rnbo.best"
               class="pi pi-check" /><i
@@ -62,15 +66,15 @@ watch(
       </div>
       <div class="stat">
         <span class="stat-label">Gen 1st</span>
-        <span class="stat-value">{{ formatScore(store.progress.gen1stScore) }}</span>
+        <span class="stat-value">{{ fmtScore(store.progress.gen1stScore) }}</span>
       </div>
       <div class="stat">
         <span class="stat-label">Gen 2nd</span>
-        <span class="stat-value">{{ formatScore(store.progress.gen2ndScore) }}</span>
+        <span class="stat-value">{{ fmtScore(store.progress.gen2ndScore) }}</span>
       </div>
       <div class="stat">
         <span class="stat-label">Gen Last</span>
-        <span class="stat-value">{{ formatScore(store.progress.genLastScore) }}</span>
+        <span class="stat-value">{{ fmtScore(store.progress.genLastScore) }}</span>
       </div>
       <div class="stat">
         <span class="stat-label">Elapsed</span>
@@ -90,10 +94,18 @@ watch(
         >
       </div>
     </div>
-    <ProgressBar
-      :value="Math.round(store.progressPercent * 10) / 10"
-      :show-value="false"
-      class="progress-bar" />
+    <div class="progress-row">
+      <ProgressBar
+        :value="Math.round(store.progressPercent * 10) / 10"
+        :show-value="false"
+        class="progress-bar progress-bar-info" />
+      <div
+        class="progress-row-info"
+        v-if="store.progress.totalClusters != null && store.progress.clusterIndex != null">
+        {{ store.progress.clusterIndex + 1 }}<span style="margin: 0 0.2rem; opacity: 0.5">of</span>{{ store.progress.totalClusters }}
+        <span style="opacity: 0.5">clstrs</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -127,6 +139,26 @@ watch(
   row-gap: 1rem;
   column-gap: 5%;
   flex-wrap: wrap;
+}
+
+.progress-row {
+  display: inline-flex;
+  column-gap: 5%;
+}
+
+.progress-bar-info {
+  flex-grow: 24;
+}
+
+.progress-row-info {
+  flex-grow: 1;
+  flex-shrink: 0;
+  min-width: 30%;
+  line-height: 0.333;
+  opacity: 0.87;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .stat {

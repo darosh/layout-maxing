@@ -21,6 +21,9 @@ export type GenerationSnapshot = {
   effectiveMutate: number // actual mutate value used this gen (after diversity boost)
   mutations: Record<string, MutationStat>
   population?: Population[]
+  // Present during clustered runs. index = cluster being processed (0-based);
+  // index === total means the final polish pass.
+  cluster?: { index: number; total: number }
 }
 
 export type LineageEvent = {

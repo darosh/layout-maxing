@@ -110,6 +110,10 @@ export const configMeta: ConfigMeta = {
   writeSvg: [false, false, true, null, 'Write SVG visualization file (CLI only)'],
   writeJson: [false, false, true, null, 'Write JSON data file with layouts and lines (CLI only)'],
   workers: [0, 0, 128, 1, 'Number of fitness workers (0 = auto: cpu count - 1), using number of performance CPU cores recommended'],
+  // Clustering
+  cluster: [0, 0, 200, 1, 'Max boxes per cluster for divide-and-conquer GA (0 = disabled, classic single-pass)'],
+  clusterPolishFraction: [0.2, 0, 1, 0.05, 'Fraction of generations spent on final global polish pass after cluster sweep'],
+  clusterPolishMutate: [0.3, 0, 1, 0.05, 'Mutate magnitude multiplier during the polish pass (smaller = finer adjustments)'],
 }
 
 export const MUTATION_NAMES = [

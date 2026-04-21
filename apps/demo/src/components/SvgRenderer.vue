@@ -11,10 +11,32 @@ const selectionKey = computed(() => {
   if (sel.kind === 'current') return `current-${sel.index}`
   return 'unknown'
 })
+
+const clusterCss = computed(() => {
+  const total = store.clusteringInfo?.totalClusters ?? 0
+  if (!total) return ''
+  const lines: string[] = []
+  for (let i = 0; i < total; i++) {
+    const hue = (i * 137.508) % 360
+    const color = `hsl(${hue}deg 65% 55%)`
+    lines.push(`.svg-canvas [data-cluster="${i}"] { stroke: ${color} !important; fill: ${color} !important; }`)
+  }
+  const active = store.progress.clusterIndex
+  if (active != null) {
+    lines.push('.svg-canvas [data-cluster] { opacity: 0.2; }')
+    lines.push(`.svg-canvas [data-cluster="${active}"] { opacity: 1; }`)
+  }
+  return lines.join('\n')
+})
 </script>
 
 <template>
   <div class="svg-renderer">
+    <component
+      :is="'style'"
+      v-if="clusterCss"
+      >{{ clusterCss }}</component
+    >
     <div
       v-if="store.displayedSvg"
       class="svg-canvas"

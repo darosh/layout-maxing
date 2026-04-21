@@ -19,9 +19,11 @@ import {
 } from './layout.ts'
 import { cloneLayouts } from './mutation.ts'
 import { type Fitness, fitness } from './fitness.ts'
-import runGenetic from './genetic.ts'
+import runGenetic, { runClusteredGenetic, type ClusteringInfo } from './genetic.ts'
 import type { RunMonitor, GenerationSnapshot } from './monitor.ts'
 import { getRandomMulberry } from './random-mulberry-32.ts'
+
+export type { ClusteringInfo }
 
 type BoxId = string
 
@@ -82,6 +84,7 @@ export async function main(
   // Optional worker factory passed through to elkFlow(). In browsers this should create a Worker
   // from the elk-worker.min.js URL; in CLI/Node the web-worker package is used automatically.
   workerFactory?: (url?: string) => unknown,
+  onClusteringInit?: (info: ClusteringInfo) => void,
 ) {
   if (logInfo && cfg) {
     logInfo(`Configuration\n${JSON.stringify(jsonDiff<Config>(defaultConfig, cfg))}`)
@@ -219,18 +222,22 @@ export async function main(
       ? (stop: number, snapshot?: GenerationSnapshot) => onGenerationEnd(stop, snapshot, passNum, numPasses)
       : undefined
 
-    const result = await runGenetic(
-      startingLayouts,
-      lines,
-      rand,
-      c,
-      getFitness,
-      onIntermediate,
-      wrappedOnGenerationEnd,
-      wrappedLogProgress,
-      logInfo,
-      onMonitorEnd,
-    )
+    const result =
+      c.cluster > 0
+        ? await runClusteredGenetic(
+            startingLayouts,
+            lines,
+            rand,
+            c,
+            getFitness,
+            onIntermediate,
+            wrappedOnGenerationEnd,
+            wrappedLogProgress,
+            logInfo,
+            onMonitorEnd,
+            onClusteringInit,
+          )
+        : await runGenetic(startingLayouts, lines, rand, c, getFitness, onIntermediate, wrappedOnGenerationEnd, wrappedLogProgress, logInfo, onMonitorEnd)
 
     if (result.length > 0) {
       const resultFitness = getFitness ? await getFitness(result, lines, c) : fitness(result, lines, c)

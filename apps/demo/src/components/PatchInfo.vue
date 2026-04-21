@@ -32,8 +32,10 @@ const selectionLabel = computed(() => {
   return null
 })
 
+const isCluster = computed(() => !!store.displayedEntry?.isClusterScore)
+
 const fullScore = computed(() => {
-  return formatFullScore(store.displayedFitness?.score)
+  return (isCluster.value ? 'C ' : '') + formatFullScore(store.displayedFitness?.score)
 })
 </script>
 
@@ -44,7 +46,10 @@ const fullScore = computed(() => {
   <div class="svg-renderer">
     <!-- Bottom-left: score + selection label -->
     <div class="overlay overlay-bl">
-      <span class="score-value">{{ fmt(store.displayedFitness?.score) }}</span>
+      <span class="score-value"
+        ><template v-if="isCluster"><span style="opacity: 0.5; font-size: 0.8em; margin-right: 0.15em">C:</span></template
+        >{{ fmt(store.displayedFitness?.score) }}</span
+      >
       <span class="score-value selection-label">{{ fullScore }}</span>
     </div>
 

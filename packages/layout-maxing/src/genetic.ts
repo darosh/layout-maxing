@@ -1,6 +1,7 @@
 import { type Config } from './config.ts'
-import { type Box, type Line, type LayoutEntity, fixOverlaps, normalizeLayouts, toEntities } from './layout.ts'
+import { type Box, type Line, type LayoutEntity, fixOverlaps, normalizeLayouts, toEntities, simpleFlow } from './layout.ts'
 import { type Fitness, fitness } from './fitness.ts'
+import { detectClusters, lineFullyInside } from './cluster.ts'
 import {
   cloneLayouts,
   crossover,
@@ -209,12 +210,52 @@ function tournamentSelect(
   return bestIdx
 }
 
+export interface ClusterScope {
+  // Box indexes the mutator is allowed to move. Outside-scope boxes stay frozen.
+  allowed: Set<number>
+  // Box indexes the fitness function should consider (current cluster + previously frozen).
+  visible: Set<number>
+}
+
+// Wrap fitness so it sees only the in-scope subset of boxes/lines.
+function scopedFitnessSync(layouts: Box[], lines: Line[], cfg: Required<Config>, scope: ClusterScope): Fitness {
+  const visBoxes = layouts.filter((b) => scope.visible.has(b.index))
+  const visBoxIds = new Set(visBoxes.map((b) => b.id))
+  const frozen = frozenIds(scope, visBoxes)
+  const visLines = lines.filter((l) => lineFullyInside(l, visBoxIds) && !lineFullyInside(l, frozen))
+  return fitness(visBoxes, visLines, cfg)
+}
+
+// Identify ids belonging to frozen-only boxes (visible but not allowed).
+function frozenIds(scope: ClusterScope, visBoxes: Box[]): Set<string> {
+  const ids = new Set<string>()
+  for (const b of visBoxes) {
+    if (!scope.allowed.has(b.index)) ids.add(b.id)
+  }
+  return ids
+}
+
+async function scopedFitnessAsync(
+  layouts: Box[],
+  lines: Line[],
+  cfg: Required<Config>,
+  scope: ClusterScope,
+  getFitness: (l: Box[], ln: Line[], c: Required<Config>) => Promise<Fitness>,
+): Promise<Fitness> {
+  const visBoxes = layouts.filter((b) => scope.visible.has(b.index))
+  const visBoxIds = new Set(visBoxes.map((b) => b.id))
+  const frozen = frozenIds(scope, visBoxes)
+  const visLines = lines.filter((l) => lineFullyInside(l, visBoxIds) && !lineFullyInside(l, frozen))
+  return getFitness(visBoxes, visLines, cfg)
+}
+
 export async function createPopulation(
   startingLayouts: Box[][],
   lines: Line[],
   rand: () => number,
   cfg: Required<Config>,
   getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
+  scope?: ClusterScope,
 ) {
   const individuals: Population[] = []
 
@@ -227,7 +268,7 @@ export async function createPopulation(
       const cloneRound = Math.floor(i / startingLayouts.length)
       const numMutations = Math.min(cloneRound, cfg.initMutations)
       for (let m = 0; m < numMutations; m++) {
-        mutateChild(ind, rand, cfg, cfg.mutate)
+        mutateChild(ind, rand, cfg, cfg.mutate, undefined, undefined, undefined, undefined, scope?.allowed)
       }
     }
 
@@ -244,7 +285,8 @@ export async function createPopulation(
       ;(ind.layouts as any)._popId = ind.id
       ;(ind.layouts as any)._popGen = ind.gen
       ;(ind.layouts as any)._popOrigins = ind.origins
-      return getFitness(ind.layouts, lines, cfg).then((value) => {
+      const p = scope ? scopedFitnessAsync(ind.layouts, lines, cfg, scope, getFitness) : getFitness(ind.layouts, lines, cfg)
+      return p.then((value) => {
         ind.fitness = value
         return value
       })
@@ -255,7 +297,7 @@ export async function createPopulation(
       ;(ind.layouts as any)._popId = ind.id
       ;(ind.layouts as any)._popGen = ind.gen
       ;(ind.layouts as any)._popOrigins = ind.origins
-      ind.fitness = fitness(ind.layouts, lines, cfg)
+      ind.fitness = scope ? scopedFitnessSync(ind.layouts, lines, cfg, scope) : fitness(ind.layouts, lines, cfg)
     }
   }
 
@@ -335,10 +377,15 @@ function mutateChild(
   multiMutRate?: number,
   entities?: LayoutEntity[],
   boxEntityMap?: Map<number, LayoutEntity>,
+  allowedBoxIdxs?: Set<number>,
 ) {
   entities ??= toEntities(child)
   boxEntityMap ??= buildBoxEntityIndex(entities)
-  const targetEntity: LayoutEntity = entities[Math.floor(rand() * entities.length)]
+  const pool = allowedBoxIdxs ? entities.filter((e) => allowedBoxIdxs.has(e.members[0].box.index)) : entities
+  // When scoped, mutations operate only within the allowed pool so frozen boxes stay put.
+  const scopedEntityMap = allowedBoxIdxs ? buildBoxEntityIndex(pool) : boxEntityMap
+  if (pool.length === 0) return { child, mutatedBox: undefined as Box | undefined, childMutation: 'none' }
+  const targetEntity: LayoutEntity = pool[Math.floor(rand() * pool.length)]
   const mutatedBox = targetEntity.members[0].box
 
   const weights = mutWeights ?? [
@@ -367,7 +414,7 @@ function mutateChild(
   const x = mxy < 0.5 + half || mutIdx === 8 ? randGausInt(1, maxX, rand) * cfg.gridX : 0
   const y = mxy >= 0.5 - half || mutIdx === 9 ? randGausInt(1, maxY, rand) * cfg.gridY : 0
 
-  applyOneMutation(targetEntity, entities, boxEntityMap, mutIdx, x, y, rand, cfg)
+  applyOneMutation(targetEntity, pool, scopedEntityMap, mutIdx, x, y, rand, cfg)
 
   // Multi-point mutation: additional per-entity Bernoulli passes under stagnation
   if (multiMutRate && multiMutRate > 0) {
@@ -376,7 +423,7 @@ function mutateChild(
     const my2 = h2 * effectiveMutate
     const maxX2 = Math.round((0.5 * mx2) / cfg.gridX)
     const maxY2 = Math.round((0.5 * my2) / cfg.gridY)
-    for (const e of entities) {
+    for (const e of pool) {
       if (e === targetEntity) continue
       if (rand() < multiMutRate) {
         const mi = roulette(weights, rand)
@@ -384,7 +431,7 @@ function mutateChild(
         const half2 = cfg.mutateXYOverlap / 2
         const ex = mxy2 < 0.5 + half2 || mi === 8 ? randGausInt(1, maxX2, rand) * cfg.gridX : 0
         const ey = mxy2 >= 0.5 - half2 || mi === 9 ? randGausInt(1, maxY2, rand) * cfg.gridY : 0
-        applyOneMutation(e, entities, boxEntityMap, mi, ex, ey, rand, cfg)
+        applyOneMutation(e, pool, scopedEntityMap, mi, ex, ey, rand, cfg)
       }
     }
   }
@@ -392,7 +439,7 @@ function mutateChild(
   return { child, mutatedBox, childMutation }
 }
 
-async function runGenetic(
+export async function runGenetic(
   startingLayouts: Box[][],
   lines: Line[],
   rand: () => number,
@@ -403,10 +450,15 @@ async function runGenetic(
   logProgress?: (...args: any) => void,
   logInfo?: (...args: any) => void,
   onMonitorEnd?: (monitor: RunMonitor) => void,
+  scope?: ClusterScope,
 ): Promise<Box[]> {
   spare = null
+  // Disable crossover during clustered phases — it would copy frozen-box positions across parents.
+  if (scope) {
+    cfg = { ...cfg, crossoverRate: 0, repairOffspring: false }
+  }
   // Create population
-  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness)
+  let population = await createPopulation(startingLayouts, lines, rand, cfg, getFitness, scope)
 
   // If all boxes were stripped (e.g. ignoreOrphans + no lines), return empty
   if (population[0].layouts.length === 0) {
@@ -417,7 +469,13 @@ async function runGenetic(
     return []
   }
 
-  const initialFitness = getFitness ? await getFitness(population[0].layouts, lines, cfg) : fitness(population[0].layouts, lines, cfg)
+  const initialFitness = scope
+    ? getFitness
+      ? await scopedFitnessAsync(population[0].layouts, lines, cfg, scope, getFitness)
+      : scopedFitnessSync(population[0].layouts, lines, cfg, scope)
+    : getFitness
+      ? await getFitness(population[0].layouts, lines, cfg)
+      : fitness(population[0].layouts, lines, cfg)
   if (logInfo) logInfo(`Initial fitness ${initialFitness.score.toFixed(0)}\n${JSON.stringify(initialFitness, null, 2)}`)
 
   const bestInitIdx = population.reduce((bi, ind, i) => (ind.fitness!.score < population[bi].fitness!.score ? i : bi), 0)
@@ -456,7 +514,7 @@ async function runGenetic(
             ;(ind.layouts as any)._popPrevId = ind.prevId
             ;(ind.layouts as any)._popPrevGen = ind.prevGen
             ;(ind.layouts as any)._popOrigins = ind.origins
-            ind.fitness = await getFitness(ind.layouts, lines, cfg)
+            ind.fitness = scope ? await scopedFitnessAsync(ind.layouts, lines, cfg, scope, getFitness) : await getFitness(ind.layouts, lines, cfg)
           }
           return ind.fitness
         }),
@@ -469,7 +527,7 @@ async function runGenetic(
           ;(ind.layouts as any)._popPrevId = ind.prevId
           ;(ind.layouts as any)._popPrevGen = ind.prevGen
           ;(ind.layouts as any)._popOrigins = ind.origins
-          ind.fitness = fitness(ind.layouts, lines, cfg)
+          ind.fitness = scope ? scopedFitnessSync(ind.layouts, lines, cfg, scope) : fitness(ind.layouts, lines, cfg)
         }
       }
       fitnessValues = population.map((ind) => ind.fitness!)
@@ -652,7 +710,17 @@ async function runGenetic(
         if (rand() < effectiveMutationRate) {
           const childEntities = toEntities(child)
           const childBoxEntityMap = buildBoxEntityIndex(childEntities)
-          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate, childEntities, childBoxEntityMap)
+          const __ret = mutateChild(
+            child,
+            rand,
+            cfg,
+            effectiveMutate,
+            effectiveMutWeights,
+            effectiveMultiMutRate,
+            childEntities,
+            childBoxEntityMap,
+            scope?.allowed,
+          )
           child = __ret.child
           mutatedBox = __ret.mutatedBox
           childMutation = __ret.childMutation
@@ -665,7 +733,17 @@ async function runGenetic(
         if (rand() < effectiveMutationRate) {
           const childEntities = toEntities(child)
           const childBoxEntityMap = buildBoxEntityIndex(childEntities)
-          const __ret = mutateChild(child, rand, cfg, effectiveMutate, effectiveMutWeights, effectiveMultiMutRate, childEntities, childBoxEntityMap)
+          const __ret = mutateChild(
+            child,
+            rand,
+            cfg,
+            effectiveMutate,
+            effectiveMutWeights,
+            effectiveMultiMutRate,
+            childEntities,
+            childBoxEntityMap,
+            scope?.allowed,
+          )
           child = __ret.child
           mutatedBox = __ret.mutatedBox
           childMutation = __ret.childMutation
@@ -705,7 +783,7 @@ async function runGenetic(
       const numToReplace = Math.floor(cfg.catastropheFraction * (cfg.popSize - numElite))
       for (let r = 0; r < numToReplace; r++) {
         const freshLayouts = cloneLayouts(bestIndividual)
-        mutateChild(freshLayouts, rand, cfg, cfg.mutate * 2, effectiveMutWeights)
+        mutateChild(freshLayouts, rand, cfg, cfg.mutate * 2, effectiveMutWeights, undefined, undefined, undefined, scope?.allowed)
         if (cfg.repairOffspring) fixOverlaps(freshLayouts, cfg)
         if (cfg.normalize) normalizeLayouts(freshLayouts)
         newPopulation[newPopulation.length - 1 - r] = {
@@ -737,3 +815,122 @@ async function runGenetic(
 }
 
 export default runGenetic
+
+// Clustered driver: detects clusters, runs runGenetic once per cluster (frozen elsewhere),
+// then a final global polish pass. Mirrors runGenetic's signature for drop-in use.
+export type ClusteringInfo = {
+  totalClusters: number
+  boxClusterMap: Record<string, number> // box id → cluster index (0-based)
+}
+
+export async function runClusteredGenetic(
+  startingLayouts: Box[][],
+  lines: Line[],
+  rand: () => number,
+  cfg: Required<Config>,
+  getFitness?: (layouts: Box[], lines: Line[], cfg: Required<Config>) => Promise<Fitness>,
+  onIntermediate?: (layouts: Box[]) => void,
+  onGenerationEnd?: (stop: number, snapshot?: GenerationSnapshot) => void,
+  logProgress?: (...args: any) => void,
+  logInfo?: (...args: any) => void,
+  onMonitorEnd?: (monitor: RunMonitor) => void,
+  onClusteringInit?: (info: ClusteringInfo) => void,
+): Promise<Box[]> {
+  const seedBoxes = startingLayouts[0]
+  const clusters = detectClusters(seedBoxes, lines, cfg.cluster)
+  if (clusters.length <= 1) {
+    if (logInfo) logInfo(`Clustering: only ${clusters.length} cluster(s) → falling back to single-pass GA`)
+    return runGenetic(startingLayouts, lines, rand, cfg, getFitness, onIntermediate, onGenerationEnd, logProgress, logInfo, onMonitorEnd)
+  }
+
+  if (logInfo) {
+    const sizes = clusters.map((c) => c.boxIdxs.size).join(',')
+    logInfo(`Clustering: ${clusters.length} clusters (sizes ${sizes}, max=${cfg.cluster}) — sequential optimization`)
+  }
+
+  if (onClusteringInit) {
+    const boxClusterMap: Record<string, number> = {}
+    clusters.forEach((c, ci) => {
+      for (const idx of c.boxIdxs) boxClusterMap[seedBoxes[idx].id] = ci
+    })
+    onClusteringInit({ totalClusters: clusters.length, boxClusterMap })
+  }
+
+  // Per-cluster generation budget. Reserve a fraction of the total for the final polish pass.
+  const polishFrac = Math.max(0, Math.min(1, cfg.clusterPolishFraction))
+  const clusterGens = Math.max(200, Math.floor((cfg.generations * (1 - polishFrac)) / clusters.length))
+  const clusterStop = Math.max(50, Math.floor(cfg.stop / Math.max(1, Math.sqrt(clusters.length))))
+
+  const resolved = new Set<number>()
+  let working = cloneLayouts(startingLayouts[0])
+  // Per-depth-level x cursors: clusters at the same min-depth band are packed left-to-right,
+  // while clusters at different depths occupy different y zones independently.
+  const depthCursors = new Map<number, number>()
+
+  for (let ci = 0; ci < clusters.length; ci++) {
+    const cluster = clusters[ci]
+    const visible = new Set<number>([...resolved, ...cluster.boxIdxs])
+    const scope: ClusterScope = { allowed: cluster.boxIdxs, visible }
+
+    if (logProgress) logProgress(`CLUSTER ${ci + 1}/${clusters.length} | size=${cluster.boxIdxs.size} | visible=${visible.size}`)
+
+    // Lay out only the current cluster's boxes using depth-based y, then pack x per depth band.
+    {
+      const clusterBoxes = working.filter((b) => cluster.boxIdxs.has(b.index))
+      simpleFlow(clusterBoxes, cfg)
+      const clusterMinDepth = Math.min(...clusterBoxes.map((b) => b.depth ?? 0))
+      const startX = depthCursors.get(clusterMinDepth) ?? 0
+      const minX = Math.min(...clusterBoxes.map((b) => b.x))
+      const dx = startX - minX
+      for (const b of clusterBoxes) b.x += dx
+      const maxX = Math.max(...clusterBoxes.map((b) => b.x + b.width))
+      depthCursors.set(clusterMinDepth, maxX + cfg.gridX * 4)
+    }
+
+    const clusterCfg: Required<Config> = { ...cfg, generations: clusterGens, stop: clusterStop }
+
+    // Wrap onGenerationEnd: tag snapshots with cluster phase; pass scoped fitness as-is.
+    const wrappedOnGenerationEnd = onGenerationEnd
+      ? (stop: number, snapshot?: GenerationSnapshot) => {
+          if (snapshot) snapshot.cluster = { index: ci, total: clusters.length }
+          onGenerationEnd(stop, snapshot)
+        }
+      : undefined
+
+    const result = await runGenetic(
+      [working],
+      lines,
+      rand,
+      clusterCfg,
+      getFitness,
+      undefined, // skip intermediate svg dumps per-cluster
+      wrappedOnGenerationEnd,
+      logProgress,
+      logInfo,
+      undefined, // monitor only on polish pass
+      scope,
+    )
+
+    if (result.length > 0) working = result
+    for (const idx of cluster.boxIdxs) resolved.add(idx)
+  }
+
+  // Final polish: full graph movable, smaller mutate magnitude, fewer generations.
+  const polishGens = Math.max(200, Math.floor(cfg.generations * polishFrac))
+  if (logProgress) logProgress(`POLISH | generations=${polishGens} | mutate=${(cfg.mutate * cfg.clusterPolishMutate).toFixed(3)}`)
+  const polishCfg: Required<Config> = {
+    ...cfg,
+    generations: polishGens,
+    mutate: cfg.mutate * cfg.clusterPolishMutate,
+  }
+
+  // Wrap polish onGenerationEnd to tag snapshots with cluster = total (polish phase marker)
+  const polishOnGenerationEnd = onGenerationEnd
+    ? (stop: number, snapshot?: GenerationSnapshot) => {
+        if (snapshot) snapshot.cluster = { index: clusters.length, total: clusters.length }
+        onGenerationEnd(stop, snapshot)
+      }
+    : undefined
+
+  return runGenetic([working], lines, rand, polishCfg, getFitness, onIntermediate, polishOnGenerationEnd, logProgress, logInfo, onMonitorEnd)
+}
