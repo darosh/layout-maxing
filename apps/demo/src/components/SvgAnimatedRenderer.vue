@@ -411,7 +411,12 @@ function clusterStyle(ci: number | undefined) {
   const color = ci !== undefined ? clusterColor(ci) : undefined
   const dimmed = ac != null && ci !== ac
   return {
-    ...(color ? { stroke: color, 'stroke-dasharray': `${(1 / rootScale.value) * 16 * userScale.value} ${(1 / rootScale.value) * 8 * userScale.value + gridStrokeWidth.value * 1.25}` } : {}),
+    ...(color
+      ? {
+          stroke: color,
+          'stroke-dasharray': `${(1 / rootScale.value) * 16 * userScale.value} ${(1 / rootScale.value) * 8 * userScale.value + gridStrokeWidth.value * 1.25}`,
+        }
+      : {}),
     opacity: dimmed ? '0.2' : '1',
   }
 }
