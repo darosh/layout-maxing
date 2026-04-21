@@ -837,7 +837,7 @@ export async function runClusteredGenetic(
   onClusteringInit?: (info: ClusteringInfo) => void,
 ): Promise<Box[]> {
   const seedBoxes = startingLayouts[0]
-  const clusters = detectClusters(seedBoxes, lines, cfg.cluster)
+  const clusters = detectClusters(seedBoxes, lines, cfg.cluster, cfg.clusterMax)
   if (clusters.length <= 1) {
     if (logInfo) logInfo(`Clustering: only ${clusters.length} cluster(s) → falling back to single-pass GA`)
     return runGenetic(startingLayouts, lines, rand, cfg, getFitness, onIntermediate, onGenerationEnd, logProgress, logInfo, onMonitorEnd)

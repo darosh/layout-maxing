@@ -111,7 +111,8 @@ export const configMeta: ConfigMeta = {
   writeJson: [false, false, true, null, 'Write JSON data file with layouts and lines (CLI only)'],
   workers: [0, 0, 128, 1, 'Number of fitness workers (0 = auto: cpu count - 1), using number of performance CPU cores recommended'],
   // Clustering
-  cluster: [0, 0, 200, 1, 'Max boxes per cluster for divide-and-conquer GA (0 = disabled, classic single-pass)'],
+  cluster: [0, 0, 200, 1, 'Boxes per cluster for divide-and-conquer GA (0 = disabled, classic single-pass)'],
+  clusterMax: [0, 0, 200, 1, 'Max boxes per cluster'],
   clusterPolishFraction: [0.2, 0, 1, 0.05, 'Fraction of generations spent on final global polish pass after cluster sweep'],
   clusterPolishMutate: [0.3, 0, 1, 0.05, 'Mutate magnitude multiplier during the polish pass (smaller = finer adjustments)'],
 }
@@ -208,6 +209,10 @@ export const configFeatureTags: Partial<Record<keyof Config, string[]>> = {
   gridY: ['grid'],
   minDistX: ['minDist'],
   minDistY: ['minDist'],
+  cluster: ['cluster'],
+  clusterMax: ['cluster'],
+  clusterPolishFraction: ['cluster'],
+  clusterPolishMutate: ['cluster'],
 }
 
 // Maps mutation/crossover key → primary config weight key

@@ -235,6 +235,7 @@ const groups: GroupDef[] = [
       { key: 'useZero' },
       { key: 'initialMutation' },
       { key: 'cluster' },
+      { key: 'clusterMax' },
       { key: 'clusterPolishFraction' },
       { key: 'clusterPolishMutate' },
     ],

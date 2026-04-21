@@ -8,7 +8,7 @@ export interface Cluster {
 // Requires fillDepths() to have populated parents/children/depth on every box.
 // Boxgroup members (sharing groupIdx) are forced into the same cluster.
 // Returned clusters are ordered deepest-first (process order for sequential GA).
-export function detectClusters(boxes: Box[], _lines: Line[], maxSize: number): Cluster[] {
+export function detectClusters(boxes: Box[], _lines: Line[], maxSize: number, maxSizeIsolated = maxSize): Cluster[] {
   if (maxSize <= 0 || boxes.length === 0) return []
 
   const n = boxes.length
@@ -96,6 +96,29 @@ export function detectClusters(boxes: Box[], _lines: Line[], maxSize: number): C
       const atomic = seedSizeOf(best)
       if (cluster.size > 0 && cluster.size + atomic.length > maxSize * 1.5) break
       addAtomic(best)
+    }
+
+    // Absorb isolated frontier nodes (all their unassigned neighbors connect only back
+    // into this cluster) up to maxSizeIsolated.
+    if (maxSizeIsolated > maxSize) {
+      let changed = true
+      while (changed && cluster.size < maxSizeIsolated) {
+        changed = false
+        for (const idx of cluster) {
+          for (const ni of [...(boxes[idx].parents ?? []), ...(boxes[idx].children ?? [])]) {
+            if (assigned[ni]) continue
+            const neighbors = [...(boxes[ni].parents ?? []), ...(boxes[ni].children ?? [])]
+            const isolated = neighbors.every((nn) => cluster.has(nn) || assigned[nn])
+            if (isolated) {
+              const atomic = seedSizeOf(ni)
+              if (cluster.size + atomic.length <= maxSizeIsolated) {
+                addAtomic(ni)
+                changed = true
+              }
+            }
+          }
+        }
+      }
     }
 
     clusters.push({ boxIdxs: cluster })

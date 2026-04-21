@@ -107,6 +107,7 @@ export interface Config {
   workers?: number
   // Clustering
   cluster?: number
+  clusterMax?: number
   clusterPolishFraction?: number
   clusterPolishMutate?: number
 }
