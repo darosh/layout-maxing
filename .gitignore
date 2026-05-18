@@ -27,9 +27,11 @@ dist-ssr
 .claude/worktrees/
 
 # IDE
-.idea
 .aider*
 .agents
 .claude
 skills-lock.json
 PLAN-*.md
+
+# Temp
+./temp/
