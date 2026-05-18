@@ -102,23 +102,9 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
     let over_pen = 0
     const reverse_pen = pts1.ey > pts1.sy ? 1 : c.reversePenalty
 
-    const ix0 = pts1.sx < pts1.ex ? pts1.sx : pts1.ex
-    const ix1 = pts1.sx < pts1.ex ? pts1.ex : pts1.sx
-    const iy0 = pts1.sy < pts1.ey ? pts1.sy : pts1.ey
-    const iy1 = pts1.sy < pts1.ey ? pts1.ey : pts1.sy
-
     // Crossing detection (straight-line approximation for speed)
     for (let j = i + 1; j < lines.length; j++) {
       const pts2 = linePoints[j]
-      // AABB broad-phase: skip pairs that are x-separated or y-separated
-      const jx0 = pts2.sx < pts2.ex ? pts2.sx : pts2.ex
-      if (ix1 < jx0) continue
-      const jx1 = pts2.sx < pts2.ex ? pts2.ex : pts2.sx
-      if (jx1 < ix0) continue
-      const jy0 = pts2.sy < pts2.ey ? pts2.sy : pts2.ey
-      if (iy1 < jy0) continue
-      const jy1 = pts2.sy < pts2.ey ? pts2.ey : pts2.sy
-      if (jy1 < iy0) continue
 
       if (segmentsOverlap(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) {
         overlaps++
@@ -130,12 +116,7 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
     }
 
     const sourceBoxId = l1.patchline.source[0]
-    const lx0 = Math.min(pts1.sx, pts1.ex) - c.boxZone
-    const lx1 = Math.max(pts1.sx, pts1.ex) + c.boxZone
-    const ly0 = Math.min(pts1.sy, pts1.ey) - c.boxZone
-    const ly1 = Math.max(pts1.sy, pts1.ey) + c.boxZone
     for (const box of layouts) {
-      if (box.x + box.width < lx0 || box.x > lx1 || box.y + box.height < ly0 || box.y > ly1) continue
       if (boxLineCollision(box, pts1, c.boxZone)) {
         if (sscSourceIds.has(sourceBoxId) && box.id === sourceBoxId) {
           singleSelfCollisions++

@@ -120,23 +120,14 @@ function getWorkers(workers = 0) {
     free.worker.postMessage(next.input)
   }
 
-  function initWorkers(lines: unknown, cfg?: unknown) {
-    for (const { worker } of fitnessWorkers) {
-      worker.postMessage({ type: 'init', lines, cfg })
-    }
-  }
-
-  // _lines is ignored — workers have them stored from initWorkers; cfg is forwarded when it varies (calibrate)
-  function getFitness(layouts: unknown, _lines?: unknown, cfg?: unknown) {
-    const msg: Record<string, unknown> = { type: 'eval', layouts }
-    if (cfg !== undefined) msg.cfg = cfg
+  function getFitness(...input: unknown[]) {
     return new Promise<Fitness>((resolve) => {
-      fitnessWorkersQueue.push({ input: msg, resolve })
+      fitnessWorkersQueue.push({ input, resolve })
       runNext()
     })
   }
 
-  return { CPUS, getFitness, initWorkers, terminateWorkers }
+  return { CPUS, getFitness, terminateWorkers }
 }
 
 async function cli() {
@@ -149,7 +140,7 @@ async function cli() {
     if (command === 'layout' || command === 'layout-clipboard') {
       const start = Date.now()
       const c = { ...defaultConfig, ...cfg }
-      const { CPUS, getFitness, initWorkers, terminateWorkers } = getWorkers(c.workers)
+      const { CPUS, getFitness, terminateWorkers } = getWorkers(c.workers)
 
       if (c.logInfo) console.log(`Using ${CPUS} workers.`)
 
@@ -161,7 +152,6 @@ async function cli() {
       const outputPath = outPath ?? format({ ...parse(filePath), name: `${parse(filePath).name}_updated` })
 
       await Deno.mkdir(dirname(outputPath), { recursive: true })
-      initWorkers(lines, c)
 
       const bestIndividual = await main(
         rnbo,
@@ -236,11 +226,10 @@ async function cli() {
       const depthIdx = Deno.args.indexOf('--depth')
       const depth = depthIdx !== -1 && Deno.args[depthIdx + 1] ? parseInt(Deno.args[depthIdx + 1], 10) : 3
 
-      const { getFitness, initWorkers, terminateWorkers } = getWorkers()
+      const { getFitness, terminateWorkers } = getWorkers()
       const rnbo: RNBO = JSON.parse(await Deno.readTextFile(filePath))
       const layouts = createInitialLayouts(rnbo.patcher)
       const lines = rnbo.patcher.lines
-      initWorkers(lines)
       const params = getNumericParams()
 
       console.log(`Calibrating ${params.length} numeric params at depth=${depth} (${params.length * depth + 1} evaluations)...`)
