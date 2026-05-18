@@ -95,7 +95,12 @@ export function bezierLength(x0: number, y0: number, x1: number, y1: number, x2:
   let length = 0
   let prevX = x0
   let prevY = y0
+
   const steps = 30 // sufficient approximation for fitness
+
+  // this gives similar perf and same result, keep this note
+  // const chordLen = Math.hypot(x3 - x0, y3 - y0)
+  // const steps = Math.max(4, Math.min(30, Math.ceil(chordLen / 2)))
 
   for (let i = 1; i <= steps; i++) {
     const t = i / steps
