@@ -147,7 +147,8 @@ async function cli() {
       const filePath = positional[0]
       const outPath = positional[1]
       const jsonText = await Deno.readTextFile(filePath)
-      const rnbo: RNBO = command === 'layout-clipboard' ? { patcher: JSON.parse(jsonText) } : JSON.parse(jsonText)
+      const parsed = JSON.parse(jsonText)
+      const rnbo: RNBO = (command === 'layout-clipboard' || !('patcher' in parsed)) ? { patcher: parsed } : parsed
       const lines = rnbo.patcher.lines
       const outputPath = outPath ?? format({ ...parse(filePath), name: `${parse(filePath).name}_updated` })
 
@@ -206,7 +207,8 @@ async function cli() {
     } else if (command === 'fitness') {
       const filePath = positional[0]
       const jsonText = await Deno.readTextFile(filePath)
-      const rnbo: RNBO = JSON.parse(jsonText)
+      const parsedFitness = JSON.parse(jsonText)
+      const rnbo: RNBO = 'patcher' in parsedFitness ? parsedFitness : { patcher: parsedFitness }
       const lines = rnbo.patcher.lines
       const baseLayouts = createInitialLayouts(rnbo.patcher)
       const inputFitness = fitness(baseLayouts, lines, cfg)
@@ -227,7 +229,8 @@ async function cli() {
       const depth = depthIdx !== -1 && Deno.args[depthIdx + 1] ? parseInt(Deno.args[depthIdx + 1], 10) : 3
 
       const { getFitness, terminateWorkers } = getWorkers()
-      const rnbo: RNBO = JSON.parse(await Deno.readTextFile(filePath))
+      const parsedCal = JSON.parse(await Deno.readTextFile(filePath))
+      const rnbo: RNBO = 'patcher' in parsedCal ? parsedCal : { patcher: parsedCal }
       const layouts = createInitialLayouts(rnbo.patcher)
       const lines = rnbo.patcher.lines
       const params = getNumericParams()
