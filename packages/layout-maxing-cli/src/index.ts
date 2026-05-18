@@ -103,6 +103,12 @@ function getWorkers(workers = 0) {
     }
   }
 
+  function initWorkers(cfg: unknown) {
+    for (const { worker } of fitnessWorkers) {
+      worker.postMessage({ type: 'init', cfg })
+    }
+  }
+
   function runNext() {
     if (!fitnessWorkersQueue.length) {
       return
@@ -120,14 +126,14 @@ function getWorkers(workers = 0) {
     free.worker.postMessage(next.input)
   }
 
-  function getFitness(...input: unknown[]) {
+  function getFitness(layouts: unknown, lines: unknown, _cfg: unknown) {
     return new Promise<Fitness>((resolve) => {
-      fitnessWorkersQueue.push({ input, resolve })
+      fitnessWorkersQueue.push({ input: [layouts, lines], resolve })
       runNext()
     })
   }
 
-  return { CPUS, getFitness, terminateWorkers }
+  return { CPUS, getFitness, initWorkers, terminateWorkers }
 }
 
 async function cli() {
@@ -140,7 +146,7 @@ async function cli() {
     if (command === 'layout' || command === 'layout-clipboard') {
       const start = Date.now()
       const c = { ...defaultConfig, ...cfg }
-      const { CPUS, getFitness, terminateWorkers } = getWorkers(c.workers)
+      const { CPUS, getFitness, initWorkers, terminateWorkers } = getWorkers(c.workers)
 
       if (c.logInfo) console.log(`Using ${CPUS} workers.`)
 
@@ -150,6 +156,7 @@ async function cli() {
       const parsed = JSON.parse(jsonText)
       const rnbo: RNBO = (command === 'layout-clipboard' || !('patcher' in parsed)) ? { patcher: parsed } : parsed
       const lines = rnbo.patcher.lines
+      initWorkers(c)
       const outputPath = outPath ?? format({ ...parse(filePath), name: `${parse(filePath).name}_updated` })
 
       await Deno.mkdir(dirname(outputPath), { recursive: true })
@@ -229,11 +236,12 @@ async function cli() {
       const depthIdx = Deno.args.indexOf('--depth')
       const depth = depthIdx !== -1 && Deno.args[depthIdx + 1] ? parseInt(Deno.args[depthIdx + 1], 10) : 3
 
-      const { getFitness, terminateWorkers } = getWorkers()
+      const { getFitness, initWorkers: initCalibrateWorkers, terminateWorkers } = getWorkers()
       const parsedCal = JSON.parse(await Deno.readTextFile(filePath))
       const rnbo: RNBO = 'patcher' in parsedCal ? parsedCal : { patcher: parsedCal }
       const layouts = createInitialLayouts(rnbo.patcher)
       const lines = rnbo.patcher.lines
+      initCalibrateWorkers({ ...defaultConfig, ...cfg })
       const params = getNumericParams()
 
       console.log(`Calibrating ${params.length} numeric params at depth=${depth} (${params.length * depth + 1} evaluations)...`)

@@ -144,22 +144,32 @@ export function mutateShiftCol(target: LayoutEntity, entities: LayoutEntity[], d
 }
 
 // Find entity in otherEntities that matches the given entity (by groupIdx or box.index).
-function matchEntity(entity: LayoutEntity, otherEntities: LayoutEntity[]): LayoutEntity | undefined {
-  if (entity.groupIdx !== undefined) {
-    return otherEntities.find((e) => e.groupIdx === entity.groupIdx)
+function buildEntityLookup(entities: LayoutEntity[]): { byGroup: Map<number, LayoutEntity>; byBoxIdx: Map<number, LayoutEntity> } {
+  const byGroup = new Map<number, LayoutEntity>()
+  const byBoxIdx = new Map<number, LayoutEntity>()
+  for (const e of entities) {
+    if (e.groupIdx !== undefined) {
+      byGroup.set(e.groupIdx, e)
+    } else {
+      byBoxIdx.set(e.members[0].box.index, e)
+    }
   }
-  const myIdx = entity.members[0].box.index
-  return otherEntities.find((e) => e.groupIdx === undefined && e.members[0].box.index === myIdx)
+  return { byGroup, byBoxIdx }
+}
+
+function matchEntityFast(entity: LayoutEntity, lookup: { byGroup: Map<number, LayoutEntity>; byBoxIdx: Map<number, LayoutEntity> }): LayoutEntity | undefined {
+  if (entity.groupIdx !== undefined) return lookup.byGroup.get(entity.groupIdx)
+  return lookup.byBoxIdx.get(entity.members[0].box.index)
 }
 
 export function crossover(parent1: Box[], parent2: Box[], rand: () => number, cfg: Required<Config>): Box[] {
   const child = cloneLayouts(parent1)
   const childEntities = toEntities(child)
-  const p2Entities = toEntities(parent2)
+  const p2Lookup = buildEntityLookup(toEntities(parent2))
 
   for (const e of childEntities) {
     if (rand() < cfg.crossoverMix) {
-      const p2e = matchEntity(e, p2Entities)
+      const p2e = matchEntityFast(e, p2Lookup)
       if (!p2e) continue
       moveEntityTo(e, p2e.x, p2e.y)
 
@@ -183,7 +193,7 @@ export function crossover(parent1: Box[], parent2: Box[], rand: () => number, cf
 export function crossoverStructural(parent1: Box[], parent2: Box[], rand: () => number): Box[] {
   const child = cloneLayouts(parent1)
   const childEntities = toEntities(child)
-  const p2Entities = toEntities(parent2)
+  const p2Lookup = buildEntityLookup(toEntities(parent2))
 
   // Pick random entity as structural transplant root
   const targetEntityIdx = Math.floor(rand() * childEntities.length)
@@ -209,7 +219,7 @@ export function crossoverStructural(parent1: Box[], parent2: Box[], rand: () => 
 
   // Copy positions from parent2 for all transplanted entities
   for (const entity of toTransplant) {
-    const p2e = matchEntity(entity, p2Entities)
+    const p2e = matchEntityFast(entity, p2Lookup)
     if (!p2e) continue
     moveEntityTo(entity, p2e.x, p2e.y)
 

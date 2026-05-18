@@ -1,7 +1,8 @@
 # Layout-Maxing Optimization Plan
 
 Benchmark before/after every change: `bash scripts/bench-run.sh` then `bash scripts/bench-compare.sh`.
-Baseline is run 1 (git `aed9377`): e1=3933/1.44s, e2=24366/22.93s, e3=11039/2.30s, e4=33529/3.59s.
+Baseline is run 1 (git `7bf9dbb`): e1=3933/1.33s, e2=24366/21.4s, e3=11039/2.22s, e4=33529/3.51s, e5=1460336/248s.
+Run 2 (git `a5b4334`, after opts #1–5): e1=3933/1.38s, e2=24366/21.39s, e3=11039/2.19s, e4=33529/3.53s, e5=1460336/229s.
 
 ---
 
@@ -35,9 +36,10 @@ The clustered GA accumulates too many genome objects over many generations. Each
 
 **Must not change:** fitness function or any algorithm — purely worker protocol.
 
-- [ ] Implement in CLI worker + index.ts
-- [ ] Implement in app worker + wherever the app creates the fitness worker
-- [ ] Bench run, compare scores (should be identical), compare times
+- [x] Implement in CLI worker + index.ts
+- [x] Implement in app worker + wherever the app creates the fitness worker
+- [x] Bench run, compare scores (should be identical), compare times
+- **Result (run 2):** Scores identical. Timing flat — only `cfg` can be cached (it's tiny). In Clustered mode, `lines` are filtered per-cluster by `scopedFitnessAsync`, so caching global lines would break example-5. Full lines-caching requires deeper integration in genetic.ts. Moving on; real wins in #2–4.
 
 ---
 
@@ -51,10 +53,11 @@ The clustered GA accumulates too many genome objects over many generations. Each
 
 **Expected win:** Saves ~600 map operations per eval (O(E+N) for the-synth with 165 lines, 100 boxes).
 
-- [ ] Export `precomputeTopology` from fitness.ts
-- [ ] Add optional `topology` param to `fitness()`
-- [ ] Pass precomputed topology from worker
-- [ ] Bench and compare
+- [x] Export `precomputeTopology` from fitness.ts
+- [x] Add optional `topology` param to `fitness()`
+- [x] Pass precomputed topology from worker (cached per lines key, invalidated on cluster change)
+- [x] Bench and compare
+- **Result (run 2):** Scores identical. e5: 248s→242s (-2.5%). Small win; examples 1-4 within noise.
 
 ---
 
@@ -68,9 +71,10 @@ The clustered GA accumulates too many genome objects over many generations. Each
 
 **Must not change:** which entity is matched (same lookup logic, just faster).
 
-- [ ] Build lookup maps before entity loop in `crossover()`
-- [ ] Same fix in `crossoverStructural()`
-- [ ] Bench and compare
+- [x] Build lookup maps before entity loop in `crossover()`
+- [x] Same fix in `crossoverStructural()`
+- [x] Bench and compare
+- **Result (run 2):** Scores identical. Timing within noise — N (entities) is small (~50-100), O(N) gain is negligible vs eval overhead.
 
 ---
 
@@ -84,8 +88,9 @@ The clustered GA accumulates too many genome objects over many generations. Each
 
 **Must not change:** which collisions are detected (AABB overlap is a necessary condition for line-box collision).
 
-- [ ] Add AABB guard before `boxLineCollision` call
-- [ ] Bench and compare
+- [x] Add AABB guard before `boxLineCollision` call
+- [x] Bench and compare
+- **Result (run 2, with #5):** Scores identical. e5: 248s→229s (-7.5%). Best single win so far.
 
 ---
 
@@ -97,8 +102,8 @@ The clustered GA accumulates too many genome objects over many generations. Each
 
 **Change:** Return 0 early if `xOverlap === 0`.
 
-- [ ] Add early return
-- [ ] Bench and compare (likely small win, easy to do)
+- [x] Add early return
+- [x] Bench and compare (combined with #4 in run 2)
 
 ---
 

@@ -90,7 +90,7 @@ function createFitnessWorkerPool(workers = 0) {
     return info
   })
 
-  const queue: { input: [Box[], Line[], Config]; resolve: (f: Fitness) => void }[] = []
+  const queue: { input: [Box[], Line[]]; resolve: (f: Fitness) => void }[] = []
 
   function runNext() {
     if (!queue.length) return
@@ -98,12 +98,18 @@ function createFitnessWorkerPool(workers = 0) {
     if (!free) return
     const next = queue.shift()!
     free.resolve = next.resolve
-    free.worker.postMessage([next.input[0], next.input[1], next.input[2]])
+    free.worker.postMessage(next.input)
   }
 
-  function getFitness(layouts: Box[], lines: Line[], cfg: Config): Promise<Fitness> {
+  function init(cfg: Config) {
+    for (const { worker } of fitnessWorkers) {
+      worker.postMessage({ type: 'init', cfg })
+    }
+  }
+
+  function getFitness(layouts: Box[], lines: Line[], _cfg: Config): Promise<Fitness> {
     return new Promise((resolve) => {
-      queue.push({ input: [layouts, lines, cfg], resolve })
+      queue.push({ input: [layouts, lines], resolve })
       runNext()
     })
   }
@@ -112,7 +118,7 @@ function createFitnessWorkerPool(workers = 0) {
     for (const { worker } of fitnessWorkers) worker.terminate()
   }
 
-  return { getFitness, terminate, count }
+  return { getFitness, init, terminate, count }
 }
 
 function cloneForSvg(layouts: Box[]): Box[] {
@@ -157,6 +163,7 @@ self.onmessage = async (e: MessageEvent) => {
   const c = { ...defaultConfig, ...cfg }
   const lines = rnbo.patcher.lines
   const pool = createFitnessWorkerPool(cfg.workers)
+  pool.init(c)
 
   let evalCount = 0
   let bestScore: number | null = null

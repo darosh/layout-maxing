@@ -38,7 +38,36 @@ export const fitnessMeta: FitnessMeta = {
   view: ['View', 'VIE', 'Viewport size'],
 }
 
-export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config): Fitness {
+export interface Topology {
+  sscSourceIds: Set<BoxId>
+  sscByChildIds: Map<BoxId, BoxId[]>
+}
+
+export function precomputeTopology(lines: Line[], boxes: { id: string; numOutlets?: number }[]): Topology {
+  const outgoingCount = new Map<BoxId, number>()
+  const incomingCount = new Map<BoxId, number>()
+  for (const l of lines) {
+    const src = l.patchline.source[0]
+    const dst = l.patchline.destination[0]
+    outgoingCount.set(src, (outgoingCount.get(src) ?? 0) + 1)
+    incomingCount.set(dst, (incomingCount.get(dst) ?? 0) + 1)
+  }
+  const sscSourceIds = new Set<BoxId>()
+  for (const b of boxes) {
+    if (b.numOutlets === 1 && outgoingCount.get(b.id) === 1 && !incomingCount.has(b.id)) sscSourceIds.add(b.id)
+  }
+  const sscByChildIds = new Map<BoxId, BoxId[]>()
+  for (const l of lines) {
+    const srcId = l.patchline.source[0]
+    if (!sscSourceIds.has(srcId)) continue
+    const dstId = l.patchline.destination[0]
+    if (!sscByChildIds.has(dstId)) sscByChildIds.set(dstId, [])
+    sscByChildIds.get(dstId)!.push(srcId)
+  }
+  return { sscSourceIds, sscByChildIds }
+}
+
+export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config, topology?: Topology): Fitness {
   lines ??= []
   const c = { ...defaultConfig, ...cfg }
   const boxMap = new Map<BoxId, Box>()
@@ -51,28 +80,26 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
   let collisions = 0
   let singleSelfCollisions = 0
 
-  // Precompute SSC source boxes: numOutlets === 1, exactly 1 outgoing line, no incoming lines
-  const outgoingCount = new Map<BoxId, number>()
-  const incomingCount = new Map<BoxId, number>()
-  for (const l of lines) {
-    const src = l.patchline.source[0]
-    const dst = l.patchline.destination[0]
-    outgoingCount.set(src, (outgoingCount.get(src) ?? 0) + 1)
-    incomingCount.set(dst, (incomingCount.get(dst) ?? 0) + 1)
-  }
-  const sscSourceIds = new Set<BoxId>()
-  for (const b of layouts) {
-    if (b.numOutlets === 1 && outgoingCount.get(b.id) === 1 && !incomingCount.has(b.id)) sscSourceIds.add(b.id)
+  let sscSourceIds: Set<BoxId>
+  let sscByChildIds: Map<BoxId, BoxId[]>
+  if (topology) {
+    sscSourceIds = topology.sscSourceIds
+    sscByChildIds = topology.sscByChildIds
+  } else {
+    const t = precomputeTopology(lines, layouts)
+    sscSourceIds = t.sscSourceIds
+    sscByChildIds = t.sscByChildIds
   }
 
   // Compute misalignedSS: SSC sibling pairs sharing a child without shared x or y
   const sscByChild = new Map<BoxId, Box[]>()
-  for (const l of lines) {
-    const srcId = l.patchline.source[0]
-    if (!sscSourceIds.has(srcId)) continue
-    const dstId = l.patchline.destination[0]
-    if (!sscByChild.has(dstId)) sscByChild.set(dstId, [])
-    sscByChild.get(dstId)!.push(boxMap.get(srcId)!)
+  for (const [dstId, srcIds] of sscByChildIds) {
+    const boxes: Box[] = []
+    for (const srcId of srcIds) {
+      const b = boxMap.get(srcId)
+      if (b) boxes.push(b)
+    }
+    if (boxes.length > 0) sscByChild.set(dstId, boxes)
   }
 
   let misalignedSS = 0
@@ -116,7 +143,12 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
     }
 
     const sourceBoxId = l1.patchline.source[0]
+    const lx0 = Math.min(pts1.sx, pts1.ex) - c.boxZone
+    const lx1 = Math.max(pts1.sx, pts1.ex) + c.boxZone
+    const ly0 = Math.min(pts1.sy, pts1.ey)
+    const ly1 = Math.max(pts1.sy, pts1.ey)
     for (const box of layouts) {
+      if (box.x + box.width < lx0 || box.x > lx1 || box.y + box.height < ly0 || box.y > ly1) continue
       if (boxLineCollision(box, pts1, c.boxZone)) {
         if (sscSourceIds.has(sourceBoxId) && box.id === sourceBoxId) {
           singleSelfCollisions++
