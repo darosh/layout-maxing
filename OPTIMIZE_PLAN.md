@@ -18,9 +18,7 @@ deno run --allow-all --sloppy-imports src/index.ts layout \
 The clustered GA accumulates too many genome objects over many generations. Each individual in the population is a full `Box[]` array that gets cloned per offspring. With a large patcher (~700+ boxes) and many generations, V8 heap exhausts.
 
 **Likely fixes (in order of effort):**
-- [ ] Increase Deno heap: `deno run --v8-flags=--max-old-space-size=8192 ...` — quick test to confirm it's heap-limited
-- [ ] Check if `_mutations` history object on each Box accumulates unboundedly across generations — cap or drop it
-- [ ] Profile what's growing: add `--inspect` and check heap snapshot after N gens
+- [x] Root cause: `buildGenerationSnapshot` stored the full `population` (20×700 Box objects) in every snapshot, and `monitor.snapshots` grew unboundedly. Fix: clear `snapshot.population = undefined` immediately after `onGenerationEnd` in `genetic.ts`. Confirmed: run now completes in ~10min instead of OOM-crashing.
 
 ---
 

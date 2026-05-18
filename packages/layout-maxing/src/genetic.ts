@@ -639,6 +639,7 @@ export async function runGenetic(
     }
 
     onGenerationEnd?.(stop, snapshot)
+    snapshot.population = undefined
 
     if (!stop) {
       break
