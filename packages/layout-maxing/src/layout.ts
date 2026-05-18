@@ -375,11 +375,9 @@ export function fixOverlaps(layouts: Box[], cfg: Required<Config>, maxIter = 2):
     entities.sort((a, b) => a.y - b.y || a.x - b.x)
 
     for (let i = 0; i < entities.length; i++) {
-      const curr = entities[i]
-      // Iterate j from i-1 down; break when prev is fully above curr (y-sorted, so all further j are too)
-      for (let j = i - 1; j >= 0; j--) {
+      for (let j = 0; j < i; j++) {
+        const curr = entities[i]
         const prev = entities[j]
-        if (prev.y + prev.height <= curr.y) break
 
         if (entitiesOverlap(curr, prev)) {
           const overlapX = Math.max(0, Math.min(curr.x + curr.width, prev.x + prev.width) - Math.max(curr.x, prev.x))
