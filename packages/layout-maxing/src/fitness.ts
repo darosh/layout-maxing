@@ -86,9 +86,11 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
     }
   }
 
+  const linePoints = lines.map((line) => getStraightLinePoints(line, boxMap, c))
+
   for (let i = 0; i < lines.length; i++) {
     const l1 = lines[i]
-    const pts1 = getStraightLinePoints(l1, boxMap, c)
+    const pts1 = linePoints[i]
 
     // Bezier length (exact curve)
     const c1x = pts1.sx
@@ -102,8 +104,7 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
 
     // Crossing detection (straight-line approximation for speed)
     for (let j = i + 1; j < lines.length; j++) {
-      const l2 = lines[j]
-      const pts2 = getStraightLinePoints(l2, boxMap, c)
+      const pts2 = linePoints[j]
 
       if (segmentsOverlap(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) {
         overlaps++
