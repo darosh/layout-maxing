@@ -4,6 +4,7 @@ import E3 from '../../../../packages/layout-maxing-cli/tests/fixtures/the-synth.
 // import E4 from '../../../../packages/layout-maxing-cli/tests/fixtures/the-synth.maxpat'
 import E5 from '../../../../packages/layout-maxing-cli/tests/fixtures/reverb-example.json'
 import E6 from '../../../../packages/layout-maxing-cli/tests/fixtures/reverb-grouped-example.json'
+import E7 from '../../../../packages/layout-maxing-cli/tests/fixtures/the-voice.rnbopat'
 import type { RNBO } from 'layout-maxing'
 
 export const EXAMPLES: RNBO[] = <RNBO[]>(<unknown[]>[
@@ -11,4 +12,5 @@ export const EXAMPLES: RNBO[] = <RNBO[]>(<unknown[]>[
   { patcher: E3, best: 13332 },
   { patcher: E5, best: 10014 },
   { patcher: E6, best: 10888 },
+  { patcher: E7.patcher, best: 1460336 },
 ])
