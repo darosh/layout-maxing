@@ -204,6 +204,7 @@ async function cli() {
       console.log(`Elapsed ${elapsed}`)
 
       terminateWorkers()
+      Deno.exit(0)
     } else if (command === 'fitness') {
       const filePath = positional[0]
       const jsonText = await Deno.readTextFile(filePath)
@@ -240,6 +241,7 @@ async function cli() {
       const result = await runCalibrate(layouts, lines, depth, getFitness)
       printCalibrateResults(result)
       terminateWorkers()
+      Deno.exit(0)
     } else if (command === 'help') {
       console.log(help())
       console.log(`\nPresets: ${Object.keys(PRESETS).join(', ')}`)
