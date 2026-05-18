@@ -85,9 +85,8 @@ export function boxLineCollision(box: Box, line: StartEnd, zone: number): boolea
 
 export function getIntersectionArea(a: Box, b: Box, x: number): number {
   const xOverlap = Math.max(0, Math.min(a.x + a.width + x, b.x + b.width + x) - Math.max(a.x - x, b.x - x))
-
+  if (xOverlap === 0) return 0
   const yOverlap = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
-
   return xOverlap * yOverlap
 }
 
@@ -95,7 +94,7 @@ export function bezierLength(x0: number, y0: number, x1: number, y1: number, x2:
   let length = 0
   let prevX = x0
   let prevY = y0
-  const steps = 30 // sufficient approximation for fitness
+  const steps = 10 // sufficient approximation for fitness
 
   for (let i = 1; i <= steps; i++) {
     const t = i / steps

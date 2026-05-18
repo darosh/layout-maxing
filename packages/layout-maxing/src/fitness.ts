@@ -116,7 +116,12 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config)
     }
 
     const sourceBoxId = l1.patchline.source[0]
+    const lx0 = Math.min(pts1.sx, pts1.ex) - c.boxZone
+    const lx1 = Math.max(pts1.sx, pts1.ex) + c.boxZone
+    const ly0 = Math.min(pts1.sy, pts1.ey) - c.boxZone
+    const ly1 = Math.max(pts1.sy, pts1.ey) + c.boxZone
     for (const box of layouts) {
+      if (box.x + box.width < lx0 || box.x > lx1 || box.y + box.height < ly0 || box.y > ly1) continue
       if (boxLineCollision(box, pts1, c.boxZone)) {
         if (sscSourceIds.has(sourceBoxId) && box.id === sourceBoxId) {
           singleSelfCollisions++
