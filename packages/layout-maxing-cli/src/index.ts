@@ -1,4 +1,4 @@
-import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg, fitness, help, applyBestLayout, PRESETS } from 'layout-maxing'
+import { createInitialLayouts, defaultConfig, jsonDiff, main, toSvg, fitness, help, applyBestLayout, PRESETS, stampGroupIdx } from 'layout-maxing'
 import type { Box, Config, Fitness, RNBO } from 'layout-maxing'
 import { runCalibrate, getNumericParams, printCalibrateResults } from './calibrate.ts'
 import { cpus } from 'node:os'
@@ -220,6 +220,7 @@ async function cli() {
       const rnbo: RNBO = 'patcher' in parsedFitness ? parsedFitness : { patcher: parsedFitness }
       const lines = rnbo.patcher.lines
       const baseLayouts = createInitialLayouts(rnbo.patcher)
+      stampGroupIdx(baseLayouts, rnbo.patcher.boxgroups)
       const inputFitness = fitness(baseLayouts, lines, cfg)
 
       if (cfg.logInfo) {
