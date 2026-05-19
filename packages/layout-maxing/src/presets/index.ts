@@ -7,12 +7,14 @@ import Raw from './raw.ts'
 import Relaxed from './relaxed.ts'
 import Clustered from './clustered.ts'
 import Niching from './niching.ts'
+import NichingFast from './niching-fast.ts'
 
 export const PRESETS = {
   Default,
   Clustered,
   Relaxed,
   Niching,
+  NichingFast,
   Fast,
   Medium,
   Large,
