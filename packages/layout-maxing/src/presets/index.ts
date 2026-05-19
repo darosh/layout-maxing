@@ -6,11 +6,13 @@ import Larger from './larger.ts'
 import Raw from './raw.ts'
 import Relaxed from './relaxed.ts'
 import Clustered from './clustered.ts'
+import Niching from './niching.ts'
 
 export const PRESETS = {
   Default,
   Clustered,
   Relaxed,
+  Niching,
   Fast,
   Medium,
   Large,

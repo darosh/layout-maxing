@@ -1,6 +1,9 @@
 import { type Fitness } from './fitness.ts'
 
-const NICHING_DIMS: (keyof Fitness)[] = ['score', 'crossings', 'overlaps', 'collisions', 'length', 'area', 'minDist', 'view']
+// Niching distance describes structural diversity, not score. Selection already
+// uses score via sharedFitness = score * nicheCount, so including score in the
+// distance would double-count it.
+const NICHING_DIMS: (keyof Fitness)[] = ['crossings', 'overlaps', 'collisions', 'length', 'area', 'minDist', 'view']
 
 function sh(d: number, sigma: number, alpha: number): number {
   return d < sigma ? 1 - Math.pow(d / sigma, alpha) : 0
