@@ -51,7 +51,7 @@ export const configMeta: ConfigMeta = {
   initMutations: [1, 1, 20, 1, 'Max number of mutations applied per clone during initial population; later clones get progressively more up to this limit'],
   crowdingTieBreak: [true, false, true, null, 'Prefer less-crowded individuals when tournament fitness is tied'],
   nichingEnabled: [false, false, true, null, 'Enable fitness sharing (niching) to maintain population diversity'],
-  nichingRadius: [5000, 0, 1e9, 1, 'Sigma: fitness-space distance threshold for niching neighbourhood'],
+  nichingRadius: [0.5, 0, 10, 0.01, 'Sigma: normalised fitness-space distance threshold for niching neighbourhood (scale-independent; ~0.1–1 typical)'],
   nichingExponent: [1, 0.1, 5, 0.1, 'Alpha: shape of the sharing function (1 = linear)'],
   stagnationThreshold: [11, 0, 100000, 1, 'Generations without improvement before boosting mutation rate; 0 = disabled'],
   stagnationRate: [1.1, 1, 10, 0.1, 'Mutation rate multiplier applied during stagnation burst (requires stagnationResetThreshold > 0)'],
