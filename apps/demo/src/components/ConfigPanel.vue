@@ -166,6 +166,9 @@ const groups: GroupDef[] = [
       { key: 'nichingEnabled' },
       { key: 'nichingRadius', disabled: () => !cfg.value.nichingEnabled },
       { key: 'nichingExponent', disabled: () => !cfg.value.nichingEnabled },
+      { key: 'saEnabled' },
+      { key: 'saInitTemp', disabled: () => !cfg.value.saEnabled },
+      { key: 'saTempDecay', disabled: () => !cfg.value.saEnabled },
     ],
   },
   {

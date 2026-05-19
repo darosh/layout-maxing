@@ -75,6 +75,10 @@ export const configMeta: ConfigMeta = {
   mutWeightSwapInCol: [10, 0, 100, 1, 'Roulette weight for col-neighbor swap mutation'],
   mutWeightShiftRow: [5, 0, 100, 1, 'Roulette weight for shifting all boxes in a row by x delta'],
   mutWeightShiftCol: [5, 0, 100, 1, 'Roulette weight for shifting all boxes in a col by y delta'],
+  // SA acceptance
+  saEnabled: [false, false, true, null, 'Enable simulated-annealing acceptance: stochastically accept worse offspring early'],
+  saInitTemp: [2, 0, 10, 0.01, 'Initial SA temperature as fraction of current best score; 0.1 = accept solutions up to 10% worse'],
+  saTempDecay: [0.9, 0, 1, 0.001, 'Multiplicative per-generation SA temperature decay'],
   // Control flags
   showStraightLines: [false, false, true, null, 'Render straight lines instead of curves'],
   removeLineSegments: [true, false, true, null, 'Remove patchline midpoints after applying layout'],
@@ -163,6 +167,9 @@ export const configFeatureTags: Partial<Record<keyof Config, string[]>> = {
   mutWeightSwapInCol: ['SWCL', 'bandit'],
   mutWeightShiftRow: ['SHRW', 'bandit'],
   mutWeightShiftCol: ['SHCL', 'bandit'],
+  saEnabled: ['sa'],
+  saInitTemp: ['sa'],
+  saTempDecay: ['sa'],
   maxChildren: ['CHLD'],
   maxParents: ['PRNT'],
   mutate: ['QUAD', 'SNGL', 'CHLD', 'PRNT', 'SHRW', 'SHCL'],

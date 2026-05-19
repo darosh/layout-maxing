@@ -35,3 +35,4 @@ PLAN-*.md
 
 # Temp
 temp/
+scripts/*.json

@@ -70,6 +70,10 @@ export interface Config {
   mutWeightSwapInCol?: number
   mutWeightShiftRow?: number
   mutWeightShiftCol?: number
+  // SA acceptance
+  saEnabled?: boolean
+  saInitTemp?: number
+  saTempDecay?: number
   // Control flags
   showStraightLines?: boolean
   removeLineSegments?: boolean

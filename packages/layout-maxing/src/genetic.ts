@@ -600,6 +600,22 @@ export async function runGenetic(
       }
     }
 
+    // SA acceptance: inflate score of rejected offspring so tournament avoids them
+    if (cfg.saEnabled) {
+      const T = cfg.saInitTemp * bestFitnessScore * Math.pow(cfg.saTempDecay, gen)
+      if (T > 0) {
+        for (let i = 0; i < population.length; i++) {
+          if (i === currentBestIdx) continue
+          const ind = population[i]
+          if (ind._parentScore === undefined || !ind.fitness) continue
+          const delta = ind.fitness.score - ind._parentScore
+          if (delta > 0 && rand() > Math.exp(-delta / T)) {
+            ind.fitness = { ...ind.fitness, score: ind.fitness.score * 1e6 }
+          }
+        }
+      }
+    }
+
     // --- diversity-aware effective mutation rate ---
     const diversity = computePopulationDiversity(population)
     let effectiveMutationRate = cfg.mutationRate
