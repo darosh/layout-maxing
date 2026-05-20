@@ -8,6 +8,8 @@ import Relaxed from './relaxed.ts'
 import Clustered from './clustered.ts'
 import Niching from './niching.ts'
 import NichingFast from './niching-fast.ts'
+import ClusteredNiching from './clustered-niching.ts'
+import ClusteredNichingStable from './clustered-niching-stable.ts'
 
 export const PRESETS = {
   Default,
@@ -15,6 +17,8 @@ export const PRESETS = {
   Relaxed,
   Niching,
   NichingFast,
+  ClusteredNiching,
+  ClusteredNichingStable,
   Fast,
   Medium,
   Large,
