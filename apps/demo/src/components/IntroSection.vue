@@ -52,6 +52,7 @@ const emit = defineEmits<{ 'example-click': [] }>()
             @click="store.loadFile(example, `example-${i + 1}`, 'clipboard'); emit('example-click')" />
         </span>
       </li>
+      <li><div>Try <b>Default</b> or <b>Niching</b> presets, and for more complex patches like number 5 <b>Clustered</b> family presets</div></li>
     </ul>
     <div class="footnote">
       All JSON based Max file types are supported: <span class="hint">MAXPAT</span>, <span class="hint">RNBOPAT</span>,

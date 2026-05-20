@@ -16,5 +16,6 @@ defineProps<{
 <style scoped>
 .placeholder {
   padding: 1rem;
+  max-width: 520px;
 }
 </style>
