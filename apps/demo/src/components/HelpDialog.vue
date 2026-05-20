@@ -2,8 +2,9 @@
 import Dialog from 'primevue/dialog'
 import { configMeta } from 'layout-maxing'
 import { computed } from 'vue'
+import IntroSection from '@/components/IntroSection.vue'
 
-const props = defineProps<{ visible: boolean; isMac?: boolean }>()
+const props = defineProps<{ visible: boolean; isMac?: boolean; pasteKey?: string }>()
 defineEmits<{ 'update:visible': [value: boolean] }>()
 
 const modKey = computed(() => (props.isMac ? '⌘ ' : 'Ctrl +'))
@@ -16,19 +17,36 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
   if (typeof def === 'boolean') return ``
   return `${min} – ${max}`
 }
+
+function scrollTo(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+}
 </script>
 
 <template>
   <Dialog
     :visible="visible"
-    header="Help"
     modal
     dismissable-mask
     :closeButtonProps="{ text: true, size: 'small' }"
     :style="{ naxWidth: '100%', maxHeight: '80vh' }"
     :draggable="false"
     @update:visible="$emit('update:visible', $event)">
-    <h4>Hot keys</h4>
+    <template #header>
+      <div class="dialog-header">
+        <span class="dialog-title">Help</span>
+        <nav class="toc">
+          <a @click.prevent="scrollTo('help-about')">About</a>
+          <a @click.prevent="scrollTo('help-hotkeys')">Hot keys</a>
+          <a @click.prevent="scrollTo('help-config')">Configuration</a>
+        </nav>
+      </div>
+    </template>
+    <div class="scroll-container">
+    <section id="help-about" style="margin-top: 4px;">
+      <IntroSection :paste-key="props.pasteKey" :bright="true" @example-click="$emit('update:visible', false)" />
+    </section>
+    <h4 id="help-hotkeys">Hot keys</h4>
     <table class="help-table">
       <thead>
         <tr>
@@ -79,7 +97,7 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
         </tr>
       </tbody>
     </table>
-    <h4>Configuration</h4>
+    <h4 id="help-config">Configuration</h4>
     <table class="help-table">
       <thead>
         <tr>
@@ -100,8 +118,15 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
         </tr>
       </tbody>
     </table>
+    </div>
   </Dialog>
 </template>
+
+<style>
+.p-dialog-content {
+  scroll-behavior: smooth;
+}
+</style>
 
 <style scoped>
 .help-table {
@@ -122,6 +147,10 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
   padding: 0.75rem 0.5rem;
   vertical-align: top;
   border-bottom: 1px solid var(--p-surface-800);
+}
+
+.help-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .help-key {
@@ -156,5 +185,38 @@ function rangeMeta(entry: (typeof entries)[number][1]): string {
 .list ul {
   padding-inline-start: 2rem;
   font-size: 1rem;
+}
+
+h4 {
+  margin-top: 2.5rem;
+  margin-bottom: 0;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+}
+
+.dialog-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.toc {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.toc a {
+  color: var(--p-primary-400);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.toc a:hover {
+  color: var(--p-primary-300);
+  text-decoration: underline;
 }
 </style>

@@ -258,7 +258,8 @@ const btnPause = computed(() => store.status === 'running')
     </main>
     <HelpDialog
       v-model:visible="helpVisible"
-      :is-mac="isMac" />
+      :is-mac="isMac"
+      :paste-key="pasteKey" />
     <Toast
       position="center"
       style="--p-toast-info-background: rgba(66, 66, 66, 0.4); --p-toast-info-border-color: rgba(88, 88, 88, 0.5); --p-toast-info-color: #fff">
