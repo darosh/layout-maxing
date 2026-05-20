@@ -1,0 +1,6 @@
+bench.db
+bench.db-journal
+bench.db-shm
+bench.db-wal
+node_modules
+dist

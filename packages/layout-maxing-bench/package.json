@@ -1,0 +1,20 @@
+{
+  "name": "layout-maxing-bench",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "layout-maxing-bench": "./src/cli.ts"
+  },
+  "scripts": {
+    "run": "deno run -A --sloppy-imports ./src/cli.ts",
+    "show": "deno run -A --sloppy-imports ./src/cli.ts show",
+    "status": "deno run -A --sloppy-imports ./src/cli.ts status"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.5.0",
+    "elkjs": "^0.10.0",
+    "layout-maxing": "0.0.0",
+    "web-worker": "^1.5.0"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "nodeModulesDir": "auto",
+  "workspace": ["./packages/layout-maxing", "./packages/layout-maxing-cli", "./packages/layout-maxing-bench"]
+}
