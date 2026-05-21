@@ -64,10 +64,14 @@ function mapRange(u: number, r: { min: number; max: number; integer?: boolean })
   return r.integer ? Math.round(v) : Number(v.toFixed(6))
 }
 
-function gaSeedFor(group: string, example: string, sampleSeed: number): number {
-  // Distinct stable seeds per (group, example, sampleSeed) without collisions across phases.
+function gaSeedFor(group: string, sampleSeed: number): number {
+  // Seed depends on (group, sampleSeed) only — NOT on example.
+  // This makes a single Halton draw produce a fully-deterministic config (params + seed)
+  // that is evaluated identically across every example in the sweep. The "best shared"
+  // leaderboard is then a true apples-to-apples comparison, and the saved preset can
+  // include the seed verbatim.
   let h = 2166136261 >>> 0
-  for (const s of [group, example, String(sampleSeed)]) {
+  for (const s of [group, String(sampleSeed)]) {
     for (let i = 0; i < s.length; i++) h = ((h ^ s.charCodeAt(i)) * 16777619) >>> 0
   }
   return h % 0x7fffffff || 1
@@ -86,7 +90,7 @@ export function* genBaseline(): Generator<WorkItem> {
       sampleSeed: 0,
       cfg: { ...presetCfg, passes: 1, deterministic: true },
       paramValues: {},
-      gaSeed: gaSeedFor('baseline', ex.name, 0),
+      gaSeed: gaSeedFor('baseline', 0),
     }
   }
 }
@@ -106,7 +110,7 @@ export function* genPresets(): Generator<WorkItem> {
         sampleSeed: i++,
         cfg: { ...presetCfg, passes: 1, deterministic: true },
         paramValues: {},
-        gaSeed: gaSeedFor('preset', ex.name, i),
+        gaSeed: gaSeedFor('preset', i),
       }
     }
   }
@@ -133,7 +137,7 @@ export function* genOAT(): Generator<WorkItem> {
             sampleSeed: counter++,
             cfg,
             paramValues: { [pname]: v },
-            gaSeed: gaSeedFor('oat', ex.name, counter),
+            gaSeed: gaSeedFor('oat', counter),
           }
         }
       }
@@ -172,7 +176,7 @@ export function* genSynergy(groupName?: string, maxPerGroup = 200): Generator<Wo
           sampleSeed: i,
           cfg,
           paramValues: draw,
-          gaSeed: gaSeedFor(g.name, ex.name, i),
+          gaSeed: gaSeedFor(g.name, i),
         }
       }
     }
@@ -202,7 +206,7 @@ export function* genGapfill(group: GroupDef['name'], offset: number, count: numb
         sampleSeed: i,
         cfg,
         paramValues: draw,
-        gaSeed: gaSeedFor('gapfill:' + g.name, ex.name, i),
+        gaSeed: gaSeedFor('gapfill:' + g.name, i),
       }
     }
   }

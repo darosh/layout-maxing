@@ -80,10 +80,11 @@ function renderPreset(name: string, delta: Partial<Config>, header: string): str
       seen.add(k)
     }
   }
+  // `seed` is part of the config — keep it. Determinism is required for the saved
+  // score to be reproducible. (A separate BestStable preset, planned later, will be
+  // chosen by score stability across multiple seeds rather than a single run.)
   for (const [k, v] of Object.entries(delta)) {
     if (seen.has(k)) continue
-    // skip `seed` — preset shouldn't pin a seed
-    if (k === 'seed') continue
     lines.push(`  ${k}: ${JSON.stringify(v)},`)
   }
   lines.push('} satisfies Config', '')

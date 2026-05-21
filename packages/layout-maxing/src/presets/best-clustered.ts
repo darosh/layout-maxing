@@ -16,4 +16,5 @@ export default {
   clusterMax: 12,
   saEnabled: true,
   initialMutation: false,
+  seed: 796855095,
 } satisfies Config
