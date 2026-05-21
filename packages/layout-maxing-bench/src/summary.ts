@@ -73,5 +73,8 @@ export function exportRunConfig(db: BenchDb, runId: number): string {
 
 export function topRows(db: BenchDb, example: string, limit = 10): RunRow[] {
   const rows = db.runsBy({ example, limit: 1000 })
-  return rows.filter((r) => r.status === 'ok').sort((a, b) => (a.score_default ?? Infinity) - (b.score_default ?? Infinity)).slice(0, limit)
+  return rows
+    .filter((r) => r.status === 'ok')
+    .sort((a, b) => (a.score_default ?? Infinity) - (b.score_default ?? Infinity))
+    .slice(0, limit)
 }

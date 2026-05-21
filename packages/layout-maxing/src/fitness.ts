@@ -36,6 +36,7 @@ export const fitnessMeta: FitnessMeta = {
   area: ['Area', 'ARE', 'Number of box-box intersection areas'],
   minDist: ['Min Dist', 'DST', 'Number of box pairs violating minDistX or minDistY spacing'],
   view: ['View', 'VIE', 'Viewport size'],
+  sharedFitness: ['Shared Fitness', 'SHF', 'Niching fitness-sharing-adjusted score'],
 }
 
 export interface Topology {

@@ -49,10 +49,17 @@ const emit = defineEmits<{ 'example-click': [] }>()
             :label="`${i + 1}`"
             size="small"
             severity="info"
-            @click="store.loadFile(example, `example-${i + 1}`, 'clipboard'); emit('example-click')" />
+            @click="
+              () => {
+                store.loadFile(example, `example-${i + 1}`, 'clipboard')
+                emit('example-click')
+              }
+            " />
         </span>
       </li>
-      <li><div>Try <b>Default</b> or <b>Niching*</b> presets, and for more complex patches like number 5 <b>Clustered*</b> presets</div></li>
+      <li
+        ><div>Try <b>Default</b> or <b>Niching*</b> presets, and for more complex patches like number 5 <b>Clustered*</b> presets</div></li
+      >
     </ul>
     <div class="footnote">
       All JSON based Max file types are supported: <span class="hint">MAXPAT</span>, <span class="hint">RNBOPAT</span>,

@@ -15,8 +15,8 @@ import { openDb } from './db.ts'
 import { executeWorkItem } from './runner.ts'
 import { genBaseline, genPresets, genOAT, genSynergy, genGapfill, type WorkItem } from './sampler.ts'
 import { findGroup, GROUPS } from './groups.ts'
-import { findExample } from './examples.ts'
 import { exportRunConfig, statusText, summaryMarkdown, topRows } from './summary.ts'
+import { savePresets } from './save-presets.ts'
 
 function parseArgs(argv: string[]): { sub: string; flags: Map<string, string | true>; positional: string[] } {
   const sub = argv[0] ?? 'help'
@@ -61,6 +61,7 @@ function help() {
   show    [--port 8787] [--db PATH]
   export  --run <id> | --top --example <name> [--limit N] [--db PATH]
   summary [--group <g>] [--example <name>] [--db PATH]
+  save-presets                              # write Best (ex1-4) + BestCluster (ex5) presets into layout-maxing
 
 Groups: ${GROUPS.map((g) => g.name).join(', ')}
 `)
@@ -168,9 +169,7 @@ async function main() {
     }
     case 'summary': {
       const db = openDb(dbPath)
-      console.log(
-        summaryMarkdown(db, args.flags.get('group') as string | undefined, args.flags.get('example') as string | undefined),
-      )
+      console.log(summaryMarkdown(db, args.flags.get('group') as string | undefined, args.flags.get('example') as string | undefined))
       db.close()
       break
     }
@@ -195,6 +194,16 @@ async function main() {
       db.close()
       break
     }
+    case 'save-presets': {
+      const db = openDb(dbPath)
+      const res = await savePresets(db)
+      if (res.best) console.log(`wrote presets/best.ts (run #${res.best.runId}, ex1-4 sum=${res.best.sum.toFixed(0)})`)
+      else console.log('no shared ex1-4 config available yet — skipped best.ts')
+      if (res.bestCluster) console.log(`wrote presets/best-clustered.ts (run #${res.bestCluster.runId}, ex5 score=${res.bestCluster.score.toFixed(0)})`)
+      else console.log('no ex5 config available yet — skipped best-clustered.ts')
+      db.close()
+      break
+    }
     case 'show': {
       const { startServer } = await import('./web/server.ts')
       await startServer(dbPath, Number(args.flags.get('port') ?? '8787'))
@@ -206,4 +215,4 @@ async function main() {
   }
 }
 
-if (import.meta.main) main()
+if (import.meta.main) void main()

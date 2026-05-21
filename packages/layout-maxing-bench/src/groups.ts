@@ -25,6 +25,7 @@ export const GROUPS: GroupDef[] = [
     fixed: {},
     clusteredOnly: false,
     params: {
+      popSize: { min: 5, max: 80, integer: true },
       mutationRate: { min: 0.3, max: 1.0 },
       stagnationThreshold: { min: 0, max: 80, integer: true },
       stagnationRate: { min: 1.0, max: 1.5 },
@@ -37,6 +38,7 @@ export const GROUPS: GroupDef[] = [
     fixed: { nichingEnabled: true },
     clusteredOnly: false,
     params: {
+      popSize: { min: 10, max: 80, integer: true },
       nichingRadius: { min: 0.1, max: 1.5 },
       nichingExponent: { min: 0.5, max: 2.5 },
       eliteSize: { min: 1, max: 8, integer: true },
@@ -47,6 +49,7 @@ export const GROUPS: GroupDef[] = [
     fixed: {},
     clusteredOnly: true,
     params: {
+      popSize: { min: 5, max: 40, integer: true },
       cluster: { min: 3, max: 20, integer: true },
       clusterMax: { min: 0, max: 30, integer: true },
       clusterPolishFraction: { min: 0.05, max: 0.5 },

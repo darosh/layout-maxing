@@ -23,9 +23,12 @@ import { GROUPS, type GroupDef, PRESET_NAMES_CLUSTERED, PRESET_NAMES_NON_CLUSTER
 export const STOP_CAP = 1499
 
 // Standard config tail applied to every swept row (presets are exempt).
+// `passes=1` is a hard project constraint (one GA pass per row).
+// `popSize` defaults to 20 (matches defaultConfig) and is overridden by groups
+// that explicitly sweep it.
 export function sweptBase(): Partial<Config> {
   return {
-    popSize: 1,
+    popSize: 20,
     stop: STOP_CAP,
     passes: 1,
     deterministic: true,
@@ -67,7 +70,7 @@ function gaSeedFor(group: string, example: string, sampleSeed: number): number {
   for (const s of [group, example, String(sampleSeed)]) {
     for (let i = 0; i < s.length; i++) h = ((h ^ s.charCodeAt(i)) * 16777619) >>> 0
   }
-  return (h % 0x7fffffff) || 1
+  return h % 0x7fffffff || 1
 }
 
 // ---- Phase: baseline ----

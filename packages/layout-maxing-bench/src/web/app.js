@@ -27,9 +27,7 @@ function fmt(n, digits = 0) {
 
 function renderTable(target, rows, columns) {
   const head = '<tr>' + columns.map((c) => `<th>${c.label}</th>`).join('') + '</tr>'
-  const body = rows
-    .map((r) => '<tr>' + columns.map((c) => `<td>${c.get(r)}</td>`).join('') + '</tr>')
-    .join('')
+  const body = rows.map((r) => '<tr>' + columns.map((c) => `<td>${c.get(r)}</td>`).join('') + '</tr>').join('')
   target.innerHTML = head + body
 }
 
@@ -68,7 +66,7 @@ async function refreshScatter() {
   const runs = res.runs.filter((r) => r.status === 'ok' && r.score_default != null)
   const paramNames = new Set()
   for (const r of runs) for (const k of Object.keys(r.params)) paramNames.add(k)
-  const opts = ['(auto)', ...Array.from(paramNames).sort()]
+  const opts = ['(auto)', ...Array.from(paramNames).sort((a, b) => a.localeCompare(b))]
   const cur = $('xparam').value
   fillSelect($('xparam'), opts, opts.includes(cur) ? cur : '(auto)')
 
@@ -88,10 +86,13 @@ async function refreshScatter() {
 
   const xs = runs.map((r) => (xKey in r.params ? r.params[xKey] : r.wall_ms / 1000))
   const ys = runs.map((r) => r.score_default)
-  const xMin = Math.min(...xs), xMax = Math.max(...xs)
-  const yMin = Math.min(...ys), yMax = Math.max(...ys)
+  const xMin = Math.min(...xs),
+    xMax = Math.max(...xs)
+  const yMin = Math.min(...ys),
+    yMax = Math.max(...ys)
   const pad = 40
-  const W = canvas.width - 2 * pad, H = canvas.height - 2 * pad
+  const W = canvas.width - 2 * pad,
+    H = canvas.height - 2 * pad
   const px = (x) => pad + ((x - xMin) / (xMax - xMin || 1)) * W
   const py = (y) => pad + H - ((y - yMin) / (yMax - yMin || 1)) * H
 
@@ -123,5 +124,5 @@ $('group').addEventListener('change', refreshScatter)
 $('example').addEventListener('change', refreshScatter)
 $('xparam').addEventListener('change', refreshScatter)
 
-tick()
+void tick()
 setInterval(tick, 2000)

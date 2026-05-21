@@ -9,6 +9,7 @@ Run 2 (git `a5b4334`, after opts #1–5): e1=3933/1.38s, e2=24366/21.39s, e3=110
 ## 0. Fix OOM crash on example-5 (the-voice.rnbopat)
 
 **Repro:**
+
 ```bash
 cd packages/layout-maxing-cli
 deno run --allow-all --sloppy-imports src/index.ts layout \
@@ -19,6 +20,7 @@ deno run --allow-all --sloppy-imports src/index.ts layout \
 The clustered GA accumulates too many genome objects over many generations. Each individual in the population is a full `Box[]` array that gets cloned per offspring. With a large patcher (~700+ boxes) and many generations, V8 heap exhausts.
 
 **Likely fixes (in order of effort):**
+
 - [x] Root cause: `buildGenerationSnapshot` stored the full `population` (20×700 Box objects) in every snapshot, and `monitor.snapshots` grew unboundedly. Fix: clear `snapshot.population = undefined` immediately after `onGenerationEnd` in `genetic.ts`. Confirmed: run now completes in ~10min instead of OOM-crashing.
 
 ---
@@ -28,6 +30,7 @@ The clustered GA accumulates too many genome objects over many generations. Each
 **What:** Currently each fitness eval sends the full `layouts` (positions) + `lines` (graph topology, constant) + `cfg` (constant) via structured-clone. For large patches, `lines` is large and never changes during a run.
 
 **Files:**
+
 - `packages/layout-maxing-cli/src/worker.ts` — add `init`/`eval` message protocol
 - `packages/layout-maxing-cli/src/index.ts` — call `initWorkers(lines, cfg)` once after reading file; `getFitness` sends only layouts
 - `apps/demo/src/workers/fitness.worker.ts` — same init/eval split for the app
@@ -49,7 +52,7 @@ The clustered GA accumulates too many genome objects over many generations. Each
 
 **Files:** `packages/layout-maxing/src/fitness.ts`
 
-**Approach:** Export `precomputeTopology(lines, boxes)` returning `{ sscSourceIds, sscByChildIds }`. Add optional `topology` param to `fitness()` — if provided, skip the O(E+N) recomputation.  Worker stores the precomputed topology at init time and passes it per eval.
+**Approach:** Export `precomputeTopology(lines, boxes)` returning `{ sscSourceIds, sscByChildIds }`. Add optional `topology` param to `fitness()` — if provided, skip the O(E+N) recomputation. Worker stores the precomputed topology at init time and passes it per eval.
 
 **Expected win:** Saves ~600 map operations per eval (O(E+N) for the-synth with 165 lines, 100 boxes).
 

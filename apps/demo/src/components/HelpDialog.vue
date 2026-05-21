@@ -43,81 +43,86 @@ function scrollTo(id: string) {
       </div>
     </template>
     <div class="scroll-container">
-    <section id="help-about" style="margin-top: 4px;">
-      <IntroSection :paste-key="props.pasteKey" :bright="true" @example-click="$emit('update:visible', false)" />
-    </section>
-    <h4 id="help-hotkeys">Hot keys</h4>
-    <table class="help-table">
-      <thead>
-        <tr>
-          <th>Key</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="help-key"><kbd>R</kbd></td>
-          <td class="help-desc">Run optimization</td>
-        </tr>
-        <tr>
-          <td class="help-key">
-            <kbd>{{ altKey }}R</kbd>
-          </td>
-          <td class="help-desc"> Re-run (uses best result as initial positions, when <code>useInput</code>> is on) </td>
-        </tr>
-        <tr>
-          <td class="help-key">
-            <kbd>{{ modKey }}C</kbd>
-          </td>
-          <td class="help-desc">Copy layout to clipboard</td>
-        </tr>
-        <tr>
-          <td class="help-key">
-            <kbd>{{ modKey }}V</kbd>
-          </td>
-          <td class="help-desc">Paste layout from clipboard</td>
-        </tr>
-        <tr>
-          <td class="help-key">
-            <kbd>{{ altKey }}</kbd> hold
-          </td>
-          <td class="help-desc"> Switches <code>Run</code> → <code>Re-run</code> button; <code>Download</code> → <code>Copy</code> button </td>
-        </tr>
-        <tr>
-          <td class="help-key"><kbd>Shift + Enter</kbd></td>
-          <td class="help-desc">Reset config field to default value</td>
-        </tr>
-        <tr>
-          <td class="help-key"><kbd>Shift + ↓</kbd></td>
-          <td class="help-desc">Set config field to minimum value</td>
-        </tr>
-        <tr>
-          <td class="help-key"><kbd>Shift + ↑</kbd></td>
-          <td class="help-desc">Set config field to maximum value</td>
-        </tr>
-      </tbody>
-    </table>
-    <h4 id="help-config">Configuration</h4>
-    <table class="help-table">
-      <thead>
-        <tr>
-          <th>Key</th>
-          <th>Description</th>
-          <th>Range</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="[key, meta] in entries"
-          :key="key">
-          <td class="help-key">{{ key }}</td>
-          <td class="help-desc">{{ meta[4] }}</td>
-          <td class="help-range">{{ rangeMeta(meta) }}</td>
-          <td class="help-default">{{ meta[0] }}</td>
-        </tr>
-      </tbody>
-    </table>
+      <section
+        id="help-about"
+        style="margin-top: 4px">
+        <IntroSection
+          :paste-key="props.pasteKey"
+          :bright="true"
+          @example-click="$emit('update:visible', false)" />
+      </section>
+      <h4 id="help-hotkeys">Hot keys</h4>
+      <table class="help-table">
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="help-key"><kbd>R</kbd></td>
+            <td class="help-desc">Run optimization</td>
+          </tr>
+          <tr>
+            <td class="help-key">
+              <kbd>{{ altKey }}R</kbd>
+            </td>
+            <td class="help-desc"> Re-run (uses best result as initial positions, when <code>useInput</code>> is on) </td>
+          </tr>
+          <tr>
+            <td class="help-key">
+              <kbd>{{ modKey }}C</kbd>
+            </td>
+            <td class="help-desc">Copy layout to clipboard</td>
+          </tr>
+          <tr>
+            <td class="help-key">
+              <kbd>{{ modKey }}V</kbd>
+            </td>
+            <td class="help-desc">Paste layout from clipboard</td>
+          </tr>
+          <tr>
+            <td class="help-key">
+              <kbd>{{ altKey }}</kbd> hold
+            </td>
+            <td class="help-desc"> Switches <code>Run</code> → <code>Re-run</code> button; <code>Download</code> → <code>Copy</code> button </td>
+          </tr>
+          <tr>
+            <td class="help-key"><kbd>Shift + Enter</kbd></td>
+            <td class="help-desc">Reset config field to default value</td>
+          </tr>
+          <tr>
+            <td class="help-key"><kbd>Shift + ↓</kbd></td>
+            <td class="help-desc">Set config field to minimum value</td>
+          </tr>
+          <tr>
+            <td class="help-key"><kbd>Shift + ↑</kbd></td>
+            <td class="help-desc">Set config field to maximum value</td>
+          </tr>
+        </tbody>
+      </table>
+      <h4 id="help-config">Configuration</h4>
+      <table class="help-table">
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Description</th>
+            <th>Range</th>
+            <th>Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="[key, meta] in entries"
+            :key="key">
+            <td class="help-key">{{ key }}</td>
+            <td class="help-desc">{{ meta[4] }}</td>
+            <td class="help-range">{{ rangeMeta(meta) }}</td>
+            <td class="help-default">{{ meta[0] }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </Dialog>
 </template>

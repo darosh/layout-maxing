@@ -2,9 +2,9 @@
 // dual-score the result with both the run config and defaultConfig, write to db.
 
 import { defaultConfig, fitness, main } from 'layout-maxing'
-import type { Box, Config, Line, RNBO, RunMonitor } from 'layout-maxing'
+import type { Box, Line, RNBO, RunMonitor } from 'layout-maxing'
 import Worker from 'web-worker'
-import { openDb, type BenchDb } from './db.ts'
+import { type BenchDb } from './db.ts'
 import { makePool } from './workers.ts'
 import { resolveConfig, type WorkItem } from './sampler.ts'
 

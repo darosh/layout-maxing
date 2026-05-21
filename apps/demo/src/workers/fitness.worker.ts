@@ -7,8 +7,8 @@ let cachedTopoKey = ''
 
 function topoKey(lines: Line[]): string {
   if (!lines.length) return '0'
-  const first = lines[0].patchline
-  const last = lines[lines.length - 1].patchline
+  const first = lines[0]!.patchline
+  const last = lines[lines.length - 1]!.patchline
   return `${lines.length}:${first.source[0]}-${first.destination[0]}:${last.source[0]}-${last.destination[0]}`
 }
 

@@ -2,10 +2,10 @@
   "name": "layout-maxing-bench",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "bin": {
     "layout-maxing-bench": "./src/cli.ts"
   },
+  "type": "module",
   "scripts": {
     "run": "deno run -A --sloppy-imports ./src/cli.ts",
     "show": "deno run -A --sloppy-imports ./src/cli.ts show",

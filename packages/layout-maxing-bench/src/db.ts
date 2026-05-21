@@ -155,16 +155,12 @@ export class BenchDb {
 
   // Returns the next free sample_seed for a (group, example) pair. Used to resume.
   nextSampleSeed(group: GroupName, example: string): number {
-    const row = this.db
-      .prepare(`SELECT MAX(sample_seed) AS m FROM runs WHERE group_name=? AND example=?`)
-      .get(group, example) as { m: number | null }
+    const row = this.db.prepare(`SELECT MAX(sample_seed) AS m FROM runs WHERE group_name=? AND example=?`).get(group, example) as { m: number | null }
     return (row.m ?? -1) + 1
   }
 
   hasSample(group: GroupName, example: string, sampleSeed: number): boolean {
-    const row = this.db
-      .prepare(`SELECT 1 FROM runs WHERE group_name=? AND example=? AND sample_seed=?`)
-      .get(group, example, sampleSeed) as unknown
+    const row = this.db.prepare(`SELECT 1 FROM runs WHERE group_name=? AND example=? AND sample_seed=?`).get(group, example, sampleSeed) as unknown
     return !!row
   }
 

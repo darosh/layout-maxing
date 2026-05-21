@@ -150,7 +150,7 @@ async function cli() {
       const outPath = positional[1]
       const jsonText = await Deno.readTextFile(filePath)
       const parsed = JSON.parse(jsonText)
-      const rnbo: RNBO = (command === 'layout-clipboard' || !('patcher' in parsed)) ? { patcher: parsed } : parsed
+      const rnbo: RNBO = command === 'layout-clipboard' || !('patcher' in parsed) ? { patcher: parsed } : parsed
       const lines = rnbo.patcher.lines
 
       const { CPUS, getFitness, initWorkers, terminateWorkers } = getWorkers(c.workers)
