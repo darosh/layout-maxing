@@ -1,4 +1,4 @@
-bench.db
+# bench.db
 bench.db-journal
 bench.db-shm
 bench.db-wal
