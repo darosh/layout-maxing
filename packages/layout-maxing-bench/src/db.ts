@@ -4,7 +4,7 @@
 import { DatabaseSync } from 'node:sqlite'
 
 export type RunStatus = 'pending' | 'ok' | 'error' | 'timeout' | 'skipped'
-export type GroupName = 'baseline' | 'preset' | 'oat' | 'stagnation' | 'niching' | 'cluster' | 'mutweights' | 'fitness' | 'gapfill'
+export type GroupName = 'baseline' | 'preset' | 'oat' | 'stagnation' | 'niching' | 'cluster' | 'mutweights' | 'fitness' | 'gapfill' | 'verify'
 
 export interface RunRow {
   id: number
@@ -206,6 +206,67 @@ export class BenchDb {
       value: number
     }[]
     return Object.fromEntries(rows.map((r) => [r.name, r.value]))
+  }
+
+  // Top-K configs that have all 4 non-clustered examples, ranked by sum(score_default).
+  // Returns one representative run_id per config (the example-1 row) for the caller
+  // to build verify WorkItems from.
+  topCandidates(k = 10): { run_id: number; group_name: string; sample_seed: number; sum_d: number }[] {
+    return this.db
+      .prepare(
+        `SELECT MIN(id) AS run_id, group_name, sample_seed,
+              SUM(score_default) AS sum_d
+       FROM runs
+       WHERE status='ok'
+         AND group_name NOT IN ('baseline','preset','verify')
+         AND example IN ('example-1','example-2','example-3','example-4')
+       GROUP BY group_name, sample_seed
+       HAVING COUNT(DISTINCT example) = 4
+       ORDER BY sum_d ASC
+       LIMIT ?`,
+      )
+      .all(k) as { run_id: number; group_name: string; sample_seed: number; sum_d: number }[]
+  }
+
+  // Top-K ex5 candidates.
+  topCandidatesEx5(k = 5): { run_id: number; group_name: string; sample_seed: number; score_d: number }[] {
+    return this.db
+      .prepare(
+        `SELECT id AS run_id, group_name, sample_seed, score_default AS score_d
+       FROM runs
+       WHERE status='ok'
+         AND group_name NOT IN ('baseline','preset','verify')
+         AND example = 'example-5'
+       ORDER BY score_d ASC
+       LIMIT ?`,
+      )
+      .all(k) as { run_id: number; group_name: string; sample_seed: number; score_d: number }[]
+  }
+
+  // All verify rows for a given parent run id.
+  verifyRowsFor(parentRunId: number): RunRow[] {
+    return this.db.prepare(`SELECT * FROM runs WHERE group_name='verify' AND notes LIKE ? AND status='ok'`).all(`parent:${parentRunId}%`) as RunRow[]
+  }
+
+  // Median score across verify seeds, per example, for a given parent config.
+  // Returns null if no verify rows exist for this parent.
+  verifyMedianSum(parentRunId: number): number | null {
+    const rows = this.verifyRowsFor(parentRunId)
+    if (!rows.length) return null
+    const byExample = new Map<string, number[]>()
+    for (const r of rows) {
+      if (r.score_default == null) continue
+      const arr = byExample.get(r.example) ?? []
+      arr.push(r.score_default)
+      byExample.set(r.example, arr)
+    }
+    let sum = 0
+    for (const scores of byExample.values()) {
+      scores.sort((a, b) => a - b)
+      const mid = Math.floor(scores.length / 2)
+      sum += scores.length % 2 === 0 ? (scores[mid - 1]! + scores[mid]!) / 2 : scores[mid]!
+    }
+    return sum
   }
 
   counts(): { group: string; example: string; ok: number; err: number; total: number }[] {

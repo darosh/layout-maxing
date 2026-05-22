@@ -8,6 +8,7 @@
     "show": "deno run -A --sloppy-imports ./src/cli.ts show",
     "export": "deno run -A --sloppy-imports ./src/cli.ts export",
     "summary": "deno run -A --sloppy-imports ./src/cli.ts summary",
+    "verify": "deno run -A --sloppy-imports ./src/cli.ts verify",
     "save-presets": "deno run -A --sloppy-imports ./src/cli.ts save-presets"
   }
 }

@@ -13,7 +13,7 @@
 import { dirname, fromFileUrl, resolve } from 'jsr:@std/path'
 import { openDb } from './db.ts'
 import { executeWorkItem } from './runner.ts'
-import { genBaseline, genPresets, genOAT, genSynergy, genGapfill, type WorkItem } from './sampler.ts'
+import { genBaseline, genPresets, genOAT, genSynergy, genGapfill, genVerify, type WorkItem } from './sampler.ts'
 import { findGroup, GROUPS } from './groups.ts'
 import { exportRunConfig, statusText, summaryMarkdown, topRows } from './summary.ts'
 import { savePresets } from './save-presets.ts'
@@ -61,7 +61,8 @@ function help() {
   show    [--port 8787] [--db PATH]
   export  --run <id> | --top --example <name> [--limit N] [--db PATH]
   summary [--group <g>] [--example <name>] [--db PATH]
-  save-presets                              # write Best (ex1-4) + BestCluster (ex5) presets into layout-maxing
+  verify  [--top N=10] [--seeds N=5] [--example e]  # re-run top-N configs × N seeds for stability
+  save-presets                                       # write Best + BestStable + BestCluster + BestStableCluster
 
 Groups: ${GROUPS.map((g) => g.name).join(', ')}
 `)
@@ -191,6 +192,45 @@ async function main() {
       } else {
         console.error('export needs --run <id> or --top --example <name>')
       }
+      db.close()
+      break
+    }
+    case 'verify': {
+      const db = openDb(dbPath)
+      const sha = await gitSha()
+      const k = Number(args.flags.get('top') ?? '10')
+      const seeds = Number(args.flags.get('seeds') ?? '5')
+      const exFilter = args.flags.get('example') as string | undefined
+      // Build candidates for ex1-4.
+      const cands = db.topCandidates(k).map((c) => {
+        const row = db.getRun(c.run_id)!
+        return {
+          runId: c.run_id,
+          configJson: row.config_json,
+          examples: exFilter ? [exFilter] : ['example-1', 'example-2', 'example-3', 'example-4'],
+        }
+      })
+      // Also add top ex5 candidates.
+      const cands5 = db.topCandidatesEx5(Math.ceil(k / 2)).map((c) => {
+        const row = db.getRun(c.run_id)!
+        return { runId: c.run_id, configJson: row.config_json, examples: exFilter ? [exFilter] : ['example-5'] }
+      })
+      const allCands = [...cands, ...cands5]
+      if (!allCands.length) {
+        console.log('no candidates yet — run the sweep first')
+        db.close()
+        break
+      }
+      console.log(`verify: ${allCands.length} candidates × ${seeds} seeds each`)
+      let count = 0
+      for (const item of genVerify(allCands, seeds, db)) {
+        const label = `[verify] run=#${item.paramValues.__parentRunId} ${item.example.name} seed_i=${item.paramValues.__seedIndex}`
+        console.log(`${label}  start`)
+        const res = await executeWorkItem(db, sha, { ...item, notes: `parent:${item.paramValues.__parentRunId}` } as any)
+        console.log(`${label}  done  status=${res.status}  score_d=${res.scoreDefault?.toFixed(0) ?? '—'}  wall=${(res.wallMs / 1000).toFixed(1)}s`)
+        count++
+      }
+      console.log(`verify complete: ${count} rows written`)
       db.close()
       break
     }

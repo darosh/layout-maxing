@@ -4,7 +4,7 @@
 // so resuming = read max(sample_seed) from db and continue from there. The sampleSeed
 // is also stored in the row, making each draw fully reproducible.
 
-import { defaultConfig, PRESETS, type Config } from 'layout-maxing'
+import { defaultConfig, configMeta, PRESETS, type Config } from 'layout-maxing'
 
 // Local mulberry32 — avoids depending on a non-exported helper from layout-maxing.
 function mulberry32(seed: number): () => number {
@@ -59,9 +59,23 @@ function halton(index: number, base: number): number {
 }
 const HALTON_BASES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
-function mapRange(u: number, r: { min: number; max: number; integer?: boolean }): number {
+function snapToStep(v: number, step: number | null): number {
+  if (!step || step <= 0) return v
+  return Math.round(v / step) * step
+}
+
+function mapRange(u: number, r: { min: number; max: number; integer?: boolean }, paramName?: string): number {
   const v = r.min + u * (r.max - r.min)
-  return r.integer ? Math.round(v) : Number(v.toFixed(6))
+  if (r.integer) return Math.round(v)
+  // Snap to the step defined in configMeta if available.
+  const step = paramName ? ((configMeta as Record<string, [unknown, unknown, unknown, number | null, unknown]>)[paramName]?.[3] ?? null) : null
+  const snapped = snapToStep(v, step)
+  // Format to the precision implied by step (e.g. step=0.01 → 2 decimal places).
+  if (step && step > 0) {
+    const decimals = Math.max(0, Math.ceil(-Math.log10(step)))
+    return Number(snapped.toFixed(decimals))
+  }
+  return Number(snapped.toFixed(6))
 }
 
 function gaSeedFor(group: string, sampleSeed: number): number {
@@ -125,7 +139,7 @@ export function* genOAT(): Generator<WorkItem> {
     const examples = g.clusteredOnly ? CLUSTERED_EXAMPLES : NON_CLUSTERED_EXAMPLES
     for (const [pname, range] of Object.entries(g.params)) {
       for (const u of [0, 0.5, 1]) {
-        const v = mapRange(u, range)
+        const v = mapRange(u, range, pname)
         for (const ex of examples) {
           const cfg: Config = { ...base, ...g.fixed, [pname]: v } as Config
           // cluster group needs cluster>0 even for non-cluster params (since clusteredOnly examples).
@@ -163,7 +177,7 @@ export function* genSynergy(groupName?: string, maxPerGroup = 200): Generator<Wo
       } else {
         pnames.forEach((p, k) => {
           const u = halton(i, HALTON_BASES[k % HALTON_BASES.length])
-          draw[p] = mapRange(u, g.params[p])
+          draw[p] = mapRange(u, g.params[p], p)
         })
       }
       for (const ex of examples) {
@@ -194,7 +208,7 @@ export function* genGapfill(group: GroupDef['name'], offset: number, count: numb
     const draw: Record<string, number> = {}
     pnames.forEach((p, k) => {
       const u = halton(i, HALTON_BASES[k % HALTON_BASES.length])
-      draw[p] = mapRange(u, g.params[p])
+      draw[p] = mapRange(u, g.params[p], p)
     })
     for (const ex of examples) {
       const cfg: Config = { ...base, ...g.fixed, ...draw } as Config
@@ -207,6 +221,55 @@ export function* genGapfill(group: GroupDef['name'], offset: number, count: numb
         cfg,
         paramValues: draw,
         gaSeed: gaSeedFor('gapfill:' + g.name, i),
+      }
+    }
+  }
+}
+
+// ---- Phase: verify ----
+// Re-runs the top-K sweep candidates with N fresh seeds to assess score stability.
+// Each verify WorkItem links back to the original run via paramValues.__parentRunId.
+// sample_seed encodes (parentRunId * 100 + seedIndex) for unique, resumable rows.
+//
+// Verify seeds are derived from parentRunId + seedIndex so every verify run is
+// deterministic and idempotent — re-running skips already-completed pairs.
+export interface VerifyCandidate {
+  runId: number // representative run id (the actual config source)
+  configJson: string // resolved config JSON from the sweep row
+  examples: string[] // which examples to verify on
+}
+
+function verifyGaSeed(parentRunId: number, seedIndex: number): number {
+  let h = 2166136261 >>> 0
+  for (const s of ['verify', String(parentRunId), String(seedIndex)]) {
+    for (let i = 0; i < s.length; i++) h = ((h ^ s.charCodeAt(i)) * 16777619) >>> 0
+  }
+  return h % 0x7fffffff || 1
+}
+
+export function* genVerify(
+  candidates: VerifyCandidate[],
+  seedCount: number,
+  db: { hasSample: (g: any, ex: string, s: number) => boolean },
+): Generator<WorkItem> {
+  for (const cand of candidates) {
+    const baseConfig = JSON.parse(cand.configJson) as Required<Config>
+    for (let si = 0; si < seedCount; si++) {
+      const sampleSeed = cand.runId * 100 + si
+      const gaSeed = verifyGaSeed(cand.runId, si)
+      for (const exName of cand.examples) {
+        if (db.hasSample('verify', exName, sampleSeed)) continue
+        const ex = EXAMPLES.find((e) => e.name === exName)!
+        const cfg: Config = { ...baseConfig, seed: gaSeed } as Config
+        yield {
+          group: 'verify',
+          example: ex,
+          preset: null,
+          sampleSeed,
+          cfg,
+          paramValues: { __parentRunId: cand.runId, __seedIndex: si },
+          gaSeed,
+        }
       }
     }
   }

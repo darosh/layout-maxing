@@ -28,7 +28,7 @@ async function readRnbo(path: string): Promise<RNBO> {
   return 'patcher' in parsed ? parsed : { patcher: parsed }
 }
 
-export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkItem): Promise<RunResult> {
+export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkItem & { notes?: string }): Promise<RunResult> {
   const resolved = resolveConfig(item)
   const rnbo = await readRnbo(item.example.file)
   const lines: Line[] = rnbo.patcher.lines ?? []
@@ -139,7 +139,7 @@ export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkIte
       view: metrics.view,
       total_dist: metrics.length,
       misaligned_ss: metrics.misalignedSS,
-      notes: null,
+      notes: item.notes ?? null,
     },
     item.paramValues,
   )
