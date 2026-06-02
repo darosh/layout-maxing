@@ -156,8 +156,8 @@ export async function computeWorkItem(gitSha: string, item: WorkItem & { notes?:
   }
 }
 
-export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkItem & { notes?: string }): Promise<RunResult> {
-  const c = await computeWorkItem(gitSha, item)
+export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkItem & { notes?: string }, workerOverride?: number): Promise<RunResult> {
+  const c = await computeWorkItem(gitSha, item, workerOverride)
   const runId = db.insertRun(c.row, c.paramValues)
   return { runId, status: c.status, wallMs: c.wallMs, scoreCustom: c.scoreCustom, scoreDefault: c.scoreDefault }
 }

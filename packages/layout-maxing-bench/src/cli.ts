@@ -62,7 +62,7 @@ function help() {
   show    [--port 8787] [--db PATH]
   export  --run <id> | --top --example <name> [--limit N] [--db PATH]
   summary [--group <g>] [--example <name>] [--db PATH]
-  verify  [--top N=10] [--seeds N=5] [--example e]  # re-run top-N configs × N seeds for stability
+  verify  [--top N=10] [--seeds N=5] [--example e] [--parallel N] [--workers N]  # re-run top-N configs × N seeds for stability
   save-presets                                       # write Best + BestStable + BestClustered + BestStableCluster
 
 Groups: ${GROUPS.map((g) => g.name).join(', ')}
@@ -219,6 +219,9 @@ async function main() {
       const k = Number(args.flags.get('top') ?? '10')
       const seeds = Number(args.flags.get('seeds') ?? '5')
       const exFilter = args.flags.get('example') as string | undefined
+      const vParallel = Math.max(1, Number(args.flags.get('parallel') ?? '1'))
+      const vWorkersFlag = args.flags.get('workers')
+      const vWorkerCount = vWorkersFlag ? Math.max(1, Number(vWorkersFlag)) : Math.max(1, Math.floor(cpus().length / vParallel))
       // Build candidates for ex1-4.
       const cands = db.topCandidates(k).map((c) => {
         const row = db.getRun(c.run_id)!
@@ -239,15 +242,23 @@ async function main() {
         db.close()
         break
       }
-      console.log(`verify: ${allCands.length} candidates × ${seeds} seeds each`)
+      console.log(`verify: ${allCands.length} candidates × ${seeds} seeds each (parallel=${vParallel})`)
       let count = 0
+      const vActive = new Set<Promise<void>>()
+      const vFlush = async () => { if (vActive.size >= vParallel) await Promise.race(vActive) }
       for (const item of genVerify(allCands, seeds, db)) {
         const label = `[verify] run=#${item.paramValues.__parentRunId} ${item.example.name} seed_i=${item.paramValues.__seedIndex}`
         console.log(`${label}  start`)
-        const res = await executeWorkItem(db, sha, { ...item, notes: `parent:${item.paramValues.__parentRunId}` } as any)
-        console.log(`${label}  done  status=${res.status}  score_d=${res.scoreDefault?.toFixed(0) ?? '—'}  wall=${(res.wallMs / 1000).toFixed(1)}s`)
-        count++
+        await vFlush()
+        const p: Promise<void> = (async () => {
+          const res = await executeWorkItem(db, sha, { ...item, notes: `parent:${item.paramValues.__parentRunId}` } as any, vWorkerCount)
+          console.log(`${label}  done  status=${res.status}  score_d=${res.scoreDefault?.toFixed(0) ?? '—'}  wall=${(res.wallMs / 1000).toFixed(1)}s  run=#${res.runId}`)
+          count++
+        })()
+        vActive.add(p)
+        p.finally(() => vActive.delete(p))
       }
+      await Promise.all(vActive)
       console.log(`verify complete: ${count} rows written`)
       db.close()
       break
