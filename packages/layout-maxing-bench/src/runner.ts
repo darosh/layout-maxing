@@ -4,7 +4,7 @@
 import { defaultConfig, fitness, main } from 'layout-maxing'
 import type { Box, Line, RNBO, RunMonitor } from 'layout-maxing'
 import Worker from 'web-worker'
-import { type BenchDb } from './db.ts'
+import { type BenchDb, type RunRow } from './db.ts'
 import { makePool } from './workers.ts'
 import { resolveConfig, type WorkItem } from './sampler.ts'
 
@@ -12,6 +12,15 @@ const FIFTEEN_MIN_MS = 15 * 60 * 1000
 
 export interface RunResult {
   runId: number
+  status: 'ok' | 'error'
+  wallMs: number
+  scoreCustom: number | null
+  scoreDefault: number | null
+}
+
+export interface RunComputed {
+  row: Omit<RunRow, 'id'>
+  paramValues: Record<string, number>
   status: 'ok' | 'error'
   wallMs: number
   scoreCustom: number | null
@@ -28,12 +37,13 @@ async function readRnbo(path: string): Promise<RNBO> {
   return 'patcher' in parsed ? parsed : { patcher: parsed }
 }
 
-export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkItem & { notes?: string }): Promise<RunResult> {
+export async function computeWorkItem(gitSha: string, item: WorkItem & { notes?: string }, workerOverride?: number): Promise<RunComputed> {
   const resolved = resolveConfig(item)
   const rnbo = await readRnbo(item.example.file)
   const lines: Line[] = rnbo.patcher.lines ?? []
 
-  const pool = makePool(resolved.workers ?? 0)
+  const pool = makePool(workerOverride ?? resolved.workers ?? 0)
+  console.log(`  workers=${pool.cpus}`)
   pool.init(resolved)
 
   let monitor: RunMonitor | undefined
@@ -50,14 +60,12 @@ export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkIte
     best = await main(
       rnbo,
       pool.getFitness,
-      undefined, // onIntermediate
+      undefined,
       resolved,
-      undefined, // onGenerationEnd
-      undefined, // logProgress
-      undefined, // logInfo
-      (m) => {
-        monitor = m
-      },
+      undefined,
+      undefined,
+      undefined,
+      (m) => { monitor = m },
       elkWorkerFactory,
       undefined,
     )
@@ -98,8 +106,7 @@ export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkIte
     }
   }
 
-  // Cost accounting from monitor snapshots. Each snapshot is one generation × popSize evals.
-  // For cluster phase, snapshot.cluster.index < total indicates per-cluster work; index == total marks polish.
+  // Cost accounting from monitor snapshots.
   let evalsMain = 0
   let evalsCluster = 0
   let genActual = 0
@@ -113,8 +120,8 @@ export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkIte
   }
   const evalsTotal = evalsMain + evalsCluster
 
-  const runId = db.insertRun(
-    {
+  return {
+    row: {
       created_at: new Date().toISOString(),
       git_sha: gitSha,
       example: item.example.name,
@@ -141,8 +148,16 @@ export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkIte
       misaligned_ss: metrics.misalignedSS,
       notes: item.notes ?? null,
     },
-    item.paramValues,
-  )
+    paramValues: item.paramValues,
+    status,
+    wallMs,
+    scoreCustom,
+    scoreDefault,
+  }
+}
 
-  return { runId, status, wallMs, scoreCustom, scoreDefault }
+export async function executeWorkItem(db: BenchDb, gitSha: string, item: WorkItem & { notes?: string }): Promise<RunResult> {
+  const c = await computeWorkItem(gitSha, item)
+  const runId = db.insertRun(c.row, c.paramValues)
+  return { runId, status: c.status, wallMs: c.wallMs, scoreCustom: c.scoreCustom, scoreDefault: c.scoreDefault }
 }

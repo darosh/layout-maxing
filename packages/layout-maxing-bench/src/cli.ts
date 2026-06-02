@@ -10,9 +10,10 @@
 //   export  --run <id> | --top --example <name> [--limit N]
 //   summary [--group <g>] [--example <name>]
 
+import { cpus } from 'node:os'
 import { dirname, fromFileUrl, resolve } from 'jsr:@std/path'
 import { openDb } from './db.ts'
-import { executeWorkItem } from './runner.ts'
+import { computeWorkItem, executeWorkItem } from './runner.ts'
 import { genBaseline, genPresets, genOAT, genSynergy, genGapfill, genVerify, type WorkItem } from './sampler.ts'
 import { findGroup, GROUPS } from './groups.ts'
 import { exportRunConfig, statusText, summaryMarkdown, topRows } from './summary.ts'
@@ -56,7 +57,7 @@ async function gitSha(): Promise<string> {
 function help() {
   console.log(`layout-maxing-bench
 
-  run     [--phase baseline|preset|oat|synergy|gapfill] [--group <g>] [--example <e>] [--limit N] [--db PATH]
+  run     [--phase baseline|preset|oat|synergy|gapfill] [--group <g>] [--example <e>] [--limit N] [--parallel N] [--workers N] [--db PATH]
   status  [--db PATH]
   show    [--port 8787] [--db PATH]
   export  --run <id> | --top --example <name> [--limit N] [--db PATH]
@@ -80,6 +81,10 @@ async function runPhase(args: ReturnType<typeof parseArgs>) {
   const dbPath = (args.flags.get('db') as string) ?? defaultDbPath()
   const maxPerGroup = Number(args.flags.get('per-group') ?? '200')
   const gapfillCount = Number(args.flags.get('count') ?? '500')
+
+  const parallel = Math.max(1, Number(args.flags.get('parallel') ?? '1'))
+  const workersFlag = args.flags.get('workers')
+  const workerCount = workersFlag ? Math.max(1, Number(workersFlag)) : Math.max(1, Math.floor(cpus().length / parallel))
 
   const db = openDb(dbPath)
   const sha = await gitSha()
@@ -123,6 +128,10 @@ async function runPhase(args: ReturnType<typeof parseArgs>) {
 
   let processed = 0
   let skipped = 0
+  const active = new Set<Promise<void>>()
+
+  const flush = async () => { if (active.size >= parallel) await Promise.race(active) }
+
   for (const item of gen) {
     if (exampleFilter && item.example.name !== exampleFilter) continue
     if (groupFilter && phase === 'all' && item.group !== groupFilter && item.group !== 'baseline' && item.group !== 'preset') continue
@@ -141,17 +150,26 @@ async function runPhase(args: ReturnType<typeof parseArgs>) {
       skipped = 0
     }
     console.log(`${label}  start`)
-    const res = await executeWorkItem(db, sha, item)
-    console.log(
-      `${label}  done  status=${res.status}  ` +
-        `score_d=${res.scoreDefault?.toFixed(0) ?? '—'}  ` +
-        `score_c=${res.scoreCustom?.toFixed(0) ?? '—'}  ` +
-        `wall=${(res.wallMs / 1000).toFixed(1)}s  ` +
-        `run=#${res.runId}`,
-    )
+
+    await flush()
+    const p: Promise<void> = (async () => {
+      const c = await computeWorkItem(sha, item, workerCount)
+      // DB write on the main thread — synchronous, naturally serialized
+      const runId = db.insertRun(c.row, c.paramValues)
+      console.log(
+        `${label}  done  status=${c.status}  ` +
+          `score_d=${c.scoreDefault?.toFixed(0) ?? '—'}  ` +
+          `score_c=${c.scoreCustom?.toFixed(0) ?? '—'}  ` +
+          `wall=${(c.wallMs / 1000).toFixed(1)}s  ` +
+          `run=#${runId}`,
+      )
+    })()
+    active.add(p)
+    p.finally(() => active.delete(p))
     processed++
   }
   if (skipped > 0) console.log(`  (skipped ${skipped} already-done rows; nothing new to run)`)
+  await Promise.all(active)
   db.close()
 }
 

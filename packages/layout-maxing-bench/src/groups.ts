@@ -46,7 +46,7 @@ export const GROUPS: GroupDef[] = [
   },
   {
     name: 'cluster',
-    fixed: {},
+    fixed: { generations: 10000, stop: 499 },
     clusteredOnly: true,
     params: {
       popSize: { min: 5, max: 40, integer: true },
