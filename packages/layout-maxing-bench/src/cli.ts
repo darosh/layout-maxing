@@ -63,7 +63,7 @@ function help() {
   export  --run <id> | --top --example <name> [--limit N] [--db PATH]
   summary [--group <g>] [--example <name>] [--db PATH]
   verify  [--top N=10] [--seeds N=5] [--example e]  # re-run top-N configs × N seeds for stability
-  save-presets                                       # write Best + BestStable + BestCluster + BestStableCluster
+  save-presets                                       # write Best + BestStable + BestClustered + BestStableCluster
 
 Groups: ${GROUPS.map((g) => g.name).join(', ')}
 `)
@@ -257,7 +257,7 @@ async function main() {
       const res = await savePresets(db)
       if (res.best) console.log(`wrote presets/best.ts (run #${res.best.runId}, ex1-4 sum=${res.best.sum.toFixed(0)})`)
       else console.log('no shared ex1-4 config available yet — skipped best.ts')
-      if (res.bestCluster) console.log(`wrote presets/best-clustered.ts (run #${res.bestCluster.runId}, ex5 score=${res.bestCluster.score.toFixed(0)})`)
+      if (res.bestClustered) console.log(`wrote presets/best-clustered.ts (run #${res.bestClustered.runId}, ex5 score=${res.bestClustered.score.toFixed(0)})`)
       else console.log('no ex5 config available yet — skipped best-clustered.ts')
       db.close()
       break
