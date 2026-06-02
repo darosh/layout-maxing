@@ -524,6 +524,7 @@ function copyCli() {
 
 .preset-select:deep(.p-select-label) {
   padding: 0.3rem 0.4rem;
+  max-width: 6rem;
 }
 
 .fields-grid {
