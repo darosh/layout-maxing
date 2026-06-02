@@ -268,8 +268,12 @@ async function main() {
       const res = await savePresets(db)
       if (res.best) console.log(`wrote presets/best.ts (run #${res.best.runId}, ex1-4 sum=${res.best.sum.toFixed(0)})`)
       else console.log('no shared ex1-4 config available yet — skipped best.ts')
+      if (res.bestStable) console.log(`wrote presets/best-stable.ts (run #${res.bestStable.runId}, median sum=${res.bestStable.medianSum.toFixed(0)}, seeds=${res.bestStable.seeds})`)
+      else console.log('no verify data for ex1-4 yet — skipped best-stable.ts')
       if (res.bestClustered) console.log(`wrote presets/best-clustered.ts (run #${res.bestClustered.runId}, ex5 score=${res.bestClustered.score.toFixed(0)})`)
       else console.log('no ex5 config available yet — skipped best-clustered.ts')
+      if (res.bestStableCluster) console.log(`wrote presets/best-stable-cluster.ts (run #${res.bestStableCluster.runId}, median score=${res.bestStableCluster.medianScore.toFixed(0)}, seeds=${res.bestStableCluster.seeds})`)
+      else console.log('no verify data for ex5 yet — skipped best-stable-cluster.ts')
       db.close()
       break
     }

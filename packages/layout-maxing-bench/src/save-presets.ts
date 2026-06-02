@@ -109,7 +109,7 @@ async function patchIndex(flags: { best: boolean; bestClustered: boolean; bestSt
     return text.includes(newLine) ? text : text.replace(after, `${after}\n${newLine}`)
   }
   function addExport(existing: string, after: string, newEntry: string): string {
-    return text.includes(newEntry + ',') ? text : text.replace(after, `${after}${newEntry},`)
+    return text.includes(newEntry) ? text : text.replace(after, `${after}${newEntry}`)
   }
 
   if (flags.best) {
