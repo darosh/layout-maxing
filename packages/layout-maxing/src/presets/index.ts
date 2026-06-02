@@ -9,7 +9,7 @@ import Raw from './raw.ts'
 import Relaxed from './relaxed.ts'
 import Clustered from './clustered.ts'
 import BestClustered from './best-clustered.ts'
-import BestStableCluster from './best-stable-cluster.ts'
+import BestStableClustered from './best-stable-clustered.ts'
 import Niching from './niching.ts'
 import NichingFast from './niching-fast.ts'
 import ClusteredNiching from './clustered-niching.ts'
@@ -31,5 +31,5 @@ export const PRESETS = {
   Best,
   BestStable,
   BestClustered,
-  BestStableCluster,
+  BestStableClustered,
 }
