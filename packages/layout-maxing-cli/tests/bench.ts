@@ -19,7 +19,8 @@ for (const [file, preset] of [
   const t1 = performance.now()
   for (let i = 0; i < N; i++) fitnessOpt(layouts, lines, preset)
   const t2 = performance.now()
-  const orig = (t1 - t0) / N * 1000, opt = (t2 - t1) / N * 1000
+  const orig = ((t1 - t0) / N) * 1000,
+    opt = ((t2 - t1) / N) * 1000
   console.log(`original:  ${orig.toFixed(1)} µs/call`)
   console.log(`optimized: ${opt.toFixed(1)} µs/call`)
   console.log(`speedup:   ${(orig / opt).toFixed(2)}x`)

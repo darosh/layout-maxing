@@ -65,7 +65,9 @@ export async function computeWorkItem(gitSha: string, item: WorkItem & { notes?:
       undefined,
       undefined,
       undefined,
-      (m) => { monitor = m },
+      (m) => {
+        monitor = m
+      },
       elkWorkerFactory,
       undefined,
     )
