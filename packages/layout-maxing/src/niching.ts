@@ -1,4 +1,4 @@
-import { type Fitness } from './fitness.ts'
+import { type Fitness } from './fitness-optimized.ts'
 
 // Niching distance describes structural diversity, not score. Selection already
 // uses score via sharedFitness = score * nicheCount, so including score in the

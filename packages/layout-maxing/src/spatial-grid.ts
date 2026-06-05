@@ -16,13 +16,13 @@ export class SpatialGrid {
   private readonly x0: number
   private readonly y0: number
   private readonly gridW: number
-  private readonly maxCX: number   // inclusive upper cell bound
+  private readonly maxCX: number // inclusive upper cell bound
   private readonly maxCY: number
 
   // Box CSR
-  private boxHead!: Int32Array   // cell → start index in boxData (-1 = empty)
-  private boxNext!: Int32Array   // boxData[i] → next index (-1 = end)
-  private boxData!: Int32Array   // box indices in insertion order per cell chain
+  private boxHead!: Int32Array // cell → start index in boxData (-1 = empty)
+  private boxNext!: Int32Array // boxData[i] → next index (-1 = end)
+  private boxData!: Int32Array // box indices in insertion order per cell chain
   private boxCount = 0
 
   // Line CSR
@@ -36,9 +36,17 @@ export class SpatialGrid {
   private readonly lineGen: Int32Array
   private gen = 0
 
-  constructor(cellSize: number, boxCount: number, lineCount: number,
-              minX: number, minY: number, maxX: number, maxY: number,
-              boxSlots: number, lineSlots: number) {
+  constructor(
+    cellSize: number,
+    boxCount: number,
+    lineCount: number,
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    boxSlots: number,
+    lineSlots: number,
+  ) {
     this.cs = cellSize
     this.x0 = Math.floor(minX / cellSize)
     this.y0 = Math.floor(minY / cellSize)
@@ -65,14 +73,20 @@ export class SpatialGrid {
     return (cy - this.y0) * this.gridW + (cx - this.x0)
   }
 
-  private clampX(cx: number): number { return cx < this.x0 ? this.x0 : cx > this.maxCX ? this.maxCX : cx }
-  private clampY(cy: number): number { return cy < this.y0 ? this.y0 : cy > this.maxCY ? this.maxCY : cy }
+  private clampX(cx: number): number {
+    return cx < this.x0 ? this.x0 : cx > this.maxCX ? this.maxCX : cx
+  }
+  private clampY(cy: number): number {
+    return cy < this.y0 ? this.y0 : cy > this.maxCY ? this.maxCY : cy
+  }
 
   insertBox(boxIdx: number, box: Box): void {
     this.boxList[boxIdx] = box
     const cs = this.cs
-    const x0 = this.clampX(Math.floor(box.x / cs)), x1 = this.clampX(Math.floor((box.x + box.width) / cs))
-    const y0 = this.clampY(Math.floor(box.y / cs)), y1 = this.clampY(Math.floor((box.y + box.height) / cs))
+    const x0 = this.clampX(Math.floor(box.x / cs)),
+      x1 = this.clampX(Math.floor((box.x + box.width) / cs))
+    const y0 = this.clampY(Math.floor(box.y / cs)),
+      y1 = this.clampY(Math.floor((box.y + box.height) / cs))
     for (let cx = x0; cx <= x1; cx++) {
       for (let cy = y0; cy <= y1; cy++) {
         const k = this.cellIdx(cx, cy)
@@ -86,9 +100,12 @@ export class SpatialGrid {
 
   insertLine(lineIdx: number, pts: StartEnd): void {
     const cs = this.cs
-    const lx = Math.min(pts.sx, pts.ex), ly = Math.min(pts.sy, pts.ey)
-    const x0 = this.clampX(Math.floor(lx / cs)), x1 = this.clampX(Math.floor((lx + Math.abs(pts.sx - pts.ex)) / cs))
-    const y0 = this.clampY(Math.floor(ly / cs)), y1 = this.clampY(Math.floor((ly + Math.abs(pts.sy - pts.ey)) / cs))
+    const lx = Math.min(pts.sx, pts.ex),
+      ly = Math.min(pts.sy, pts.ey)
+    const x0 = this.clampX(Math.floor(lx / cs)),
+      x1 = this.clampX(Math.floor((lx + Math.abs(pts.sx - pts.ex)) / cs))
+    const y0 = this.clampY(Math.floor(ly / cs)),
+      y1 = this.clampY(Math.floor((ly + Math.abs(pts.sy - pts.ey)) / cs))
     for (let cx = x0; cx <= x1; cx++) {
       for (let cy = y0; cy <= y1; cy++) {
         const k = this.cellIdx(cx, cy)
@@ -103,16 +120,24 @@ export class SpatialGrid {
   queryBoxIndices(x: number, y: number, w: number, h: number, out: number[]): void {
     out.length = 0
     const cs = this.cs
-    const x0 = this.clampX(Math.floor(x / cs)), x1 = this.clampX(Math.floor((x + w) / cs))
-    const y0 = this.clampY(Math.floor(y / cs)), y1 = this.clampY(Math.floor((y + h) / cs))
+    const x0 = this.clampX(Math.floor(x / cs)),
+      x1 = this.clampX(Math.floor((x + w) / cs))
+    const y0 = this.clampY(Math.floor(y / cs)),
+      y1 = this.clampY(Math.floor((y + h) / cs))
     const g = ++this.gen
-    const bg = this.boxGen, bh = this.boxHead, bn = this.boxNext, bd = this.boxData
+    const bg = this.boxGen,
+      bh = this.boxHead,
+      bn = this.boxNext,
+      bd = this.boxData
     for (let cx = x0; cx <= x1; cx++) {
       for (let cy = y0; cy <= y1; cy++) {
         let slot = bh[this.cellIdx(cx, cy)]
         while (slot !== -1) {
           const idx = bd[slot]
-          if (bg[idx] !== g) { bg[idx] = g; out.push(idx) }
+          if (bg[idx] !== g) {
+            bg[idx] = g
+            out.push(idx)
+          }
           slot = bn[slot]
         }
       }
@@ -122,21 +147,31 @@ export class SpatialGrid {
   queryLineIndices(x: number, y: number, w: number, h: number, out: number[]): void {
     out.length = 0
     const cs = this.cs
-    const x0 = this.clampX(Math.floor(x / cs)), x1 = this.clampX(Math.floor((x + w) / cs))
-    const y0 = this.clampY(Math.floor(y / cs)), y1 = this.clampY(Math.floor((y + h) / cs))
+    const x0 = this.clampX(Math.floor(x / cs)),
+      x1 = this.clampX(Math.floor((x + w) / cs))
+    const y0 = this.clampY(Math.floor(y / cs)),
+      y1 = this.clampY(Math.floor((y + h) / cs))
     const g = ++this.gen
-    const lg = this.lineGen, lh = this.lineHead, ln = this.lineNext, ld = this.lineData
+    const lg = this.lineGen,
+      lh = this.lineHead,
+      ln = this.lineNext,
+      ld = this.lineData
     for (let cx = x0; cx <= x1; cx++) {
       for (let cy = y0; cy <= y1; cy++) {
         let slot = lh[this.cellIdx(cx, cy)]
         while (slot !== -1) {
           const idx = ld[slot]
-          if (lg[idx] !== g) { lg[idx] = g; out.push(idx) }
+          if (lg[idx] !== g) {
+            lg[idx] = g
+            out.push(idx)
+          }
           slot = ln[slot]
         }
       }
     }
   }
 
-  getBox(idx: number): Box { return this.boxList[idx] }
+  getBox(idx: number): Box {
+    return this.boxList[idx]
+  }
 }

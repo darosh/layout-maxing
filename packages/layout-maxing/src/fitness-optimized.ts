@@ -125,14 +125,22 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config,
     for (let i = 0; i < lines.length; i++) {
       const l1 = lines[i]
       const pts1 = linePoints[i]
-      const c1x = pts1.sx, c1y = pts1.sy + c.curveControl
-      const c2x = pts1.ex, c2y = pts1.ey - c.curveControl
-      let cross_pen = 0, over_pen = 0
+      const c1x = pts1.sx,
+        c1y = pts1.sy + c.curveControl
+      const c2x = pts1.ex,
+        c2y = pts1.ey - c.curveControl
+      let cross_pen = 0,
+        over_pen = 0
       const reverse_pen = pts1.ey > pts1.sy ? 1 : c.reversePenalty
       for (let j = i + 1; j < lines.length; j++) {
         const pts2 = linePoints[j]
-        if (segmentsOverlap(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) { overlaps++; over_pen++ }
-        else if (segmentsIntersect(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) { crossings++; cross_pen++ }
+        if (segmentsOverlap(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) {
+          overlaps++
+          over_pen++
+        } else if (segmentsIntersect(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) {
+          crossings++
+          cross_pen++
+        }
       }
       const sourceBoxId = l1.patchline.source[0]
       const lx0 = Math.min(pts1.sx, pts1.ex) - c.boxZone
@@ -153,11 +161,13 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config,
         misalignedFirst++
         firstMisalignmentPenalty = Math.abs(pts1.sx - pts1.ex) * c.misalignedFirstPenalty
       }
-      totalLength += (segmentLength + firstMisalignmentPenalty) * (cross_pen ? cross_pen * c.crossPenalty : 1) * (over_pen ? over_pen * c.overPenalty : 1) * reverse_pen
+      totalLength +=
+        (segmentLength + firstMisalignmentPenalty) * (cross_pen ? cross_pen * c.crossPenalty : 1) * (over_pen ? over_pen * c.overPenalty : 1) * reverse_pen
     }
     for (let i = 0; i < layouts.length; i++) {
       for (let j = i + 1; j < layouts.length; j++) {
-        const a = layouts[i], b = layouts[j]
+        const a = layouts[i],
+          b = layouts[j]
         const sameGroup = a.groupIdx !== undefined && a.groupIdx === b.groupIdx
         if (!sameGroup && getIntersectionArea(a, b, c.minDistX / 2)) area++
         if (sameGroup) continue
@@ -170,20 +180,23 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config,
     // Spatial grid: O(n·k), worthwhile for larger inputs
     const avgBoxDim = layouts.reduce((s, b) => s + b.width + b.height, 0) / (2 * layouts.length)
     const cs = avgBoxDim * 2
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity
     let boxSlots = 0
     for (const b of layouts) {
       if (b.x < minX) minX = b.x
       if (b.y < minY) minY = b.y
       if (b.x + b.width > maxX) maxX = b.x + b.width
       if (b.y + b.height > maxY) maxY = b.y + b.height
-      boxSlots += (Math.floor((b.x + b.width) / cs) - Math.floor(b.x / cs) + 1) *
-                  (Math.floor((b.y + b.height) / cs) - Math.floor(b.y / cs) + 1)
+      boxSlots += (Math.floor((b.x + b.width) / cs) - Math.floor(b.x / cs) + 1) * (Math.floor((b.y + b.height) / cs) - Math.floor(b.y / cs) + 1)
     }
     let lineSlots = 0
     for (const pts of linePoints) {
-      lineSlots += (Math.floor(Math.max(pts.sx, pts.ex) / cs) - Math.floor(Math.min(pts.sx, pts.ex) / cs) + 1) *
-                   (Math.floor(Math.max(pts.sy, pts.ey) / cs) - Math.floor(Math.min(pts.sy, pts.ey) / cs) + 1)
+      lineSlots +=
+        (Math.floor(Math.max(pts.sx, pts.ex) / cs) - Math.floor(Math.min(pts.sx, pts.ex) / cs) + 1) *
+        (Math.floor(Math.max(pts.sy, pts.ey) / cs) - Math.floor(Math.min(pts.sy, pts.ey) / cs) + 1)
     }
     const grid = new SpatialGrid(cs, layouts.length, lines.length, minX, minY, maxX, maxY, boxSlots, lineSlots)
     for (let i = 0; i < layouts.length; i++) grid.insertBox(i, layouts[i])
@@ -194,17 +207,25 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config,
     for (let i = 0; i < lines.length; i++) {
       const l1 = lines[i]
       const pts1 = linePoints[i]
-      const c1x = pts1.sx, c1y = pts1.sy + c.curveControl
-      const c2x = pts1.ex, c2y = pts1.ey - c.curveControl
-      let cross_pen = 0, over_pen = 0
+      const c1x = pts1.sx,
+        c1y = pts1.sy + c.curveControl
+      const c2x = pts1.ex,
+        c2y = pts1.ey - c.curveControl
+      let cross_pen = 0,
+        over_pen = 0
       const reverse_pen = pts1.ey > pts1.sy ? 1 : c.reversePenalty
       grid.queryLineIndices(Math.min(pts1.sx, pts1.ex), Math.min(pts1.sy, pts1.ey), Math.abs(pts1.sx - pts1.ex), Math.abs(pts1.sy - pts1.ey), nearbyLines)
       for (let k = 0; k < nearbyLines.length; k++) {
         const j = nearbyLines[k]
         if (j <= i) continue
         const pts2 = linePoints[j]
-        if (segmentsOverlap(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) { overlaps++; over_pen++ }
-        else if (segmentsIntersect(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) { crossings++; cross_pen++ }
+        if (segmentsOverlap(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) {
+          overlaps++
+          over_pen++
+        } else if (segmentsIntersect(pts1.sx, pts1.sy, pts1.ex, pts1.ey, pts2.sx, pts2.sy, pts2.ex, pts2.ey)) {
+          crossings++
+          cross_pen++
+        }
       }
       const sourceBoxId = l1.patchline.source[0]
       const lx0 = Math.min(pts1.sx, pts1.ex) - c.boxZone
@@ -226,7 +247,8 @@ export function fitness(layouts: Box[], lines: Line[] | undefined, cfg?: Config,
         misalignedFirst++
         firstMisalignmentPenalty = Math.abs(pts1.sx - pts1.ex) * c.misalignedFirstPenalty
       }
-      totalLength += (segmentLength + firstMisalignmentPenalty) * (cross_pen ? cross_pen * c.crossPenalty : 1) * (over_pen ? over_pen * c.overPenalty : 1) * reverse_pen
+      totalLength +=
+        (segmentLength + firstMisalignmentPenalty) * (cross_pen ? cross_pen * c.crossPenalty : 1) * (over_pen ? over_pen * c.overPenalty : 1) * reverse_pen
     }
     for (let i = 0; i < layouts.length; i++) {
       const a = layouts[i]

@@ -71,7 +71,7 @@ test('two-groups fixture: all 8 boxes preserved and DST=0', async () => {
 })
 
 test('fitness: same-group pairs are excluded from minDist', async () => {
-  const { fitness: fitnessFunc } = await import('../src/fitness.ts')
+  const { fitness: fitnessFunc } = await import('../src/fitness-optimized.ts')
   // Two boxes in the same group, placed touching (no gap) — should not count as minDist violation
   const sameGroup = [
     { id: 'a', index: 0, x: 0, y: 0, width: 100, height: 20, numInlets: 1, numOutlets: 1, groupIdx: 0 },

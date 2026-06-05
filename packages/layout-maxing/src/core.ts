@@ -18,7 +18,7 @@ import {
   stampGroupOffsets,
 } from './layout.ts'
 import { cloneLayouts } from './mutation.ts'
-import { type Fitness, fitness } from './fitness.ts'
+import { type Fitness, fitness } from './fitness-optimized.ts'
 import runGenetic, { runClusteredGenetic, type ClusteringInfo } from './genetic.ts'
 import type { RunMonitor, GenerationSnapshot } from './monitor.ts'
 import { getRandomMulberry } from './random-mulberry-32.ts'

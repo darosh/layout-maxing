@@ -1,6 +1,6 @@
 import { type Config } from './config.ts'
 import { type Box, type Line, type LayoutEntity, fixOverlaps, normalizeLayouts, toEntities, simpleFlow } from './layout.ts'
-import { type Fitness, fitness } from './fitness.ts'
+import { type Fitness, fitness } from './fitness-optimized.ts'
 import { detectClusters, lineFullyInside } from './cluster.ts'
 import {
   cloneLayouts,
