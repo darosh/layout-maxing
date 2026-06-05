@@ -21,8 +21,10 @@ export function segmentsIntersect(ax: number, ay: number, bx: number, by: number
 }
 
 export function segmentsOverlap(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): boolean {
-  // First: must be collinear
-  const collinear = !ccw(ax, ay, bx, by, cx, cy) && !ccw(ax, ay, bx, by, dx, dy) && !ccw(cx, cy, dx, dy, ax, ay) && !ccw(cx, cy, dx, dy, bx, by)
+  // First: must be collinear — use signed cross product, not boolean ccw
+  const cross1 = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+  const cross2 = (bx - ax) * (dy - ay) - (by - ay) * (dx - ax)
+  const collinear = Math.abs(cross1) < 1e-9 && Math.abs(cross2) < 1e-9
 
   if (!collinear) return false
 
