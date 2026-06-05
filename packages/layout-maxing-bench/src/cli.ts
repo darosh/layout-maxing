@@ -167,7 +167,7 @@ async function runPhase(args: ReturnType<typeof parseArgs>) {
       )
     })()
     active.add(p)
-    p.finally(() => active.delete(p))
+    void p.finally(() => active.delete(p))
     processed++
   }
   if (skipped > 0) console.log(`  (skipped ${skipped} already-done rows; nothing new to run)`)
@@ -262,7 +262,7 @@ async function main() {
           count++
         })()
         vActive.add(p)
-        p.finally(() => vActive.delete(p))
+        void p.finally(() => vActive.delete(p))
       }
       await Promise.all(vActive)
       console.log(`verify complete: ${count} rows written`)

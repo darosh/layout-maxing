@@ -64,7 +64,7 @@ export class SpatialGrid {
     this.lineNext = new Int32Array(lineSlots).fill(-1)
     this.lineData = new Int32Array(lineSlots)
 
-    this.boxList = new Array(boxCount)
+    this.boxList = Array.from({ length: boxCount })
     this.boxGen = new Int32Array(boxCount)
     this.lineGen = new Int32Array(lineCount)
   }
